@@ -1,0 +1,432 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { useAuth } from '@/context/AuthContext'
+import { signOut } from '@/lib/auth'
+import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser } from '@/lib/db'
+import type { Wod, Result, WodType, Profile } from '@/lib/types'
+
+// ── Constants ──────────────────────────────────────────
+
+const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+const WOD_TYPE_LABEL: Record<string, string> = {
+  'For Time': 'FOR TIME',
+  'AMRAP':    'AMRAP',
+  'EMOM':     'EMOM',
+  'Strength': 'STRENGTH',
+  'Warmup':   'WARMUP',
+  'For Max':  'FOR MAX',
+  'Other':    'WOD',
+}
+
+// ── Helpers ────────────────────────────────────────────
+
+function isSunday(date: string): boolean {
+  return new Date(date + 'T00:00:00').getDay() === 0
+}
+
+function getWeekDates(offset = 0): string[] {
+  const today = new Date()
+  const dow = today.getDay()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7)
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
+}
+
+function formatWeekRange(dates: string[]): string {
+  const from = new Date(dates[0] + 'T00:00:00')
+  const to   = new Date(dates[6] + 'T00:00:00')
+  return `${from.getDate()} – ${to.getDate()} ${to.toLocaleDateString('es-ES', { month: 'long' })}`
+}
+
+function getScoreDisplay(wod: Wod, result: Result): string {
+  if (wod.type === 'For Time'                        && result.score_time)   return result.score_time
+  if ((wod.type === 'AMRAP' || wod.type === 'EMOM')  && result.score_rounds) return result.score_rounds
+  if (wod.type === 'Strength'                        && result.score_weight) return `${result.score_weight} kg`
+  if (wod.type === 'For Max'                         && result.score_rounds) return result.score_rounds
+  if (result.score_notes) return result.score_notes
+  return '—'
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?'
+  return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+}
+
+// ── Athlete List ───────────────────────────────────────
+
+function AthleteList({ athletes, onSelect }: {
+  athletes: Profile[]
+  onSelect: (athlete: Profile) => void
+}) {
+  if (athletes.length === 0) return (
+    <div className="flex-1 flex flex-col justify-center px-6 py-8 max-w-2xl mx-auto w-full">
+      <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">Atletas</p>
+      <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">Sin atletas</h2>
+    </div>
+  )
+
+  return (
+    <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
+      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-6">
+        {athletes.length} {athletes.length === 1 ? 'atleta' : 'atletas'}
+      </p>
+      <div className="flex flex-col gap-3">
+        {athletes.map(athlete => (
+          <button
+            key={athlete.id}
+            onClick={() => onSelect(athlete)}
+            className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-900 hover:border-neutral-700 hover:bg-neutral-950 transition-all text-left"
+          >
+            {athlete.avatar_url ? (
+              <Image
+                src={athlete.avatar_url}
+                alt={athlete.full_name ?? ''}
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                <span className="text-white text-xs font-black">{getInitials(athlete.full_name)}</span>
+              </div>
+            )}
+            <span className="flex-1 text-white font-medium text-sm">
+              {athlete.full_name ?? 'Sin nombre'}
+            </span>
+            <span className="text-neutral-600 text-sm font-mono">→</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Athlete Week View ──────────────────────────────────
+
+function AthleteWeekView({ athlete, onBack }: {
+  athlete: Profile
+  onBack: () => void
+}) {
+  const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
+
+  const [weekOffset,    setWeekOffset]    = useState(0)
+  const [selectedDate,  setSelectedDate]  = useState(today)
+  const [selectedBlock, setSelectedBlock] = useState(0)
+  const [wods,          setWods]          = useState<Wod[]>([])
+  const [results,       setResults]       = useState<Result[]>([])
+  const [loading,       setLoading]       = useState(true)
+
+  const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
+
+  useEffect(() => {
+    setLoading(true)
+    getWodsForWeek(weekDates[0], weekDates[6])
+      .then(async weekWods => {
+        setWods(weekWods)
+        if (weekWods.length > 0) {
+          const res = await getResultsForWodsAndUser(weekWods.map(w => w.id), athlete.id)
+          setResults(res)
+        } else {
+          setResults([])
+        }
+      })
+      .finally(() => setLoading(false))
+  }, [weekDates, athlete.id])
+
+  // Reset block when day changes
+  useEffect(() => { setSelectedBlock(0) }, [selectedDate])
+
+  // Reset to current week and today when athlete changes
+  useEffect(() => {
+    setWeekOffset(0)
+    setSelectedDate(today)
+    setSelectedBlock(0)
+  }, [athlete.id, today])
+
+  const dayWods      = wods.filter(w => w.date === selectedDate)
+  const activeWod    = dayWods.find(w => w.block === selectedBlock + 1) ?? null
+  const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
+
+  // Summary: how many WODs completed this week
+  const completedCount = results.length
+  const totalWods      = wods.filter(w => w.type !== 'Warmup').length
+
+  return (
+    <>
+      {/* Athlete header */}
+      <div className="flex items-center gap-4 px-6 py-5 border-b border-neutral-900">
+        <button
+          onClick={onBack}
+          className="text-neutral-600 hover:text-white text-sm font-mono transition"
+        >
+          ←
+        </button>
+        {athlete.avatar_url ? (
+          <Image
+            src={athlete.avatar_url}
+            alt={athlete.full_name ?? ''}
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center">
+            <span className="text-white text-xs font-black">{getInitials(athlete.full_name)}</span>
+          </div>
+        )}
+        <div className="flex-1">
+          <p className="text-white font-black text-sm tracking-tight">{athlete.full_name ?? 'Sin nombre'}</p>
+          {!loading && (
+            <p className="text-neutral-600 text-xs font-mono">
+              {completedCount}/{totalWods} WODs completados esta semana
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Week navigation */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-900">
+        <button
+          onClick={() => setWeekOffset(o => o - 1)}
+          className="text-neutral-600 hover:text-white transition font-mono text-sm"
+        >
+          ← anterior
+        </button>
+        <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
+          {formatWeekRange(weekDates)}
+        </span>
+        <button
+          onClick={() => setWeekOffset(o => o + 1)}
+          className="text-neutral-600 hover:text-white transition font-mono text-sm"
+        >
+          siguiente →
+        </button>
+      </div>
+
+      {/* Day tabs */}
+      <div className="border-b border-neutral-900">
+        <div className="grid grid-cols-7">
+          {weekDates.map((date) => {
+            const d          = new Date(date + 'T00:00:00')
+            const isToday    = date === today
+            const isSelected = date === selectedDate
+            const hasWod     = wods.some(w => w.date === date)
+            const hasResult  = wods
+              .filter(w => w.date === date)
+              .some(w => results.some(r => r.wod_id === w.id))
+
+            return (
+              <button
+                key={date}
+                onClick={() => setSelectedDate(date)}
+                className={`flex flex-col items-center gap-1 px-3 py-4 border-b-2 transition-colors ${
+                  isSelected ? 'border-white' : 'border-transparent'
+                }`}
+              >
+                <span className={`text-xs uppercase tracking-widest font-mono ${
+                  isSelected ? 'text-neutral-400' : 'text-neutral-700'
+                }`}>
+                  {DAY_SHORT[d.getDay()]}
+                </span>
+                <span className={`text-lg font-black leading-none ${
+                  isSelected ? 'text-white' : isToday ? 'text-neutral-400' : 'text-neutral-600'
+                }`}>
+                  {d.getDate()}
+                </span>
+                <div className={`w-1 h-1 rounded-full ${
+                  hasResult ? 'bg-white' : hasWod ? 'bg-neutral-700' : 'bg-transparent'
+                }`} />
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-px h-10 bg-white animate-pulse" />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col px-6 py-8 max-w-2xl mx-auto w-full">
+          {isSunday(selectedDate) ? (
+            <div className="flex-1 flex flex-col justify-center">
+              <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-4">Domingo</p>
+              <h2 className="text-neutral-800 font-black text-6xl uppercase tracking-tighter leading-none">Descanso</h2>
+            </div>
+          ) : (
+            <>
+              {/* Block tabs */}
+              <div className="flex gap-2 mb-8 flex-wrap">
+                {[1, 2, 3, 4, 5, 6].map((block) => {
+                  const wod      = dayWods.find(w => w.block === block)
+                  const isActive = selectedBlock === block - 1
+                  const label    = wod ? (WOD_TYPE_LABEL[wod.type] ?? wod.type) : `Bloque ${block}`
+                  const done     = wod ? results.some(r => r.wod_id === wod.id) : false
+                  return (
+                    <button
+                      key={block}
+                      onClick={() => setSelectedBlock(block - 1)}
+                      className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition relative ${
+                        isActive
+                          ? 'bg-white text-black'
+                          : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
+                      }`}
+                    >
+                      {label}
+                      {done && !isActive && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {activeWod ? (
+                <>
+                  {/* Type badge */}
+                  <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1 mb-5 w-fit">
+                    <span className="text-neutral-400 text-xs uppercase tracking-widest font-mono">
+                      {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h1 className="text-white font-black text-5xl sm:text-6xl leading-none tracking-tighter uppercase mb-8">
+                    {activeWod.title}
+                  </h1>
+
+                  {/* Description */}
+                  <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-10">
+                    {activeWod.description}
+                  </pre>
+
+                  {/* Result */}
+                  {activeWod.type !== 'Warmup' && (
+                    activeResult ? (
+                      <div className="border border-neutral-800 rounded-xl p-5">
+                        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+                          Resultado · {activeResult.rx ? 'RX' : 'Scaled'}
+                        </p>
+                        <p className="text-white font-black text-2xl tracking-tight">
+                          {getScoreDisplay(activeWod, activeResult)}
+                        </p>
+                        {activeResult.score_notes && (
+                          <p className="text-neutral-600 text-xs font-mono mt-2">{activeResult.score_notes}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="border border-neutral-900 rounded-xl p-5">
+                        <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono">Sin resultado</p>
+                      </div>
+                    )
+                  )}
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col justify-center pt-8">
+                  <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">Bloque {selectedBlock + 1}</p>
+                  <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">Sin programar</h2>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
+// ── Page ───────────────────────────────────────────────
+
+export default function AtletasPage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
+
+  const [athletes,         setAthletes]         = useState<Profile[]>([])
+  const [selectedAthlete,  setSelectedAthlete]  = useState<Profile | null>(null)
+  const [loading,          setLoading]          = useState(true)
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) { router.push('/login'); return }
+
+    getProfile(user.id).then(profile => {
+      if (profile?.role !== 'coach') { router.push('/dashboard'); return }
+
+      getAthletes('bizarro')
+        .then(setAthletes)
+        .finally(() => setLoading(false))
+    })
+  }, [authLoading, user, router])
+
+  async function handleLogout() {
+    await signOut()
+    router.push('/login')
+  }
+
+  if (authLoading || loading) {
+    return (
+      <main className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-px h-10 bg-white animate-pulse" />
+      </main>
+    )
+  }
+
+  return (
+    <main className="min-h-screen bg-black flex flex-col">
+
+      {/* Header */}
+      <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
+        <div className="flex items-center gap-3">
+          <Image src="/logoBizarro.png" alt="Bizarro" width={32} height={32} className="object-contain" />
+          <span className="text-white font-black text-xl tracking-tighter">BIZARRO</span>
+        </div>
+
+        {/* Centered tabs */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
+          <button
+            onClick={() => router.push('/admin')}
+            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
+          >
+            Home
+          </button>
+          <button
+            onClick={() => router.push('/admin/atletas')}
+            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-white"
+          >
+            Mis atletas
+          </button>
+        </div>
+
+        <div className="flex items-center gap-5">
+          <button
+            onClick={handleLogout}
+            className="text-neutral-600 hover:text-white text-sm transition font-mono"
+          >
+            Salir →
+          </button>
+        </div>
+      </header>
+
+      {selectedAthlete ? (
+        <AthleteWeekView
+          athlete={selectedAthlete}
+          onBack={() => setSelectedAthlete(null)}
+        />
+      ) : (
+        <AthleteList
+          athletes={athletes}
+          onSelect={setSelectedAthlete}
+        />
+      )}
+    </main>
+  )
+}
