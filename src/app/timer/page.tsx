@@ -109,23 +109,53 @@ function SimpleTimer({ label, totalSeconds, onMinuteTick }: {
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
-      <div className="flex flex-col items-center gap-8">
-        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">{label}</p>
-        <div className={`font-black tabular-nums leading-none tracking-tighter ${finished ? 'text-neutral-600' : 'text-white'} text-9xl`}>
-          {finished ? 'TIME!' : fmt(remaining)}
+      {finished && (
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+          <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
         </div>
-        {running && !finished && <p className="text-neutral-700 font-mono text-sm">{fmt(elapsed)} transcurrido</p>}
-        <div className="flex gap-4">
-          {!running && !finished && !inPreCountdown && (
-            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl">
-              {elapsed === 0 ? 'Iniciar' : 'Reanudar'}
-            </button>
-          )}
-          {running && (
-            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-4 rounded-xl text-sm">
-              Pausar
-            </button>
-          )}
+      )}
+      <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">{label}</p>
+        <div className="flex-1 flex items-center justify-center">
+        <div className="relative w-[28rem] h-[28rem]">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
+            {Array.from({ length: 60 }).map((_, i) => {
+              const angle = (i * 360) / 60
+              const rad = (angle - 90) * (Math.PI / 180)
+              const isMajor = i % 5 === 0
+              const r1 = isMajor ? 80 : 85
+              const r2 = 93
+              const cos = Math.cos(rad)
+              const sin = Math.sin(rad)
+              return (
+                <line key={i}
+                  x1={parseFloat((100 + r1 * cos).toFixed(4))}
+                  y1={parseFloat((100 + r1 * sin).toFixed(4))}
+                  x2={parseFloat((100 + r2 * cos).toFixed(4))}
+                  y2={parseFloat((100 + r2 * sin).toFixed(4))}
+                  stroke={isMajor ? '#525252' : '#303030'}
+                  strokeWidth={isMajor ? 2 : 1}
+                  strokeLinecap="round"
+                />
+              )
+            })}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">{elapsed === 0 && !running ? 'Duración' : 'Restante'}</p>
+            <p className="text-white font-black text-6xl tabular-nums tracking-tighter leading-none">{fmt(remaining)}</p>
+            {!running && !finished && !inPreCountdown && (
+              <button onClick={handleStart} className="mt-2 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                {elapsed === 0 ? 'Iniciar' : 'Reanudar'}
+              </button>
+            )}
+            {running && (
+              <button onClick={() => setRunning(false)} className="mt-2 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                Pausar
+              </button>
+            )}
+          </div>
+        </div>
         </div>
       </div>
     </>
@@ -160,26 +190,60 @@ function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
-      <div className="flex flex-col items-center gap-8">
-        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">FOR TIME</p>
-        {capSeconds > 0 && <p className="text-neutral-600 text-xs font-mono">Time cap: {fmt(capSeconds)}</p>}
-        <div className={`font-black tabular-nums leading-none tracking-tighter text-9xl ${cappedOut ? 'text-neutral-600' : stopped ? 'text-neutral-300' : 'text-white'}`}>
-          {fmt(elapsed)}
+      {cappedOut && (
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+          <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME CAP</p>
         </div>
-        {(cappedOut || stopped) && (
-          <p className="text-white font-black text-xl uppercase tracking-widest">
-            {cappedOut ? 'TIME CAP' : `Tiempo: ${fmt(elapsed)}`}
-          </p>
-        )}
-        <div className="flex gap-4">
-          {!running && !stopped && !cappedOut && !inPreCountdown && (
-            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl">
-              {elapsed === 0 ? 'Iniciar' : 'Reanudar'}
-            </button>
-          )}
-          {running && (
-            <button onClick={stop} className="bg-white text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl">Stop</button>
-          )}
+      )}
+      <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
+        <div className="flex-1 flex items-center justify-center">
+        <div className="relative w-[28rem] h-[28rem]">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
+            {Array.from({ length: 60 }).map((_, i) => {
+              const angle = (i * 360) / 60
+              const rad = (angle - 90) * (Math.PI / 180)
+              const isMajor = i % 5 === 0
+              const r1 = isMajor ? 80 : 85
+              const r2 = 93
+              const cos = Math.cos(rad)
+              const sin = Math.sin(rad)
+              return (
+                <line key={i}
+                  x1={parseFloat((100 + r1 * cos).toFixed(4))}
+                  y1={parseFloat((100 + r1 * sin).toFixed(4))}
+                  x2={parseFloat((100 + r2 * cos).toFixed(4))}
+                  y2={parseFloat((100 + r2 * sin).toFixed(4))}
+                  stroke={isMajor ? '#525252' : '#303030'}
+                  strokeWidth={isMajor ? 2 : 1}
+                  strokeLinecap="round"
+                />
+              )
+            })}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">
+              {capSeconds > 0 ? `Cap ${fmt(capSeconds)}` : 'Tiempo'}
+            </p>
+            <p className={`font-black text-6xl tabular-nums tracking-tighter leading-none ${stopped ? 'text-neutral-300' : 'text-white'}`}>
+              {fmt(elapsed)}
+            </p>
+            {stopped && (
+              <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest">Listo</p>
+            )}
+            {!running && !stopped && !cappedOut && !inPreCountdown && (
+              <button onClick={handleStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                {elapsed === 0 ? 'Iniciar' : 'Reanudar'}
+              </button>
+            )}
+            {running && (
+              <button onClick={stop} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                Stop
+              </button>
+            )}
+          </div>
+        </div>
         </div>
       </div>
     </>
@@ -246,27 +310,51 @@ function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
         </div>
       )}
-      <div className="flex flex-col items-center gap-6 text-center">
-        <div className={`inline-flex border rounded-full px-5 py-1 ${phase === 'work' ? 'border-white' : 'border-neutral-700'}`}>
-          <p className={`text-xs uppercase tracking-widest font-mono ${phase === 'work' ? 'text-white' : 'text-neutral-500'}`}>
-            {phase === 'work' ? 'Trabajo' : 'Descanso'}
-          </p>
+      <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
+        <div className="flex-1 flex items-center justify-center">
+        <div className="relative w-[28rem] h-[28rem]">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
+            {Array.from({ length: 60 }).map((_, i) => {
+              const angle = (i * 360) / 60
+              const rad = (angle - 90) * (Math.PI / 180)
+              const isMajor = i % 5 === 0
+              const r1 = isMajor ? 80 : 85
+              const r2 = 93
+              const cos = Math.cos(rad)
+              const sin = Math.sin(rad)
+              return (
+                <line key={i}
+                  x1={parseFloat((100 + r1 * cos).toFixed(4))}
+                  y1={parseFloat((100 + r1 * sin).toFixed(4))}
+                  x2={parseFloat((100 + r2 * cos).toFixed(4))}
+                  y2={parseFloat((100 + r2 * sin).toFixed(4))}
+                  stroke={isMajor ? '#525252' : '#303030'}
+                  strokeWidth={isMajor ? 2 : 1}
+                  strokeLinecap="round"
+                />
+              )
+            })}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+            <p className={`text-xs uppercase tracking-widest font-mono ${phase === 'work' ? 'text-white' : 'text-neutral-500'}`}>
+              {phase === 'work' ? 'Trabajo' : 'Descanso'}
+            </p>
+            <p className="text-white font-black text-6xl tabular-nums tracking-tighter leading-none">{fmt(phaseRemaining)}</p>
+            <p className="text-neutral-600 text-xs font-mono">Ronda {currentRound} / {rounds}</p>
+            {!running && !finished && !inPreCountdown && (
+              <button onClick={handleStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                {phaseElapsed === 0 && currentRound === 1 ? 'Iniciar' : 'Reanudar'}
+              </button>
+            )}
+            {running && (
+              <button onClick={() => setRunning(false)} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                Pausar
+              </button>
+            )}
+          </div>
         </div>
-        <div className="text-white font-black text-9xl tracking-tighter tabular-nums leading-none">
-          {fmt(phaseRemaining)}
-        </div>
-        <p className="text-neutral-500 font-mono text-sm">Ronda {currentRound} / {rounds}</p>
-        <div className="flex gap-4 mt-4">
-          {!running && !finished && !inPreCountdown && (
-            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl">
-              {phaseElapsed === 0 && currentRound === 1 ? 'Iniciar' : 'Reanudar'}
-            </button>
-          )}
-          {running && (
-            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">
-              Pausar
-            </button>
-          )}
         </div>
       </div>
     </>
@@ -324,30 +412,59 @@ function MixTimer({ blocks }: { blocks: MixBlock[] }) {
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
         </div>
       )}
-      <div className="flex flex-col items-center gap-6 text-center">
-        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">
+      <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">{current?.label}</p>
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mt-1">
           Bloque {blockIdx + 1} / {blocks.length}
         </p>
-        <h2 className="text-white font-black text-3xl uppercase tracking-tighter">{current?.label}</h2>
-        <div className="text-white font-black text-9xl tracking-tighter tabular-nums leading-none">
-          {fmt(remaining)}
-        </div>
-        {blockIdx + 1 < blocks.length && (
-          <p className="text-neutral-600 text-xs font-mono">
-            Siguiente: {blocks[blockIdx + 1].label} · {fmt(blocks[blockIdx + 1].seconds)}
-          </p>
-        )}
-        <div className="flex gap-4 mt-4">
-          {!running && !finished && !inPreCountdown && (
-            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-10 py-5 rounded-xl">
-              {blockIdx === 0 && elapsed === 0 ? 'Iniciar' : 'Reanudar'}
-            </button>
-          )}
-          {running && (
-            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">
-              Pausar
-            </button>
-          )}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative w-[28rem] h-[28rem]">
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
+                {Array.from({ length: 60 }).map((_, i) => {
+                  const angle = (i * 360) / 60
+                  const rad = (angle - 90) * (Math.PI / 180)
+                  const isMajor = i % 5 === 0
+                  const r1 = isMajor ? 80 : 85
+                  const r2 = 93
+                  const cos = Math.cos(rad)
+                  const sin = Math.sin(rad)
+                  return (
+                    <line
+                      key={i}
+                      x1={parseFloat((100 + r1 * cos).toFixed(4))}
+                      y1={parseFloat((100 + r1 * sin).toFixed(4))}
+                      x2={parseFloat((100 + r2 * cos).toFixed(4))}
+                      y2={parseFloat((100 + r2 * sin).toFixed(4))}
+                      stroke={isMajor ? '#525252' : '#303030'}
+                      strokeWidth={isMajor ? 2 : 1}
+                      strokeLinecap="round"
+                    />
+                  )
+                })}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Restante</p>
+                <p className="text-white font-black text-6xl tabular-nums tracking-tighter leading-none">{fmt(remaining)}</p>
+                {!running && !finished && !inPreCountdown && (
+                  <button onClick={handleStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                    {blockIdx === 0 && elapsed === 0 ? 'Iniciar' : 'Reanudar'}
+                  </button>
+                )}
+                {running && (
+                  <button onClick={() => setRunning(false)} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                    Pausar
+                  </button>
+                )}
+              </div>
+            </div>
+            {blockIdx + 1 < blocks.length && (
+              <p className="text-neutral-600 text-xs font-mono">
+                Siguiente: {blocks[blockIdx + 1].label} · {fmt(blocks[blockIdx + 1].seconds)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </>
@@ -486,27 +603,135 @@ function NumInput({ label, value, onChange, min = 1, max = 99 }: {
 function AMRAPSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
   const [minutes, setMinutes] = useState(20)
   return (
-    <div className="flex flex-col items-center gap-10">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">AMRAP</p>
-      <NumInput label="Minutos" value={minutes} onChange={setMinutes} max={60} />
-      <button onClick={() => onStart({ type: 'amrap', totalSeconds: minutes * 60 })}
-        className="bg-white text-black font-black uppercase tracking-widest px-12 py-5 rounded-xl text-lg">
-        Iniciar
-      </button>
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-white font-black text-5xl uppercase tracking-tighter">AMRAP</p>
+      <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">As Many Rounds As Possible</p>
+        <div className="flex items-center justify-center gap-3">
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={minutes}
+            onFocus={e => e.target.select()}
+            onChange={e => setMinutes(Math.max(1, Math.min(60, Number(e.target.value))))}
+            className="w-16 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-3 py-2 focus:outline-none focus:border-white tabular-nums"
+          />
+          <p className="text-neutral-400 text-sm font-mono">minutos</p>
+        </div>
+      </div>
+      <Connector />
+      <ClockFace display={fmt(minutes * 60)} label="Duración" onStart={() => onStart({ type: 'amrap', totalSeconds: minutes * 60 })} />
+    </div>
+  )
+}
+
+function ClockFace({ display, label, onStart }: { display: string; label: string; onStart: () => void }) {
+  return (
+    <div className="relative w-72 h-72">
+      <svg viewBox="0 0 200 200" className="w-full h-full">
+        <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
+        {Array.from({ length: 60 }).map((_, i) => {
+          const angle = (i * 360) / 60
+          const rad = (angle - 90) * (Math.PI / 180)
+          const isMajor = i % 5 === 0
+          const r1 = isMajor ? 80 : 85
+          const r2 = 93
+          const cos = Math.cos(rad)
+          const sin = Math.sin(rad)
+          return (
+            <line
+              key={i}
+              x1={parseFloat((100 + r1 * cos).toFixed(4))}
+              y1={parseFloat((100 + r1 * sin).toFixed(4))}
+              x2={parseFloat((100 + r2 * cos).toFixed(4))}
+              y2={parseFloat((100 + r2 * sin).toFixed(4))}
+              stroke={isMajor ? '#525252' : '#303030'}
+              strokeWidth={isMajor ? 2 : 1}
+              strokeLinecap="round"
+            />
+          )
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">{label}</p>
+        <p className="text-white font-black text-5xl tabular-nums tracking-tighter leading-none">{display}</p>
+        <button onClick={onStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+          Listo
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Connector() {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="w-px h-2 bg-neutral-700" />
+      <div className="w-px h-2 bg-neutral-600" />
+      <div className="w-px h-2 bg-neutral-700" />
     </div>
   )
 }
 
 function EMOMSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [minutes, setMinutes] = useState(10)
+  const [intMin, setIntMin] = useState(1)
+  const [intSec, setIntSec] = useState(0)
+  const [rounds, setRounds] = useState(10)
+  const intervalSeconds = intMin * 60 + intSec
+  const totalSeconds = intervalSeconds * rounds
   return (
-    <div className="flex flex-col items-center gap-10">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">EMOM</p>
-      <NumInput label="Minutos" value={minutes} onChange={setMinutes} max={60} />
-      <button onClick={() => onStart({ type: 'emom', totalSeconds: minutes * 60 })}
-        className="bg-white text-black font-black uppercase tracking-widest px-12 py-5 rounded-xl text-lg">
-        Iniciar
-      </button>
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-white font-black text-5xl uppercase tracking-tighter">EMOM</p>
+      <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">Every Minute On the Minute</p>
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Intervalo</p>
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={2}
+                value={String(intMin)}
+                onFocus={e => e.target.select()}
+                onChange={e => { const v = e.target.value.replace(/\D/g, ''); setIntMin(v === '' ? 0 : Math.min(59, Number(v))) }}
+                className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
+              />
+              <p className="text-neutral-600 text-xs font-mono">min</p>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={2}
+                value={String(intSec)}
+                onFocus={e => e.target.select()}
+                onChange={e => { const v = e.target.value.replace(/\D/g, ''); setIntSec(v === '' ? 0 : Math.min(59, Number(v))) }}
+                className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
+              />
+              <p className="text-neutral-600 text-xs font-mono">seg</p>
+            </div>
+          </div>
+          <div className="w-px h-10 bg-neutral-800" />
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Rondas</p>
+            <input
+              type="number"
+              min={1}
+              max={99}
+              value={rounds}
+              onFocus={e => e.target.select()}
+              onChange={e => setRounds(Math.max(1, Math.min(99, Number(e.target.value))))}
+              className="w-14 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-2 py-2 focus:outline-none focus:border-white tabular-nums"
+            />
+          </div>
+        </div>
+        <div className="border-t border-neutral-800 pt-4 flex items-center justify-center gap-2">
+          <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Total</p>
+          <p className="text-neutral-300 font-black text-lg tabular-nums tracking-tighter">{fmt(totalSeconds)}</p>
+        </div>
+      </div>
+      <Connector />
+      <ClockFace display={fmt(totalSeconds)} label="Duración" onStart={() => onStart({ type: 'emom', totalSeconds })} />
     </div>
   )
 }
@@ -515,19 +740,36 @@ function ForTimeSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
   const [hasCap, setHasCap] = useState(false)
   const [capMinutes, setCapMinutes] = useState(20)
   return (
-    <div className="flex flex-col items-center gap-10">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">FOR TIME</p>
-      <button onClick={() => setHasCap(v => !v)} className="flex items-center gap-3">
-        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${hasCap ? 'bg-white border-white' : 'border-neutral-600'}`}>
-          {hasCap && <span className="text-black text-xs font-black">✓</span>}
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
+      <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">Complete the workout as fast as possible</p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={() => setHasCap(v => !v)} className="flex items-center gap-2">
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${hasCap ? 'bg-white border-white' : 'border-neutral-600'}`}>
+              {hasCap && <span className="text-black text-xs font-black">✓</span>}
+            </div>
+            <span className="text-neutral-400 text-sm font-mono">Time cap</span>
+          </button>
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={capMinutes}
+            disabled={!hasCap}
+            onFocus={e => e.target.select()}
+            onChange={e => setCapMinutes(Math.max(1, Math.min(60, Number(e.target.value))))}
+            className={`w-16 bg-neutral-900 font-black text-xl text-center border rounded-lg px-3 py-2 focus:outline-none tabular-nums transition ${hasCap ? 'text-white border-neutral-700 focus:border-white' : 'text-neutral-700 border-neutral-800 cursor-not-allowed'}`}
+          />
+          <p className={`text-sm font-mono transition ${hasCap ? 'text-neutral-400' : 'text-neutral-700'}`}>min</p>
         </div>
-        <span className="text-white text-sm font-mono">Time cap</span>
-      </button>
-      {hasCap && <NumInput label="Minutos" value={capMinutes} onChange={setCapMinutes} max={60} />}
-      <button onClick={() => onStart({ type: 'fortime', capSeconds: hasCap ? capMinutes * 60 : 0 })}
-        className="bg-white text-black font-black uppercase tracking-widest px-12 py-5 rounded-xl text-lg">
-        Iniciar
-      </button>
+      </div>
+      <Connector />
+      <ClockFace
+        display={hasCap ? fmt(capMinutes * 60) : '00:00'}
+        label={hasCap ? 'Time cap' : 'Sin límite'}
+        onStart={() => onStart({ type: 'fortime', capSeconds: hasCap ? capMinutes * 60 : 0 })}
+      />
     </div>
   )
 }
@@ -537,32 +779,91 @@ function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
   const [rest, setRest] = useState(10)
   const [rounds, setRounds] = useState(8)
   return (
-    <div className="flex flex-col items-center gap-8">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">TABATA</p>
-      <div className="flex gap-8">
-        <NumInput label="Trabajo (seg)" value={work} onChange={setWork} max={60} />
-        <NumInput label="Descanso (seg)" value={rest} onChange={setRest} min={0} max={60} />
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
+      <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-80">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">High intensity intervals</p>
+        <div className="flex items-end justify-center gap-3">
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Trabajo</p>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={work}
+                onFocus={e => e.target.select()}
+                onChange={e => setWork(Math.max(1, Math.min(60, Number(e.target.value))))}
+                className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
+              />
+              <p className="text-neutral-600 text-xs font-mono">seg</p>
+            </div>
+          </div>
+          <div className="w-px h-10 bg-neutral-600" />
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Descanso</p>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                max={60}
+                value={rest}
+                onFocus={e => e.target.select()}
+                onChange={e => setRest(Math.max(0, Math.min(60, Number(e.target.value))))}
+                className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
+              />
+              <p className="text-neutral-600 text-xs font-mono">seg</p>
+            </div>
+          </div>
+          <div className="w-px h-10 bg-neutral-600" />
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Rondas</p>
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={rounds}
+              onFocus={e => e.target.select()}
+              onChange={e => setRounds(Math.max(1, Math.min(30, Number(e.target.value))))}
+              className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
+            />
+          </div>
+        </div>
       </div>
-      <NumInput label="Rondas" value={rounds} onChange={setRounds} max={30} />
-      <p className="text-neutral-600 text-xs font-mono">Total: {fmt((work + rest) * rounds)}</p>
-      <button onClick={() => onStart({ type: 'tabata', workSeconds: work, restSeconds: rest, rounds })}
-        className="bg-white text-black font-black uppercase tracking-widest px-12 py-5 rounded-xl text-lg">
-        Iniciar
-      </button>
+      <Connector />
+      <ClockFace display={fmt((work + rest) * rounds)} label="Total" onStart={() => onStart({ type: 'tabata', workSeconds: work, restSeconds: rest, rounds })} />
     </div>
   )
 }
 
+type MixBlockWithId = MixBlock & { id: number }
+
 function MixSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [blocks, setBlocks] = useState<MixBlock[]>([])
+  const [blocks, setBlocks] = useState<MixBlockWithId[]>([])
+  const idCounter = useRef(0)
   const [newLabel, setNewLabel] = useState('')
-  const [newMinutes, setNewMinutes] = useState(5)
+  const [newMinutes, setNewMinutes] = useState(1)
+  const [newSecs, setNewSecs] = useState(0)
+  const [showSubTypes, setShowSubTypes] = useState(false)
+  const [forTimeCap, setForTimeCap] = useState(false)
+  const [emomIntMin, setEmomIntMin] = useState(1)
+  const [emomIntSec, setEmomIntSec] = useState(0)
+  const [emomRounds, setEmomRounds] = useState(10)
+  const emomTotal = (emomIntMin * 60 + emomIntSec) * emomRounds
+  const [tabWork, setTabWork] = useState(20)
+  const [tabRest, setTabRest] = useState(10)
+  const [tabRounds, setTabRounds] = useState(8)
+  const tabTotal = (tabWork + tabRest) * tabRounds
+  const dragIdx = useRef<number | null>(null)
 
   function addBlock() {
     if (!newLabel.trim()) return
-    setBlocks(prev => [...prev, { label: newLabel.trim(), seconds: newMinutes * 60 }])
+    const seconds = newLabel === 'EMOM' ? emomTotal : newLabel === 'Tabata' ? tabTotal : newMinutes * 60 + newSecs
+    setBlocks(prev => [...prev, { id: ++idCounter.current, label: newLabel.trim(), seconds }])
     setNewLabel('')
-    setNewMinutes(5)
+    setNewMinutes(1)
+    setNewSecs(0)
+    setShowSubTypes(false)
   }
 
   function removeBlock(i: number) {
@@ -572,36 +873,174 @@ function MixSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
   const total = blocks.reduce((acc, b) => acc + b.seconds, 0)
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-sm">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">MIX</p>
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-white font-black text-5xl uppercase tracking-tighter">Mix</p>
+      <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-80">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">Bloques personalizados</p>
 
-      {/* Blocks list */}
-      {blocks.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {blocks.map((b, i) => (
-            <div key={i} className="flex items-center justify-between border border-neutral-800 rounded-xl px-4 py-3">
-              <div>
-                <p className="text-white text-sm font-mono">{b.label}</p>
-                <p className="text-neutral-600 text-xs font-mono">{fmt(b.seconds)}</p>
-              </div>
-              <button onClick={() => removeBlock(i)} className="text-neutral-700 hover:text-white text-lg font-mono transition">×</button>
-            </div>
+        <div className="flex gap-2">
+          {[['Nuevo entr.', 'Nuevo entr.'], ['Trabajo', 'Trabajo'], ['Descanso', 'Descanso']].map(([display, value]) => (
+            <button
+              key={value}
+              onClick={() => {
+                if (value === 'Nuevo entr.') {
+                  setShowSubTypes(true)
+                  setNewLabel('')
+                } else {
+                  setShowSubTypes(false)
+                  setNewLabel(value)
+                  setNewMinutes(1)
+                  setNewSecs(0)
+                }
+              }}
+              className={`flex-1 px-2 py-2 rounded-lg text-[11px] font-mono text-center leading-tight uppercase tracking-wide whitespace-nowrap transition border ${(value === 'Nuevo entr.' ? showSubTypes : newLabel === value) ? 'border-white text-white' : 'border-neutral-700 text-neutral-500 hover:text-white hover:border-neutral-500'}`}
+            >
+              {display}
+            </button>
           ))}
-          <p className="text-neutral-700 text-xs font-mono text-right">Total: {fmt(total)}</p>
         </div>
-      )}
 
-      {/* Add block */}
-      <div className="border border-neutral-800 rounded-xl p-4 flex flex-col gap-4">
-        <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Añadir bloque</p>
-        <input
-          type="text"
-          placeholder="Nombre (ej: AMRAP 5 min)"
-          value={newLabel}
-          onChange={e => setNewLabel(e.target.value)}
-          className="w-full bg-neutral-900 text-white placeholder-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-white"
-        />
-        <NumInput label="Minutos" value={newMinutes} onChange={setNewMinutes} max={60} />
+        {showSubTypes && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {['AMRAP', 'For Time', 'EMOM', 'Tabata'].map(sub => (
+                <button
+                  key={sub}
+                  onClick={() => { setNewLabel(sub); setNewMinutes(sub === 'AMRAP' ? 20 : 5) }}
+                  className={`px-1 py-2 rounded-lg text-[10px] font-mono text-center uppercase tracking-wide transition border ${newLabel === sub ? 'border-white text-white' : 'border-neutral-700 text-neutral-500 hover:text-white hover:border-neutral-500'}`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
+
+            {newLabel === 'AMRAP' && (
+              <div className="flex flex-col gap-3">
+                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">As Many Rounds As Possible</p>
+                <div className="flex items-center justify-center gap-3">
+                  <input type="number" min={1} max={60} value={newMinutes} onFocus={e => e.target.select()}
+                    onChange={e => setNewMinutes(Math.max(1, Math.min(60, Number(e.target.value))))}
+                    className="w-16 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-3 py-2 focus:outline-none focus:border-white tabular-nums" />
+                  <p className="text-neutral-400 text-sm font-mono">minutos</p>
+                </div>
+              </div>
+            )}
+
+            {newLabel === 'For Time' && (
+              <div className="flex flex-col gap-3">
+                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">Complete the workout as fast as possible</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button onClick={() => setForTimeCap(v => !v)} className="flex items-center gap-2">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${forTimeCap ? 'bg-white border-white' : 'border-neutral-600'}`}>
+                      {forTimeCap && <span className="text-black text-xs font-black">✓</span>}
+                    </div>
+                    <span className="text-neutral-400 text-sm font-mono">Time cap</span>
+                  </button>
+                  <input type="number" min={1} max={60} value={newMinutes} onFocus={e => e.target.select()}
+                    onChange={e => setNewMinutes(Math.max(1, Math.min(60, Number(e.target.value))))}
+                    disabled={!forTimeCap}
+                    className={`w-16 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-3 py-2 focus:outline-none focus:border-white tabular-nums transition ${!forTimeCap ? 'opacity-30 cursor-not-allowed' : ''}`} />
+                  <p className={`text-neutral-400 text-sm font-mono transition ${!forTimeCap ? 'opacity-30' : ''}`}>min</p>
+                </div>
+              </div>
+            )}
+
+            {newLabel === 'EMOM' && (
+              <div className="flex flex-col gap-3">
+                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">Every Minute On the Minute</p>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Intervalo</p>
+                    <div className="flex items-center gap-1">
+                      <input type="text" inputMode="numeric" maxLength={2} value={String(emomIntMin)}
+                        onFocus={e => e.target.select()}
+                        onChange={e => { const v = e.target.value.replace(/\D/g, ''); setEmomIntMin(v === '' ? 0 : Math.min(59, Number(v))) }}
+                        className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+                      <p className="text-neutral-600 text-xs font-mono">min</p>
+                      <input type="text" inputMode="numeric" maxLength={2} value={String(emomIntSec)}
+                        onFocus={e => e.target.select()}
+                        onChange={e => { const v = e.target.value.replace(/\D/g, ''); setEmomIntSec(v === '' ? 0 : Math.min(59, Number(v))) }}
+                        className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+                      <p className="text-neutral-600 text-xs font-mono">seg</p>
+                    </div>
+                  </div>
+                  <div className="w-px h-10 bg-neutral-800" />
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Rondas</p>
+                    <input type="number" min={1} max={99} value={emomRounds} onFocus={e => e.target.select()}
+                      onChange={e => setEmomRounds(Math.max(1, Math.min(99, Number(e.target.value))))}
+                      className="w-14 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-2 py-2 focus:outline-none focus:border-white tabular-nums" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Total</p>
+                  <p className="text-neutral-300 font-black text-lg tabular-nums tracking-tighter">{fmt(emomTotal)}</p>
+                </div>
+              </div>
+            )}
+
+            {newLabel === 'Tabata' && (
+              <div className="flex flex-col gap-3">
+                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">High intensity intervals</p>
+                <div className="flex items-end justify-center gap-3">
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Trabajo</p>
+                    <div className="flex items-center gap-1">
+                      <input type="number" min={1} max={60} value={tabWork} onFocus={e => e.target.select()}
+                        onChange={e => setTabWork(Math.max(1, Math.min(60, Number(e.target.value))))}
+                        className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+                      <p className="text-neutral-600 text-xs font-mono">seg</p>
+                    </div>
+                  </div>
+                  <div className="w-px h-10 bg-neutral-800" />
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Descanso</p>
+                    <div className="flex items-center gap-1">
+                      <input type="number" min={0} max={60} value={tabRest} onFocus={e => e.target.select()}
+                        onChange={e => setTabRest(Math.max(0, Math.min(60, Number(e.target.value))))}
+                        className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+                      <p className="text-neutral-600 text-xs font-mono">seg</p>
+                    </div>
+                  </div>
+                  <div className="w-px h-10 bg-neutral-800" />
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Rondas</p>
+                    <input type="number" min={1} max={30} value={tabRounds} onFocus={e => e.target.select()}
+                      onChange={e => setTabRounds(Math.max(1, Math.min(30, Number(e.target.value))))}
+                      className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Total</p>
+                  <p className="text-neutral-300 font-black text-lg tabular-nums tracking-tighter">{fmt(tabTotal)}</p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {!showSubTypes && !newLabel && (
+          <p className="text-neutral-600 text-xs font-mono text-center leading-relaxed">
+            Combina bloques de entrenamiento, descanso y diferentes tipos de timer en un solo workout personalizado.
+          </p>
+        )}
+
+        {!showSubTypes && newLabel && (
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-neutral-400 text-sm font-mono uppercase tracking-widest">Tiempo :</p>
+            <input type="number" min={0} max={59} value={newMinutes} onFocus={e => e.target.select()}
+              onChange={e => setNewMinutes(Math.max(0, Math.min(59, Number(e.target.value))))}
+              onBlur={e => { if (Number(e.target.value) === 0 && newSecs === 0) setNewSecs(30) }}
+              className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+            <p className="text-neutral-600 text-xs font-mono">min</p>
+            <input type="number" min={0} max={59} value={newSecs} onFocus={e => e.target.select()}
+              onChange={e => setNewSecs(Math.max(0, Math.min(59, Number(e.target.value))))}
+              onBlur={e => { if (e.target.value === '') setNewSecs(30) }}
+              className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums" />
+            <p className="text-neutral-600 text-xs font-mono">seg</p>
+          </div>
+        )}
+
         <button
           onClick={addBlock}
           className="w-full border border-neutral-700 text-white font-mono uppercase tracking-widest text-xs py-2 rounded-lg hover:border-white transition"
@@ -610,12 +1049,64 @@ function MixSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
         </button>
       </div>
 
+      {blocks.length > 0 && (
+        <div className="flex flex-col gap-2 w-80">
+          <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Resumen</p>
+          <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-px [&::-webkit-scrollbar-track]:bg-neutral-900 [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-neutral-500">
+          {blocks.map((b, i) => (
+            <div
+              key={b.id}
+              draggable
+              onDragStart={() => { dragIdx.current = i }}
+              onDragOver={e => { e.preventDefault() }}
+              onDrop={() => {
+                const from = dragIdx.current
+                if (from === null || from === i) return
+                setBlocks(prev => {
+                  const next = [...prev]
+                  const [moved] = next.splice(from, 1)
+                  next.splice(i, 0, moved)
+                  return next
+                })
+                dragIdx.current = null
+              }}
+              className="flex items-center justify-between border border-neutral-800 rounded-xl px-3 py-2"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <line x1="2" y1="3" x2="12" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="2" y1="11" x2="12" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-white text-sm font-mono">{b.label}</p>
+                  <p className="text-neutral-600 text-xs font-mono">{fmt(b.seconds)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setBlocks(prev => [...prev, { ...prev[i], id: ++idCounter.current }])} className="text-neutral-700 hover:text-white transition">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M3 11V3a1 1 0 0 1 1-1h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+                <button onClick={() => removeBlock(i)} className="text-neutral-700 hover:text-white text-lg font-mono transition">×</button>
+              </div>
+            </div>
+          ))}
+          </div>
+          <p className="text-neutral-700 text-xs font-mono text-right">Total: {fmt(total)}</p>
+        </div>
+      )}
+
       <button
-        onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks })}
+        onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks: blocks.map(({ id: _, ...b }) => b) })}
         disabled={blocks.length === 0}
-        className="bg-white text-black font-black uppercase tracking-widest px-12 py-5 rounded-xl text-lg disabled:opacity-30"
+        className="w-80 bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30"
       >
-        Iniciar
+        Listo
       </button>
     </div>
   )
@@ -625,8 +1116,8 @@ function MixSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
 
 function renderTimer(cfg: TimerConfig) {
   if (cfg.type === 'interval')  return <IntervalTimer config={cfg} />
-  if (cfg.type === 'amrap')     return <SimpleTimer label={`AMRAP · ${Math.floor(cfg.totalSeconds / 60)} MIN`} totalSeconds={cfg.totalSeconds} />
-  if (cfg.type === 'emom')      return <SimpleTimer label={`EMOM · ${Math.floor(cfg.totalSeconds / 60)} MIN`} totalSeconds={cfg.totalSeconds} onMinuteTick />
+  if (cfg.type === 'amrap')     return <SimpleTimer label="AMRAP" totalSeconds={cfg.totalSeconds} />
+  if (cfg.type === 'emom')      return <SimpleTimer label="EMOM" totalSeconds={cfg.totalSeconds} onMinuteTick />
   if (cfg.type === 'fortime')   return <ForTimeTimer capSeconds={cfg.capSeconds} />
   if (cfg.type === 'countdown') return <SimpleTimer label="COUNTDOWN" totalSeconds={cfg.totalSeconds} />
   if (cfg.type === 'tabata')    return <TabataTimer workSeconds={cfg.workSeconds} restSeconds={cfg.restSeconds} rounds={cfg.rounds} />
@@ -657,22 +1148,27 @@ function TimerContent() {
 
   return (
     <main className="min-h-screen bg-black flex flex-col p-8">
-      <button onClick={() => router.back()} className="text-neutral-600 hover:text-white text-sm font-mono mb-12 transition self-start">
+      <button onClick={() => config ? setConfig(null) : router.back()} className="text-neutral-600 hover:text-white text-sm font-mono mb-12 transition self-start">
         ← Volver
       </button>
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-md">
-          {manualType && !config && (
-            <>
-              {manualType === 'amrap'   && <AMRAPSetup   onStart={setConfig} />}
-              {manualType === 'emom'    && <EMOMSetup    onStart={setConfig} />}
-              {manualType === 'fortime' && <ForTimeSetup onStart={setConfig} />}
-              {manualType === 'tabata'  && <TabataSetup  onStart={setConfig} />}
-              {manualType === 'mix'     && <MixSetup     onStart={setConfig} />}
-            </>
-          )}
-          {config && renderTimer(config)}
-        </div>
+      <div className="flex-1 flex items-start justify-center">
+        {config ? (
+          <div className="w-full">
+            {renderTimer(config)}
+          </div>
+        ) : (
+          <div className="w-full max-w-md">
+            {manualType && (
+              <>
+                {manualType === 'amrap'   && <AMRAPSetup   onStart={setConfig} />}
+                {manualType === 'emom'    && <EMOMSetup    onStart={setConfig} />}
+                {manualType === 'fortime' && <ForTimeSetup onStart={setConfig} />}
+                {manualType === 'tabata'  && <TabataSetup  onStart={setConfig} />}
+                {manualType === 'mix'     && <MixSetup     onStart={setConfig} />}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </main>
   )
