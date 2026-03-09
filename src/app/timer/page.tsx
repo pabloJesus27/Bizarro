@@ -400,6 +400,14 @@ function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     return () => clearInterval(id)
   }, [running, blockIdx, blocks, current])
 
+  useEffect(() => {
+    if (!running || !audioRef.current) return
+    if (remaining === 30 && current && current.seconds > 30) {
+      beep(audioRef.current, 660, 0.15, 0.5)
+      setTimeout(() => beep(audioRef.current!, 660, 0.15, 0.5), 250)
+    }
+  }, [remaining, running, current])
+
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
 
   return (
@@ -838,9 +846,11 @@ function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
 
 type MixBlockWithId = MixBlock & { id: number }
 
-function MixSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [blocks, setBlocks] = useState<MixBlockWithId[]>([])
+function MixSetup({ onStart, initialBlocks }: { onStart: (c: TimerConfig) => void; initialBlocks?: MixBlock[] }) {
   const idCounter = useRef(0)
+  const [blocks, setBlocks] = useState<MixBlockWithId[]>(() =>
+    (initialBlocks ?? []).map(b => ({ ...b, id: ++idCounter.current }))
+  )
   const [newLabel, setNewLabel] = useState('')
   const [newMinutes, setNewMinutes] = useState(1)
   const [newSecs, setNewSecs] = useState(0)
@@ -1131,16 +1141,26 @@ function TimerContent() {
   const manualType = searchParams.get('type')
 
   const [config, setConfig] = useState<TimerConfig | null>(null)
+  const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
+  const loadedRef = useRef(false)
 
   useEffect(() => {
-    if (manualType) return
+    if (manualType || loadedRef.current) return
+    loadedRef.current = true
     const raw = sessionStorage.getItem('generated_timer_config')
     if (!raw) { router.push('/dashboard'); return }
-    try { setConfig(JSON.parse(raw)) }
-    catch { router.push('/dashboard') }
+    sessionStorage.removeItem('generated_timer_config')
+    try {
+      const parsed = JSON.parse(raw) as TimerConfig
+      if (parsed.type === 'mix') {
+        setGeneratedMixBlocks(parsed.blocks)
+      } else {
+        setConfig(parsed)
+      }
+    } catch { router.push('/dashboard') }
   }, [router, manualType])
 
-  if (!manualType && !config) return (
+  if (!manualType && !config && !generatedMixBlocks) return (
     <main className="min-h-screen bg-black flex items-center justify-center">
       <div className="w-px h-10 bg-white animate-pulse" />
     </main>
@@ -1148,7 +1168,19 @@ function TimerContent() {
 
   return (
     <main className="min-h-screen bg-black flex flex-col p-8">
-      <button onClick={() => config ? setConfig(null) : router.back()} className="text-neutral-600 hover:text-white text-sm font-mono mb-12 transition self-start">
+      <button
+        onClick={() => {
+          if (config) {
+            setConfig(null)
+            if (!manualType && !generatedMixBlocks) router.push('/dashboard')
+          } else if (generatedMixBlocks) {
+            router.push('/dashboard')
+          } else {
+            router.back()
+          }
+        }}
+        className="text-neutral-600 hover:text-white text-sm font-mono mb-12 transition self-start"
+      >
         ← Volver
       </button>
       <div className="flex-1 flex items-start justify-center">
@@ -1158,6 +1190,9 @@ function TimerContent() {
           </div>
         ) : (
           <div className="w-full max-w-md">
+            {generatedMixBlocks && (
+              <MixSetup onStart={setConfig} initialBlocks={generatedMixBlocks} />
+            )}
             {manualType && (
               <>
                 {manualType === 'amrap'   && <AMRAPSetup   onStart={setConfig} />}

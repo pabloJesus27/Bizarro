@@ -331,6 +331,7 @@ export default function DashboardPage() {
   const [isCoach,         setIsCoach]         = useState(false)
   const [program,         setProgram]         = useState<'bizarro' | 'entrenemos'>('bizarro')
   const [generatingTimer, setGeneratingTimer] = useState(false)
+  const [timerError,      setTimerError]      = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -397,6 +398,7 @@ export default function DashboardPage() {
 
   async function handleGenerateTimer(wod: { title: string; description: string; type: string }) {
     setGeneratingTimer(true)
+    setTimerError(false)
     try {
       const res = await fetch('/api/generate-timer', {
         method: 'POST',
@@ -404,10 +406,10 @@ export default function DashboardPage() {
         body: JSON.stringify(wod),
       })
       const cfg = await res.json()
-      if (cfg.error) return
+      if (cfg.error) { setTimerError(true); return }
       sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
       router.push('/timer')
-    } catch { /* ignore */ } finally {
+    } catch { setTimerError(true) } finally {
       setGeneratingTimer(false)
     }
   }
@@ -553,13 +555,20 @@ export default function DashboardPage() {
 
               {/* Generar timer */}
               {!['Warmup', 'Strength'].includes(activeWod.type) && (
-                <button
-                  onClick={() => handleGenerateTimer(activeWod)}
-                  disabled={generatingTimer}
-                  className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition mb-6 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
-                </button>
+                <div className="mb-6">
+                  <button
+                    onClick={() => handleGenerateTimer(activeWod)}
+                    disabled={generatingTimer}
+                    className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
+                  </button>
+                  {timerError && (
+                    <p className="text-red-500 text-xs font-mono mt-2 text-center">
+                      Error al generar el timer. Comprueba la API key.
+                    </p>
+                  )}
+                </div>
               )}
 
               {/* Result + Ranking — oculto en bloques de Warmup */}

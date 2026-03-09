@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 300,
+    max_tokens: 1024,
     messages: [{
       role: 'user',
       content: `Analiza este WOD de CrossFit y devuelve SOLO un objeto JSON (sin markdown) con la configuración del temporizador.
@@ -21,16 +21,29 @@ Descripción: ${description}
 Tipos de timer disponibles:
 - amrap: { "type": "amrap", "totalSeconds": N }
 - emom: { "type": "emom", "totalSeconds": N }
-- fortime: { "type": "fortime", "capSeconds": N }  (capSeconds=0 SIEMPRE que no se mencione explícitamente un time cap; NO inventes time cap)
-- interval: { "type": "interval", "totalSeconds": N, "intervalSeconds": N, "workLabel": "actividad principal en pocas palabras", "restLabel": "texto completo de lo que se hace al sonar la alarma", "startWithRest": bool }
-- countdown: { "type": "countdown", "totalSeconds": N }
+- fortime: { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap explícito)
+- tabata: { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }
+- mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N }, ...] }
 
-Reglas:
-- AMRAP X MIN → amrap, totalSeconds = X*60
-- EMOM X MIN → emom, totalSeconds = X*60
-- For time / Completa → fortime, capSeconds=0 a menos que la descripción diga explícitamente "time cap X min"
-- Workout con "cada X min" o "cada X'" → interval, intervalSeconds = X*60, restLabel = texto de lo que se hace en el intervalo, workLabel = actividad principal (ej: "BIKE — Max calorías"), startWithRest=true si dice "comienza con" la parte de fuerza
-- Solo JSON, sin explicación ni markdown.`,
+Reglas de selección:
+- WOD con UN SOLO bloque simple → usa amrap / emom / fortime / tabata según corresponda
+- WOD COMPLEJO (varios bloques, fases, intervalos, AMRAP+descanso+AMRAP, X on X off, cada X min durante Y min, etc.) → usa MIX con todos los bloques detallados
+
+Ejemplos de WODs complejos → mix:
+- "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
+- "30 seg trabajo / 30 seg descanso x 8 rondas" → 16 blocks alternando Trabajo(30s) y Descanso(30s)
+- "EMOM 10 min: min impar X, min par Y" → 10 blocks alternando (60s cada uno)
+- "Cada 3 min x 5 series: …" → 5 blocks de 180s con label descriptivo
+- "Durante 20 min, cada 2'30'': ejercicio A + ejercicio B, resto del tiempo ejercicio C" → (20*60)/(2*60+30) = 8 bloques de 150s con label que combine los ejercicios (ej: "BikeErg + Sandbag")
+- "Durante X min, cada Y min: …" → (X*60 / Y*60) bloques de Y*60s con label descriptivo
+
+Reglas para mix:
+- El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
+- Para patrones "cada X min/seg durante Y min", crea exactamente (Y*60 / intervalo) bloques iguales
+- seconds debe ser exacto según la descripción
+- Si el WOD dice "x N rondas" con intervalos alternos, crea todos los bloques individuales
+
+Solo JSON, sin explicación ni markdown.`,
     }],
   })
 
