@@ -372,41 +372,41 @@ function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   const audioRef = useRef<AudioContext | null>(null)
 
   const current = blocks[blockIdx]
-  const remaining = current ? current.seconds - elapsed : 0
+  const blockDuration = Math.max(1, current?.seconds ?? 1)
+  const remaining = current ? blockDuration - elapsed : 0
 
+  // Tick: solo incrementa elapsed cada segundo
   useEffect(() => {
     if (!running) return
-    const id = setInterval(() => {
-      setElapsed(prev => {
-        const next = prev + 1
-        if (next >= (current?.seconds ?? 0)) {
-          if (blockIdx + 1 >= blocks.length) {
-            setRunning(false)
-            setFinished(true)
-            if (audioRef.current) beep(audioRef.current, 440, 1.5, 0.8)
-          } else {
-            setBlockIdx(i => i + 1)
-            setElapsed(0)
-            if (audioRef.current) {
-              beep(audioRef.current, 880, 0.2, 0.8)
-              setTimeout(() => beep(audioRef.current!, 1100, 0.5, 0.8), 350)
-            }
-          }
-          return 0
-        }
-        return next
-      })
-    }, 1000)
+    const id = setInterval(() => setElapsed(prev => prev + 1), 1000)
     return () => clearInterval(id)
-  }, [running, blockIdx, blocks, current])
+  }, [running, blockIdx])
 
+  // Transición de bloque: cuando elapsed alcanza la duración
+  useEffect(() => {
+    if (!running || elapsed < blockDuration) return
+    if (blockIdx + 1 >= blocks.length) {
+      setRunning(false)
+      setFinished(true)
+      if (audioRef.current) beep(audioRef.current, 440, 1.5, 0.8)
+    } else {
+      setBlockIdx(i => i + 1)
+      setElapsed(0)
+      if (audioRef.current) {
+        beep(audioRef.current, 880, 0.2, 0.8)
+        setTimeout(() => beep(audioRef.current!, 1100, 0.5, 0.8), 350)
+      }
+    }
+  }, [elapsed, running, blockIdx, blocks.length, blockDuration])
+
+  // Aviso 30 segundos
   useEffect(() => {
     if (!running || !audioRef.current) return
-    if (remaining === 30 && current && current.seconds > 30) {
+    if (remaining === 30 && blockDuration > 30) {
       beep(audioRef.current, 660, 0.15, 0.5)
       setTimeout(() => beep(audioRef.current!, 660, 0.15, 0.5), 250)
     }
-  }, [remaining, running, current])
+  }, [remaining, running, blockDuration])
 
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
 

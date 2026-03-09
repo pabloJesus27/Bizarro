@@ -13,13 +13,14 @@ import AppHeader from '@/components/AppHeader'
 const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time': 'FOR TIME',
-  'AMRAP':    'AMRAP',
-  'EMOM':     'EMOM',
-  'Strength': 'STRENGTH',
-  'Warmup':   'WARMUP',
-  'For Max':  'FOR MAX',
-  'Other':    'WOD',
+  'For Time':   'FOR TIME',
+  'AMRAP':      'AMRAP',
+  'EMOM':       'EMOM',
+  'Strength':   'STRENGTH',
+  'Gymnastics': 'GYMNASTICS',
+  'Warmup':     'WARMUP',
+  'For Max':    'FOR MAX',
+  'Other':      'WOD',
 }
 
 // ── Helpers ────────────────────────────────────────────
@@ -380,8 +381,11 @@ export default function DashboardPage() {
     setSelectedBlock(0)
   }, [weekOffset, weekDates, today])
 
-  // Reset block tab when day changes
-  useEffect(() => { setSelectedBlock(0) }, [selectedDate])
+  // Reset block tab when day changes — seleccionar el primer bloque disponible
+  useEffect(() => {
+    const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
+    setSelectedBlock(firstBlock ? firstBlock.block - 1 : 0)
+  }, [selectedDate, wods])
 
   function handleSaved(result: Result, isNewPR: boolean) {
     setResults(prev => {
@@ -512,23 +516,21 @@ export default function DashboardPage() {
             </div>
           ) : (<>
 
-          {/* Block tabs — siempre 6 */}
-          <div className="flex gap-2 mb-8">
-            {[1, 2, 3, 4, 5, 6].map((block) => {
-              const wod      = dayWods.find(w => w.block === block)
-              const isActive = selectedBlock === block - 1
-              const label    = wod ? (WOD_TYPE_LABEL[wod.type] ?? wod.type) : `Bloque ${block}`
+          {/* Block tabs — solo bloques con contenido */}
+          <div className="flex gap-2 mb-8 flex-wrap">
+            {dayWods.map((wod) => {
+              const isActive = selectedBlock === wod.block - 1
               return (
                 <button
-                  key={block}
-                  onClick={() => setSelectedBlock(block - 1)}
+                  key={wod.block}
+                  onClick={() => setSelectedBlock(wod.block - 1)}
                   className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition ${
                     isActive
                       ? 'bg-white text-black'
                       : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
                   }`}
                 >
-                  {label}
+                  {WOD_TYPE_LABEL[wod.type] ?? wod.type}
                 </button>
               )
             })}
@@ -554,7 +556,7 @@ export default function DashboardPage() {
               </pre>
 
               {/* Generar timer */}
-              {!['Warmup', 'Strength'].includes(activeWod.type) && (
+              {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
                 <div className="mb-6">
                   <button
                     onClick={() => handleGenerateTimer(activeWod)}

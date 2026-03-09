@@ -40,8 +40,11 @@ Ejemplos de WODs complejos → mix:
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
 - Para patrones "cada X min/seg durante Y min", crea exactamente (Y*60 / intervalo) bloques iguales
-- seconds debe ser exacto según la descripción
-- Si el WOD dice "x N rondas" con intervalos alternos, crea todos los bloques individuales
+- seconds debe ser exacto según la descripción. NUNCA uses seconds: 0
+- En notación CrossFit: X" = X segundos, X' = X minutos. Ej: 30" = 30 segundos, 90" = 90 segundos
+- Los bloques de descanso (off, rest) SIEMPRE deben tener su duración en segundos correcta
+- Si el WOD dice "X on / X off", crea bloques alternos de trabajo(X seg) y descanso(X seg)
+- Si el WOD dice "rest Y" al final de cada set, añade un bloque de descanso con seconds = Y
 
 Solo JSON, sin explicación ni markdown.`,
     }],

@@ -1,4 +1,4 @@
-export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Warmup' | 'For Max' | 'Other'
+export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Gymnastics' | 'Warmup' | 'For Max' | 'Other'
 export type Program  = 'bizarro' | 'entrenemos'
 
 export interface Wod {

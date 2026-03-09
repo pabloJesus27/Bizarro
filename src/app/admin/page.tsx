@@ -13,16 +13,17 @@ import type { Wod, WodType } from '@/lib/types'
 
 const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
-const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
+const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'Gymnastics', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
 
 const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time': 'FOR TIME',
-  'AMRAP':    'AMRAP',
-  'EMOM':     'EMOM',
-  'Strength': 'STRENGTH',
-  'Warmup':   'WARMUP',
-  'For Max':  'FOR MAX',
-  'Other':    'WOD',
+  'For Time':   'FOR TIME',
+  'AMRAP':      'AMRAP',
+  'EMOM':       'EMOM',
+  'Strength':   'STRENGTH',
+  'Gymnastics': 'GYMNASTICS',
+  'Warmup':     'WARMUP',
+  'For Max':    'FOR MAX',
+  'Other':      'WOD',
 }
 
 // ── Week utils ─────────────────────────────────────────
@@ -501,26 +502,32 @@ export default function AdminPage() {
             </div>
           ) : (<>
 
-          {/* Block tabs */}
+          {/* Block tabs — solo bloques con contenido + botón añadir */}
           <div className="flex gap-2 mb-8 flex-wrap">
-            {[1, 2, 3, 4, 5, 6].map((block) => {
-              const wod      = dayWods.find(w => w.block === block)
-              const isActive = selectedBlock === block
-              const label    = wod ? (WOD_TYPE_LABEL[wod.type] ?? wod.type) : `Bloque ${block}`
-              return (
-                <button
-                  key={block}
-                  onClick={() => setSelectedBlock(block)}
-                  className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition ${
-                    isActive
-                      ? 'bg-white text-black'
-                      : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
-                  }`}
-                >
-                  {label}
-                </button>
-              )
-            })}
+            {dayWods.map((wod) => (
+              <button
+                key={wod.block}
+                onClick={() => setSelectedBlock(wod.block)}
+                className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition ${
+                  selectedBlock === wod.block
+                    ? 'bg-white text-black'
+                    : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
+                }`}
+              >
+                {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+              </button>
+            ))}
+            <button
+              onClick={() => {
+                const nextBlock = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
+                setSelectedBlock(nextBlock)
+                setEditingWod(undefined)
+                setModalOpen(true)
+              }}
+              className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition border border-dashed border-neutral-700 text-neutral-600 hover:border-neutral-500 hover:text-neutral-400"
+            >
+              + Bloque
+            </button>
           </div>
 
           {/* Block content */}
@@ -579,24 +586,7 @@ export default function AdminPage() {
 
               {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
             </div>
-          ) : (
-            <div className="flex flex-col items-start gap-6">
-              <div>
-                <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">
-                  Bloque {selectedBlock} · Sin programar
-                </p>
-                <h2 className="text-neutral-800 font-black text-5xl uppercase tracking-tighter leading-none">
-                  Vacío
-                </h2>
-              </div>
-              <button
-                onClick={() => { setEditingWod(undefined); setModalOpen(true) }}
-                className="border border-neutral-700 text-white font-black uppercase tracking-widest rounded-xl px-6 py-4 hover:border-white hover:bg-neutral-900 transition text-sm"
-              >
-                + Añadir WOD
-              </button>
-            </div>
-          )}
+          ) : null}
           </>)}
         </div>
       </main>
