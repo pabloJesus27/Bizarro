@@ -59,6 +59,12 @@ export default function AppHeader() {
           >
             Mis PRs
           </button>
+          <button
+            onClick={() => router.push('/programaciones')}
+            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
+          >
+            Programaciones
+          </button>
         </div>
         <div className="relative flex items-center">
           <button

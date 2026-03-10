@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
-import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRanking, createCoachInvite, getMyPrograms } from '@/lib/db'
+import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRanking, createCoachInvite, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
@@ -355,6 +355,7 @@ export default function AdminPage() {
   const [inviteUrl,     setInviteUrl]     = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [programName,   setProgramName]   = useState('')
+  const [pendingCount,  setPendingCount]  = useState(0)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -369,9 +370,11 @@ export default function AdminPage() {
       setAvatarUrl(profile?.avatar_url ?? null)
     })
 
-    getMyPrograms(user.id).then(programs => {
+    getMyPrograms(user.id).then(async programs => {
       const found = programs.find(p => p.slug === programSlug)
       setProgramName(found?.name ?? programSlug)
+      const reqs = await getPendingJoinRequests(programs.map(p => p.id))
+      setPendingCount(reqs.length)
     })
   }, [authLoading, user, router])
 
@@ -473,6 +476,17 @@ export default function AdminPage() {
               className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
             >
               Mis atletas
+            </button>
+            <button
+              onClick={() => router.push(`/admin/notificaciones?program=${programSlug}`)}
+              className="relative px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
+            >
+              Notificaciones
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-black">
+                  {pendingCount}
+                </span>
+              )}
             </button>
           </div>
 

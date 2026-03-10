@@ -258,6 +258,94 @@ export async function maybeUpdatePR(
   return { isNewPR: true }
 }
 
+// ── Athlete Programs ──────────────────────────────────
+
+export interface AthleteProgramEntry {
+  id: string
+  athlete_id: string
+  program_id: string
+  joined_at: string
+  programs: { name: string; slug: string }
+}
+
+export async function getMyAthletePrograms(userId: string): Promise<AthleteProgramEntry[]> {
+  const { data, error } = await supabase
+    .from('athlete_programs')
+    .select('*, programs(name, slug)')
+    .eq('athlete_id', userId)
+  if (error) throw error
+  return data
+}
+
+export async function getDiscoverPrograms(userId: string): Promise<ProgramEntry[]> {
+  const { data: mine } = await supabase
+    .from('athlete_programs')
+    .select('program_id')
+    .eq('athlete_id', userId)
+  const myIds = (mine ?? []).map((r: { program_id: string }) => r.program_id)
+
+  const { data: all, error } = await supabase
+    .from('programs')
+    .select('*')
+    .order('name', { ascending: true })
+  if (error) throw new Error(error.message)
+
+  return (all ?? []).filter(p => !myIds.includes(p.id))
+}
+
+// ── Join Requests ─────────────────────────────────────
+
+export interface JoinRequest {
+  id: string
+  athlete_id: string
+  program_id: string
+  status: 'pending' | 'accepted' | 'rejected'
+  created_at: string
+  profiles?: { full_name: string | null; avatar_url: string | null }
+  programs?: { name: string; slug: string }
+}
+
+export async function createJoinRequest(athleteId: string, programId: string): Promise<void> {
+  const { error } = await supabase
+    .from('join_requests')
+    .insert({ athlete_id: athleteId, program_id: programId })
+  if (error) throw error
+}
+
+export async function getMyJoinRequests(userId: string): Promise<JoinRequest[]> {
+  const { data, error } = await supabase
+    .from('join_requests')
+    .select('*, programs(name, slug)')
+    .eq('athlete_id', userId)
+  if (error) throw error
+  return data
+}
+
+export async function getPendingJoinRequests(programIds: string[]): Promise<JoinRequest[]> {
+  if (programIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('join_requests')
+    .select('*, profiles(full_name, avatar_url), programs(name, slug)')
+    .in('program_id', programIds)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function acceptJoinRequest(requestId: string, athleteId: string, programId: string): Promise<void> {
+  await supabase.from('join_requests').update({ status: 'accepted' }).eq('id', requestId)
+  await supabase.from('athlete_programs').insert({ athlete_id: athleteId, program_id: programId })
+}
+
+export async function rejectJoinRequest(requestId: string): Promise<void> {
+  const { error } = await supabase
+    .from('join_requests')
+    .update({ status: 'rejected' })
+    .eq('id', requestId)
+  if (error) throw error
+}
+
 // ── Programs ──────────────────────────────────────────
 
 export interface ProgramEntry {

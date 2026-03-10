@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
-import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser } from '@/lib/db'
+import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
 import type { Wod, Result, WodType, Profile } from '@/lib/types'
 
 // ── Constants ──────────────────────────────────────────
@@ -356,17 +356,22 @@ export default function AtletasPage() {
   const [athletes,         setAthletes]         = useState<Profile[]>([])
   const [selectedAthlete,  setSelectedAthlete]  = useState<Profile | null>(null)
   const [loading,          setLoading]          = useState(true)
+  const [pendingCount,     setPendingCount]     = useState(0)
 
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
 
-    getProfile(user.id).then(profile => {
+    getProfile(user.id).then(async profile => {
       if (profile?.role !== 'coach') { router.push('/dashboard'); return }
 
-      getAthletes(programSlug)
-        .then(setAthletes)
-        .finally(() => setLoading(false))
+      const [, programs] = await Promise.all([
+        getAthletes(programSlug).then(setAthletes),
+        getMyPrograms(user.id),
+      ])
+      const reqs = await getPendingJoinRequests(programs.map(p => p.id))
+      setPendingCount(reqs.length)
+      setLoading(false)
     })
   }, [authLoading, user, router, programSlug])
 
@@ -412,6 +417,17 @@ export default function AtletasPage() {
             className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-white"
           >
             Mis atletas
+          </button>
+          <button
+            onClick={() => router.push(`/admin/notificaciones?program=${programSlug}`)}
+            className="relative px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
+          >
+            Notificaciones
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-black">
+                {pendingCount}
+              </span>
+            )}
           </button>
         </div>
 

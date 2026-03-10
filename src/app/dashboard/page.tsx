@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getWodsForWeek, getResultsForWods, upsertResult, getProfile, getWodRanking, maybeUpdatePR } from '@/lib/db'
 import type { RankingEntry } from '@/lib/db'
@@ -329,8 +329,9 @@ export default function DashboardPage() {
   const [wodLoading,    setWodLoading]    = useState(false)
   const [newPR,         setNewPR]         = useState<string | null>(null)
   const [modalWod,      setModalWod]      = useState<Wod | null>(null)
+  const searchParams = useSearchParams()
   const [isCoach,         setIsCoach]         = useState(false)
-  const [program,         setProgram]         = useState<'bizarro' | 'entrenemos'>('bizarro')
+  const [program,         setProgram]         = useState<string>('bizarro')
   const [generatingTimer, setGeneratingTimer] = useState(false)
   const [timerError,      setTimerError]      = useState(false)
 
@@ -343,18 +344,8 @@ export default function DashboardPage() {
 
     getProfile(user.id).then(profile => {
       setIsCoach(profile?.role === 'coach')
-
-      if (profile?.program === 'libre') {
-        router.push('/libre')
-        return
-      }
-
-      if (profile?.role === 'athlete' && !profile.program) {
-        router.push('/elegir-programa')
-        return
-      }
-
-      setProgram((profile?.program ?? 'bizarro') as 'bizarro' | 'entrenemos')
+      const programFromUrl = searchParams.get('program')
+      setProgram(programFromUrl ?? profile?.program ?? 'bizarro')
       setLoading(false)
     })
   }, [authLoading, user, router])

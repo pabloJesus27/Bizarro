@@ -308,7 +308,7 @@ export default function LibrePage() {
     if (!user) { router.push('/login'); return }
 
     getProfile(user.id).then(profile => {
-      if (profile?.program !== 'libre') { router.push('/dashboard'); return }
+      if (profile?.role === 'coach') { router.push('/select-program'); return }
       setProfileName(profile.full_name ?? '')
       setAvatarUrl(profile.avatar_url ?? null)
       setLoading(false)
@@ -442,6 +442,12 @@ export default function LibrePage() {
               className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
             >
               Mis PRs
+            </button>
+            <button
+              onClick={() => router.push('/programaciones')}
+              className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
+            >
+              Programaciones
             </button>
           </div>
 

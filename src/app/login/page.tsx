@@ -24,10 +24,10 @@ export default function LoginPage() {
       const profile = await getProfile(data.user!.id)
       if (profile?.role === 'coach') {
         router.push('/select-program')
-      } else if (profile?.program === 'libre') {
+      } else if (profile?.program === 'libre' || !profile?.program) {
         router.push('/libre')
       } else {
-        router.push('/dashboard')
+        router.push('/elegir-modo')
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
