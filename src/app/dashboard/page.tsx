@@ -344,6 +344,11 @@ export default function DashboardPage() {
     getProfile(user.id).then(profile => {
       setIsCoach(profile?.role === 'coach')
 
+      if (profile?.program === 'libre') {
+        router.push('/libre')
+        return
+      }
+
       if (profile?.role === 'athlete' && !profile.program) {
         router.push('/elegir-programa')
         return

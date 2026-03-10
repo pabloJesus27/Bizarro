@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
@@ -111,9 +111,10 @@ function AthleteList({ athletes, onSelect }: {
 
 // ── Athlete Week View ──────────────────────────────────
 
-function AthleteWeekView({ athlete, onBack }: {
+function AthleteWeekView({ athlete, onBack, programSlug }: {
   athlete: Profile
   onBack: () => void
+  programSlug: string
 }) {
   const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
 
@@ -128,7 +129,7 @@ function AthleteWeekView({ athlete, onBack }: {
 
   useEffect(() => {
     setLoading(true)
-    getWodsForWeek(weekDates[0], weekDates[6])
+    getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
       .then(async weekWods => {
         setWods(weekWods)
         if (weekWods.length > 0) {
@@ -139,7 +140,7 @@ function AthleteWeekView({ athlete, onBack }: {
         }
       })
       .finally(() => setLoading(false))
-  }, [weekDates, athlete.id])
+  }, [weekDates, athlete.id, programSlug])
 
   // Reset block when day changes
   useEffect(() => { setSelectedBlock(0) }, [selectedDate])
@@ -349,6 +350,8 @@ function AthleteWeekView({ athlete, onBack }: {
 export default function AtletasPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const programSlug = searchParams.get('program') ?? 'bizarro'
 
   const [athletes,         setAthletes]         = useState<Profile[]>([])
   const [selectedAthlete,  setSelectedAthlete]  = useState<Profile | null>(null)
@@ -361,11 +364,11 @@ export default function AtletasPage() {
     getProfile(user.id).then(profile => {
       if (profile?.role !== 'coach') { router.push('/dashboard'); return }
 
-      getAthletes('bizarro')
+      getAthletes(programSlug)
         .then(setAthletes)
         .finally(() => setLoading(false))
     })
-  }, [authLoading, user, router])
+  }, [authLoading, user, router, programSlug])
 
   async function handleLogout() {
     await signOut()
@@ -386,20 +389,26 @@ export default function AtletasPage() {
       {/* Header */}
       <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
         <div className="flex items-center gap-3">
-          <Image src="/logoBizarro.png" alt="Bizarro" width={32} height={32} className="object-contain" />
-          <span className="text-white font-black text-xl tracking-tighter">BIZARRO</span>
+          {(() => {
+            const slugImages: Record<string, string> = { bizarro: '/logoBizarro.png', entrenemos: '/entrenemos.png' }
+            const img = slugImages[programSlug]
+            return img
+              ? <Image src={img} alt={programSlug} width={48} height={48} className="object-contain" />
+              : <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center"><span className="text-white font-black text-sm uppercase">{programSlug[0]}</span></div>
+          })()}
+          <span className="text-white font-black text-xl tracking-tighter">{programSlug.toUpperCase()}</span>
         </div>
 
         {/* Centered tabs */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
           <button
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push(`/admin?program=${programSlug}`)}
             className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
           >
             Home
           </button>
           <button
-            onClick={() => router.push('/admin/atletas')}
+            onClick={() => router.push(`/admin/atletas?program=${programSlug}`)}
             className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-white"
           >
             Mis atletas
@@ -420,6 +429,7 @@ export default function AtletasPage() {
         <AthleteWeekView
           athlete={selectedAthlete}
           onBack={() => setSelectedAthlete(null)}
+          programSlug={programSlug}
         />
       ) : (
         <AthleteList

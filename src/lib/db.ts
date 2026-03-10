@@ -110,6 +110,32 @@ export async function getWodsForWeek(from: string, to: string, program: Program 
   return data
 }
 
+export async function getWodsForWeekLibre(userId: string, from: string, to: string): Promise<Wod[]> {
+  const { data, error } = await supabase
+    .from('wods')
+    .select('*')
+    .gte('date', from)
+    .lte('date', to)
+    .eq('program', 'libre')
+    .eq('owner_id', userId)
+    .order('date', { ascending: true })
+    .order('block', { ascending: true })
+
+  if (error) throw error
+  return data
+}
+
+export async function createLibreWod(wod: Omit<NewWod, 'program'>, userId: string): Promise<Wod> {
+  const { data, error } = await supabase
+    .from('wods')
+    .insert({ ...wod, program: 'libre', owner_id: userId })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 // ── Results ───────────────────────────────────────────
 
 export async function getResultsByWod(wodId: string): Promise<Result[]> {
@@ -230,6 +256,59 @@ export async function maybeUpdatePR(
     .upsert({ user_id: userId, exercise, weight, achieved_at: achievedAt, wod_id: wodId }, { onConflict: 'user_id,exercise' })
 
   return { isNewPR: true }
+}
+
+// ── Programs ──────────────────────────────────────────
+
+export interface ProgramEntry {
+  id: string
+  name: string
+  slug: string
+  owner_id: string
+  created_at: string
+}
+
+export async function getMyPrograms(userId: string): Promise<ProgramEntry[]> {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function getAllPrograms(): Promise<ProgramEntry[]> {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function deleteProgram(id: string): Promise<void> {
+  const { error } = await supabase.from('programs').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function createProgram(name: string, slug: string, userId: string): Promise<ProgramEntry> {
+  const { data, error } = await supabase
+    .from('programs')
+    .insert({ name, slug, owner_id: userId })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function createCoachInvite(userId: string): Promise<string> {
+  const token = crypto.randomUUID()
+  const { error } = await supabase
+    .from('coach_invites')
+    .insert({ token, created_by: userId })
+  if (error) throw error
+  return token
 }
 
 export async function upsertResult(result: NewResult): Promise<Result> {

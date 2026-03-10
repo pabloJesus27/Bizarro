@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
-import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRanking } from '@/lib/db'
+import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRanking, createCoachInvite, getMyPrograms } from '@/lib/db'
+import LoadWeekModal from '@/components/LoadWeekModal'
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
 
@@ -52,12 +53,14 @@ function formatWeekRange(dates: string[]): string {
 
 // ── WOD Form Modal ─────────────────────────────────────
 
-function WodModal({ date, block, wod, onClose, onSaved }: {
-  date:    string
-  block:   number
-  wod?:    Wod
-  onClose: () => void
-  onSaved: (wod: Wod) => void
+function WodModal({ date, block, wod, onClose, onSaved, inline = false, program = 'bizarro' }: {
+  date:     string
+  block:    number
+  wod?:     Wod
+  onClose:  () => void
+  onSaved:  (wod: Wod) => void
+  inline?:  boolean
+  program?: string
 }) {
   const [title,       setTitle]       = useState(wod?.title       ?? '')
   const [type,        setType]        = useState<WodType>(wod?.type ?? 'For Time')
@@ -75,7 +78,7 @@ function WodModal({ date, block, wod, onClose, onSaved }: {
     try {
       const saved = isEdit
         ? await updateWod(wod.id, { title, type, description })
-        : await createWod({ date, block, title, type, description, program: 'bizarro' })
+        : await createWod({ date, block, title, type, description, program: program as import('@/lib/types').Program })
       onSaved(saved)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al guardar')
@@ -88,23 +91,23 @@ function WodModal({ date, block, wod, onClose, onSaved }: {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-lg p-6">
-
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-              {dayFormatted} · Bloque {block}
-            </p>
-            <h2 className="text-white font-black text-xl tracking-tight uppercase">
-              {isEdit ? 'Editar WOD' : 'Nuevo WOD'}
-            </h2>
-          </div>
+  const formContent = (
+    <>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+            {dayFormatted} · Bloque {block}
+          </p>
+          <h2 className="text-white font-black text-xl tracking-tight uppercase">
+            {isEdit ? 'Editar WOD' : 'Nuevo WOD'}
+          </h2>
+        </div>
+        {!inline && (
           <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
             &times;
           </button>
-        </div>
+        )}
+      </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
@@ -166,6 +169,15 @@ function WodModal({ date, block, wod, onClose, onSaved }: {
             {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear WOD'}
           </button>
         </form>
+    </>
+  )
+
+  if (inline) return <div className="w-full">{formContent}</div>
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+      <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-lg p-6">
+        {formContent}
       </div>
     </div>
   )
@@ -321,7 +333,9 @@ function RankingSection({ wod }: { wod: Wod }) {
 
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const programSlug  = searchParams.get('program') ?? 'bizarro'
 
   const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
 
@@ -333,6 +347,14 @@ export default function AdminPage() {
   const [modalOpen,     setModalOpen]     = useState(false)
   const [editingWod,    setEditingWod]    = useState<Wod | undefined>()
   const [deletingId,    setDeletingId]    = useState<string | null>(null)
+  const [pendingBlock,  setPendingBlock]  = useState<number | null>(null)
+  const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
+  const [profileOpen,   setProfileOpen]   = useState(false)
+  const [profileName,   setProfileName]   = useState('')
+  const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
+  const [inviteUrl,     setInviteUrl]     = useState<string | null>(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [programName,   setProgramName]   = useState('')
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -343,13 +365,20 @@ export default function AdminPage() {
 
     getProfile(user.id).then(profile => {
       if (profile?.role !== 'coach') router.push('/dashboard')
+      setProfileName(profile?.full_name ?? '')
+      setAvatarUrl(profile?.avatar_url ?? null)
+    })
+
+    getMyPrograms(user.id).then(programs => {
+      const found = programs.find(p => p.slug === programSlug)
+      setProgramName(found?.name ?? programSlug)
     })
   }, [authLoading, user, router])
 
   // Load week WODs
   useEffect(() => {
     setLoading(true)
-    getWodsForWeek(weekDates[0], weekDates[6])
+    getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
       .then(setWods)
       .finally(() => setLoading(false))
   }, [weekDates])
@@ -366,6 +395,8 @@ export default function AdminPage() {
       if (idx >= 0) { const u = [...prev]; u[idx] = wod; return u }
       return [...prev, wod]
     })
+    setPendingBlock(null)
+    setSelectedBlock(wod.block)
     setModalOpen(false)
     setEditingWod(undefined)
   }
@@ -374,6 +405,26 @@ export default function AdminPage() {
     await deleteWod(id)
     setWods(prev => prev.filter(w => w.id !== id))
     setDeletingId(null)
+  }
+
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
+    for (const wod of parsed) {
+      await createWod({ ...wod, program: programSlug as import('@/lib/types').Program })
+    }
+    const updated = await getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
+    setWods(updated)
+  }
+
+  async function handleGenerateInvite() {
+    if (!user) return
+    setInviteLoading(true)
+    try {
+      const token = await createCoachInvite(user.id)
+      const url = `${window.location.origin}/register?invite=${token}`
+      setInviteUrl(url)
+    } catch { } finally {
+      setInviteLoading(false)
+    }
   }
 
   async function handleLogout() {
@@ -399,8 +450,14 @@ export default function AdminPage() {
         {/* Header */}
         <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
           <div className="flex items-center gap-3">
-            <Image src="/logoBizarro.png" alt="Bizarro" width={32} height={32} className="object-contain" />
-            <span className="text-white font-black text-xl tracking-tighter">BIZARRO</span>
+            {(() => {
+              const slugImages: Record<string, string> = { bizarro: '/logoBizarro.png', entrenemos: '/entrenemos.png' }
+              const img = slugImages[programSlug]
+              return img
+                ? <Image src={img} alt={programName} width={48} height={48} className="object-contain" />
+                : <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center"><span className="text-white font-black text-sm uppercase">{programName[0]}</span></div>
+            })()}
+            <span className="text-white font-black text-xl tracking-tighter">{programName.toUpperCase()}</span>
           </div>
 
           {/* Centered tabs */}
@@ -412,7 +469,7 @@ export default function AdminPage() {
               Home
             </button>
             <button
-              onClick={() => router.push('/admin/atletas')}
+              onClick={() => router.push(`/admin/atletas?program=${programSlug}`)}
               className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
             >
               Mis atletas
@@ -426,12 +483,60 @@ export default function AdminPage() {
             >
               ← Programas
             </button>
+
+          <div className="relative flex items-center">
             <button
-              onClick={handleLogout}
-              className="text-neutral-600 hover:text-white text-sm transition font-mono"
+              onClick={() => { setProfileOpen(v => !v); setInviteUrl(null) }}
+              className="flex items-center gap-2 hover:opacity-80 transition"
             >
-              Salir →
+              {avatarUrl
+                ? <Image src={avatarUrl} alt="avatar" width={28} height={28} className="rounded-full object-cover" unoptimized />
+                : (
+                  <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center">
+                    <span className="text-white text-xs font-black">{profileName[0]?.toUpperCase()}</span>
+                  </div>
+                )}
+              <span className="text-white text-sm font-mono">{profileName.split(' ')[0]}</span>
             </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[220px]">
+                {inviteUrl ? (
+                  <div className="px-4 py-3 border-b border-neutral-900">
+                    <p className="text-neutral-500 text-xs font-mono mb-2">Copia el enlace:</p>
+                    <div className="flex gap-2">
+                      <input
+                        readOnly
+                        value={inviteUrl}
+                        className="flex-1 bg-neutral-900 text-white text-xs font-mono px-2 py-1.5 rounded-lg border border-neutral-700 min-w-0"
+                      />
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(inviteUrl) }}
+                        className="text-xs font-mono text-neutral-400 hover:text-white transition px-2 border border-neutral-700 rounded-lg"
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGenerateInvite}
+                    disabled={inviteLoading}
+                    className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition border-b border-neutral-900 disabled:opacity-40"
+                  >
+                    {inviteLoading ? 'Generando...' : 'Generar invitación'}
+                  </button>
+                )}
+
+                <button
+                  onClick={async () => { setProfileOpen(false); await handleLogout() }}
+                  className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition"
+                >
+                  Salir
+                </button>
+              </div>
+            )}
+          </div>
           </div>
         </header>
 
@@ -443,9 +548,17 @@ export default function AdminPage() {
           >
             ← anterior
           </button>
-          <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
-            {formatWeekRange(weekDates)}
-          </span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
+              {formatWeekRange(weekDates)}
+            </span>
+            <button
+              onClick={() => setLoadWeekOpen(true)}
+              className="text-neutral-600 hover:text-white text-xs font-mono transition"
+            >
+              ↓ Cargar semana
+            </button>
+          </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}
             className="text-neutral-600 hover:text-white transition font-mono text-sm"
@@ -466,7 +579,7 @@ export default function AdminPage() {
               return (
                 <button
                   key={date}
-                  onClick={() => { setSelectedDate(date); setSelectedBlock(1) }}
+                  onClick={() => { setSelectedDate(date); setSelectedBlock(1); setPendingBlock(null) }}
                   className={`flex flex-col items-center gap-1 px-5 py-4 border-b-2 transition-colors ${
                     isSelected ? 'border-white' : 'border-transparent'
                   }`}
@@ -502,14 +615,14 @@ export default function AdminPage() {
             </div>
           ) : (<>
 
-          {/* Block tabs — solo bloques con contenido + botón añadir */}
+          {/* Block tabs — solo bloques con contenido + tab pendiente + botón añadir */}
           <div className="flex gap-2 mb-8 flex-wrap">
             {dayWods.map((wod) => (
               <button
                 key={wod.block}
-                onClick={() => setSelectedBlock(wod.block)}
+                onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null) }}
                 className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition ${
-                  selectedBlock === wod.block
+                  selectedBlock === wod.block && pendingBlock === null
                     ? 'bg-white text-black'
                     : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
                 }`}
@@ -517,12 +630,21 @@ export default function AdminPage() {
                 {WOD_TYPE_LABEL[wod.type] ?? wod.type}
               </button>
             ))}
+            {pendingBlock !== null && (
+              <div className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono bg-white text-black">
+                Bloque {pendingBlock}
+              </div>
+            )}
+            {dayWods.length === 0 && pendingBlock === null && (
+              <div className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono bg-white text-black">
+                Bloque 1
+              </div>
+            )}
             <button
               onClick={() => {
                 const nextBlock = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
+                setPendingBlock(nextBlock)
                 setSelectedBlock(nextBlock)
-                setEditingWod(undefined)
-                setModalOpen(true)
               }}
               className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition border border-dashed border-neutral-700 text-neutral-600 hover:border-neutral-500 hover:text-neutral-400"
             >
@@ -586,6 +708,15 @@ export default function AdminPage() {
 
               {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
             </div>
+          ) : (dayWods.length === 0 || pendingBlock !== null) ? (
+            <WodModal
+              inline
+              date={selectedDate}
+              block={pendingBlock ?? 1}
+              program={programSlug}
+              onClose={() => {}}
+              onSaved={handleSaved}
+            />
           ) : null}
           </>)}
         </div>
@@ -596,8 +727,17 @@ export default function AdminPage() {
           date={selectedDate}
           block={selectedBlock}
           wod={editingWod}
+          program={programSlug}
           onClose={() => { setModalOpen(false); setEditingWod(undefined) }}
           onSaved={handleSaved}
+        />
+      )}
+
+      {loadWeekOpen && (
+        <LoadWeekModal
+          weekDates={weekDates}
+          onConfirm={handleLoadWeek}
+          onClose={() => setLoadWeekOpen(false)}
         />
       )}
     </>

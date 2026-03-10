@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export async function signUp(email: string, password: string, fullName: string) {
+export async function signUp(email: string, password: string, fullName: string, program?: string | null) {
   const avatarUrl = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(fullName)}`
 
   const { data, error } = await supabase.auth.signUp({
@@ -10,6 +10,7 @@ export async function signUp(email: string, password: string, fullName: string) 
       data: {
         full_name: fullName,
         avatar_url: avatarUrl,
+        program: program ?? null,
       },
     },
   })

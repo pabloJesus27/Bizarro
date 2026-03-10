@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
 import { getWodsForWeek, createWod, updateWod, deleteWod } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
+import LoadWeekModal from '@/components/LoadWeekModal'
 
 // ── Constants ──────────────────────────────────────────
 
@@ -166,6 +167,7 @@ export default function EntrenemosPage() {
   const [modalBlock,    setModalBlock]    = useState<number | null>(null)
   const [editingWod,    setEditingWod]    = useState<Wod | undefined>()
   const [deletingId,    setDeletingId]    = useState<string | null>(null)
+  const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -185,6 +187,14 @@ export default function EntrenemosPage() {
     setSelectedDate(weekDates[0])
     setSelectedBlock(1)
   }, [weekOffset, weekDates])
+
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: WodType; description: string }[]) {
+    for (const wod of parsed) {
+      await createWod({ ...wod, program: 'entrenemos' })
+    }
+    const updated = await getWodsForWeek(weekDates[0], weekDates[6], 'entrenemos')
+    setWods(updated)
+  }
 
   function handleSaved(wod: Wod) {
     setWods(prev => {
@@ -240,7 +250,15 @@ export default function EntrenemosPage() {
         {/* Week navigation */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-900">
           <button onClick={() => setWeekOffset(o => o - 1)} className="text-neutral-600 hover:text-white transition font-mono text-sm">← anterior</button>
-          <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">{formatWeekRange(weekDates)}</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">{formatWeekRange(weekDates)}</span>
+            <button
+              onClick={() => setLoadWeekOpen(true)}
+              className="text-neutral-600 hover:text-white text-xs font-mono transition"
+            >
+              ↓ Cargar semana
+            </button>
+          </div>
           <button onClick={() => setWeekOffset(o => o + 1)} className="text-neutral-600 hover:text-white transition font-mono text-sm">siguiente →</button>
         </div>
 
@@ -374,6 +392,14 @@ export default function EntrenemosPage() {
           wod={editingWod}
           onClose={() => { setModalBlock(null); setEditingWod(undefined) }}
           onSaved={handleSaved}
+        />
+      )}
+
+      {loadWeekOpen && (
+        <LoadWeekModal
+          weekDates={weekDates}
+          onConfirm={handleLoadWeek}
+          onClose={() => setLoadWeekOpen(false)}
         />
       )}
     </>

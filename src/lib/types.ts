@@ -1,5 +1,5 @@
 export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Gymnastics' | 'Warmup' | 'For Max' | 'Other'
-export type Program  = 'bizarro' | 'entrenemos'
+export type Program  = 'bizarro' | 'entrenemos' | 'libre'
 
 export interface Wod {
   id: string
@@ -9,6 +9,7 @@ export interface Wod {
   type: WodType
   block: number         // 1-10
   program: Program
+  owner_id: string | null
   created_at: string
 }
 
@@ -24,7 +25,7 @@ export interface Result {
   created_at: string
 }
 
-export type NewWod = Omit<Wod, 'id' | 'created_at'>
+export type NewWod = Omit<Wod, 'id' | 'created_at' | 'owner_id'> & { owner_id?: string | null }
 export type NewResult = Omit<Result, 'id' | 'user_id' | 'created_at'>
 
 export interface Profile {
@@ -32,6 +33,6 @@ export interface Profile {
   full_name: string | null
   role: string
   avatar_url: string | null
-  program: Program | null
+  program: string | null
   updated_at: string
 }

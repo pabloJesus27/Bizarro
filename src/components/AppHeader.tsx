@@ -15,7 +15,7 @@ export default function AppHeader() {
   const [timerOpen,   setTimerOpen]   = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null)
-  const [program,     setProgram]     = useState<'bizarro' | 'entrenemos'>('bizarro')
+  const [program,     setProgram]     = useState<string>('bizarro')
   const [profileName, setProfileName] = useState('')
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function AppHeader() {
     getProfile(user.id).then(profile => {
       setProfileName(profile?.full_name ?? '')
       setAvatarUrl(profile?.avatar_url ?? null)
-      setProgram((profile?.program ?? 'bizarro') as 'bizarro' | 'entrenemos')
+      setProgram(profile?.program ?? 'bizarro')
     })
   }, [user])
 
@@ -34,7 +34,7 @@ export default function AppHeader() {
           <Image
             src={program === 'entrenemos' ? '/entrenemos.png' : '/logoBizarro.png'}
             alt={program === 'entrenemos' ? 'Entrenemos' : 'Bizarro'}
-            width={32} height={32} className="object-contain"
+            width={48} height={48} className="object-contain"
           />
           <span className="text-white font-black text-xl tracking-tighter">
             {program === 'entrenemos' ? 'ENTRENEMOS' : 'BIZARRO'}
@@ -42,7 +42,7 @@ export default function AppHeader() {
         </div>
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push(program === 'libre' ? '/libre' : '/dashboard')}
             className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
           >
             Home
