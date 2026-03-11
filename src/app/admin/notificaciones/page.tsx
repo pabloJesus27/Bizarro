@@ -44,7 +44,7 @@ export default function NotificacionesPage() {
   async function handleAccept(req: JoinRequest) {
     setActing(req.id)
     try {
-      await acceptJoinRequest(req.id, req.athlete_id, req.program_id)
+      await acceptJoinRequest(req.id, req.athlete_id, req.program_id, req.programs?.slug ?? '')
       setRequests(prev => prev.filter(r => r.id !== req.id))
     } finally {
       setActing(null)

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { getProfile, getMyAthletePrograms } from '@/lib/db'
+import { getProfile, getMyAthletePrograms, updateProfileProgram } from '@/lib/db'
 import type { AthleteProgramEntry } from '@/lib/db'
 
 const slugImages: Record<string, string> = {
@@ -57,7 +57,10 @@ export default function ElegirModoPage() {
           return (
             <button
               key={ap.id}
-              onClick={() => router.push(`/dashboard?program=${slug}`)}
+              onClick={async () => {
+                if (user) await updateProfileProgram(user.id, slug)
+                router.push(`/dashboard?program=${slug}`)
+              }}
               className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors"
             >
               {img ? (

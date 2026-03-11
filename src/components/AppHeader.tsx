@@ -15,7 +15,7 @@ export default function AppHeader() {
   const [timerOpen,   setTimerOpen]   = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null)
-  const [program,     setProgram]     = useState<string>('bizarro')
+  const [program,     setProgram]     = useState<string | null>(null)
   const [profileName, setProfileName] = useState('')
 
   useEffect(() => {
@@ -31,18 +31,22 @@ export default function AppHeader() {
     <>
       <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
         <div className="flex items-center gap-3">
-          <Image
-            src={program === 'entrenemos' ? '/entrenemos.png' : '/logoBizarro.png'}
-            alt={program === 'entrenemos' ? 'Entrenemos' : 'Bizarro'}
-            width={48} height={48} className="object-contain"
-          />
-          <span className="text-white font-black text-xl tracking-tighter">
-            {program === 'entrenemos' ? 'ENTRENEMOS' : 'BIZARRO'}
-          </span>
+          {program && (
+            <>
+              <Image
+                src={program === 'entrenemos' ? '/entrenemos.png' : '/logoBizarro.png'}
+                alt={program === 'entrenemos' ? 'Entrenemos' : 'Bizarro'}
+                width={48} height={48} className="object-contain"
+              />
+              <span className="text-white font-black text-xl tracking-tighter">
+                {program === 'entrenemos' ? 'ENTRENEMOS' : 'BIZARRO'}
+              </span>
+            </>
+          )}
         </div>
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
           <button
-            onClick={() => router.push(program === 'libre' ? '/libre' : '/dashboard')}
+            onClick={() => router.push(program === 'libre' ? '/libre' : `/dashboard?program=${program ?? 'bizarro'}`)}
             className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
           >
             Home
@@ -82,6 +86,12 @@ export default function AppHeader() {
           </button>
           {profileOpen && (
             <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[140px]">
+              <button
+                onClick={() => { setProfileOpen(false); router.push('/elegir-modo') }}
+                className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition border-b border-neutral-900"
+              >
+                Cambiar programa
+              </button>
               <button
                 onClick={() => { setProfileOpen(false); router.push('/profile') }}
                 className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition border-b border-neutral-900"

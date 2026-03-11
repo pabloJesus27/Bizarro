@@ -7,9 +7,37 @@ import { getMyPRs } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
 
+const GROUPS = [
+  {
+    label: 'Fuerza',
+    exercises: [
+      'Back Squat',
+      'Front Squat',
+      'Overhead Squat',
+      'Deadlift',
+      'Bench Press',
+      'Strict Press',
+      'Push Press',
+      'Pull Ups',
+    ],
+  },
+  {
+    label: 'Halterofilia',
+    exercises: [
+      'Clean',
+      'Power Clean',
+      'Hang Power Clean',
+      'Snatch',
+      'Power Snatch',
+      'Hang Power Snatch',
+      'Clean & Jerk',
+    ],
+  },
+]
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
 export default function MaximosPage() {
@@ -36,6 +64,10 @@ export default function MaximosPage() {
     )
   }
 
+  function getPR(exercise: string): PersonalRecord | undefined {
+    return prs.find(p => p.exercise.toLowerCase() === exercise.toLowerCase())
+  }
+
   return (
     <main className="min-h-screen bg-black flex flex-col">
 
@@ -43,44 +75,40 @@ export default function MaximosPage() {
 
       <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
 
-        {prs.length === 0 ? (
-          <div className="flex-1 flex flex-col justify-center pt-16">
-            <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">Sin registros</p>
-            <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">
-              Aún no tienes máximos
-            </h2>
-            <p className="text-neutral-700 text-sm font-mono mt-4">
-              Se registran automáticamente al guardar un resultado de tipo Strength.
-            </p>
-          </div>
-        ) : (
-          <>
-            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-6">
-              {prs.length} {prs.length === 1 ? 'ejercicio' : 'ejercicios'}
+        {GROUPS.map(group => (
+          <div key={group.label} className="mb-10">
+            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-4">
+              {group.label}
             </p>
 
-            <div className="flex flex-col gap-3">
-              {prs.map((pr, i) => (
-                <div
-                  key={pr.id}
-                  className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-900"
-                >
-                  <span className="text-neutral-700 font-mono text-xs w-5">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-white font-black text-base uppercase tracking-tight">{pr.exercise}</p>
-                    <p className="text-neutral-600 text-xs font-mono mt-0.5">{formatDate(pr.achieved_at)}</p>
+            <div className="grid grid-cols-3 gap-3">
+              {group.exercises.map(exercise => {
+                const pr = getPR(exercise)
+                return (
+                  <div
+                    key={exercise}
+                    className="flex flex-col justify-between border border-neutral-700 rounded-xl px-4 py-4 bg-neutral-950"
+                  >
+                    <p className="text-neutral-300 text-xs font-mono uppercase tracking-tight leading-tight mb-3">
+                      {exercise}
+                    </p>
+                    <div>
+                      <p className={`font-black text-2xl leading-none ${pr ? 'text-white' : 'text-neutral-500'}`}>
+                        {pr ? pr.weight : '—'}
+                      </p>
+                      {pr ? (
+                        <p className="text-neutral-400 text-xs font-mono mt-1">{formatDate(pr.achieved_at)}</p>
+                      ) : (
+                        <p className="text-neutral-500 text-xs font-mono mt-1">kg</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-white font-black text-xl">{pr.weight}</p>
-                    <p className="text-neutral-600 text-xs font-mono">kg</p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
-          </>
-        )}
+          </div>
+        ))}
+
       </div>
     </main>
   )

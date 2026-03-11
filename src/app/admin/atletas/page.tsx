@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
-import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
+import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser, getMyPrograms, getPendingJoinRequests, addAthleteByEmail, removeAthleteFromProgram } from '@/lib/db'
 import type { Wod, Result, WodType, Profile } from '@/lib/types'
 
 // ── Constants ──────────────────────────────────────────
@@ -62,59 +62,132 @@ function getInitials(name: string | null): string {
 
 // ── Athlete List ───────────────────────────────────────
 
-function AthleteList({ athletes, onSelect }: {
+function AthleteList({ athletes, onSelect, programId, programSlug, onAthleteAdded }: {
   athletes: Profile[]
   onSelect: (athlete: Profile) => void
+  programId: string
+  programSlug: string
+  onAthleteAdded: (athlete: Profile) => void
 }) {
-  if (athletes.length === 0) return (
-    <div className="flex-1 flex flex-col justify-center px-6 py-8 max-w-2xl mx-auto w-full">
-      <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">Atletas</p>
-      <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">Sin atletas</h2>
-    </div>
-  )
+  const [showModal, setShowModal] = useState(false)
+  const [email,     setEmail]     = useState('')
+  const [adding,    setAdding]    = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
+
+  async function handleAdd() {
+    if (!email.trim()) return
+    setAdding(true)
+    setError(null)
+    try {
+      const profile = await addAthleteByEmail(email.trim(), programId, programSlug)
+      onAthleteAdded(profile)
+      setShowModal(false)
+      setEmail('')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error al añadir atleta')
+    } finally {
+      setAdding(false)
+    }
+  }
 
   return (
     <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-6">
-        {athletes.length} {athletes.length === 1 ? 'atleta' : 'atletas'}
-      </p>
-      <div className="flex flex-col gap-3">
-        {athletes.map(athlete => (
-          <button
-            key={athlete.id}
-            onClick={() => onSelect(athlete)}
-            className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-900 hover:border-neutral-700 hover:bg-neutral-950 transition-all text-left"
-          >
-            {athlete.avatar_url ? (
-              <Image
-                src={athlete.avatar_url}
-                alt={athlete.full_name ?? ''}
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
-                <span className="text-white text-xs font-black">{getInitials(athlete.full_name)}</span>
-              </div>
-            )}
-            <span className="flex-1 text-white font-medium text-sm">
-              {athlete.full_name ?? 'Sin nombre'}
-            </span>
-            <span className="text-neutral-600 text-sm font-mono">→</span>
-          </button>
-        ))}
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">
+          {athletes.length === 0 ? 'Sin atletas' : `${athletes.length} ${athletes.length === 1 ? 'atleta' : 'atletas'}`}
+        </p>
+        <button
+          onClick={() => { setShowModal(true); setError(null); setEmail('') }}
+          className="text-xs uppercase tracking-widest font-mono text-neutral-500 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded-full px-4 py-1.5 transition"
+        >
+          + Añadir
+        </button>
       </div>
+
+      {athletes.length === 0 ? (
+        <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">Sin atletas</h2>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {athletes.map(athlete => (
+            <button
+              key={athlete.id}
+              onClick={() => onSelect(athlete)}
+              className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-900 hover:border-neutral-700 hover:bg-neutral-950 transition-all text-left"
+            >
+              {athlete.avatar_url ? (
+                <Image
+                  src={athlete.avatar_url}
+                  alt={athlete.full_name ?? ''}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                  <span className="text-white text-xs font-black">{getInitials(athlete.full_name)}</span>
+                </div>
+              )}
+              <span className="flex-1 text-white font-medium text-sm">
+                {athlete.full_name ?? 'Sin nombre'}
+              </span>
+              <span className="text-neutral-600 text-sm font-mono">→</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Modal añadir atleta */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-6">
+          <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-6 w-full max-w-sm">
+            <p className="text-white font-black text-lg uppercase tracking-tight mb-1">Añadir atleta</p>
+            <p className="text-neutral-600 text-xs font-mono mb-5">Ingresa el email del atleta registrado</p>
+
+            <input
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setError(null) }}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              placeholder="email@ejemplo.com"
+              autoFocus
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm font-mono placeholder:text-neutral-700 focus:outline-none focus:border-neutral-600 mb-3"
+            />
+
+            {error && (
+              <p className="text-red-400 text-xs font-mono mb-3">{error}</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowModal(false); setEmail(''); setError(null) }}
+                disabled={adding}
+                className="flex-1 border border-neutral-800 text-neutral-500 hover:text-white font-mono text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAdd}
+                disabled={adding || !email.trim()}
+                className="flex-1 bg-white text-black font-black text-xs uppercase tracking-widest rounded-full py-2.5 hover:bg-neutral-200 transition disabled:opacity-50"
+              >
+                {adding ? '...' : 'Añadir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Athlete Week View ──────────────────────────────────
 
-function AthleteWeekView({ athlete, onBack, programSlug }: {
+function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRemoved }: {
   athlete: Profile
   onBack: () => void
   programSlug: string
+  programId: string
+  onAthleteRemoved: () => void
 }) {
   const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
 
@@ -124,6 +197,8 @@ function AthleteWeekView({ athlete, onBack, programSlug }: {
   const [wods,          setWods]          = useState<Wod[]>([])
   const [results,       setResults]       = useState<Result[]>([])
   const [loading,       setLoading]       = useState(true)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  const [removing,      setRemoving]      = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -141,6 +216,17 @@ function AthleteWeekView({ athlete, onBack, programSlug }: {
       })
       .finally(() => setLoading(false))
   }, [weekDates, athlete.id, programSlug])
+
+  async function handleRemove() {
+    setRemoving(true)
+    try {
+      await removeAthleteFromProgram(athlete.id, programId)
+      onAthleteRemoved()
+    } finally {
+      setRemoving(false)
+      setConfirmRemove(false)
+    }
+  }
 
   // Reset block when day changes
   useEffect(() => { setSelectedBlock(0) }, [selectedDate])
@@ -191,6 +277,40 @@ function AthleteWeekView({ athlete, onBack, programSlug }: {
             </p>
           )}
         </div>
+        <button
+          onClick={() => setConfirmRemove(true)}
+          className="text-neutral-400 hover:text-red-400 text-xs font-mono transition uppercase tracking-widest border border-neutral-700 hover:border-red-400 rounded-full px-3 py-1"
+        >
+          Quitar
+        </button>
+
+        {/* Modal confirmación */}
+        {confirmRemove && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-6">
+            <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-6 w-full max-w-sm">
+              <p className="text-white font-black text-lg uppercase tracking-tight mb-1">Quitar atleta</p>
+              <p className="text-neutral-500 text-sm font-mono mb-6">
+                ¿Quieres quitar a <span className="text-white">{athlete.full_name ?? 'este atleta'}</span> del programa?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmRemove(false)}
+                  disabled={removing}
+                  className="flex-1 border border-neutral-800 text-neutral-500 hover:text-white font-mono text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleRemove}
+                  disabled={removing}
+                  className="flex-1 bg-red-500 hover:bg-red-400 text-white font-black text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
+                >
+                  {removing ? '...' : 'Quitar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Week navigation */}
@@ -357,6 +477,7 @@ export default function AtletasPage() {
   const [selectedAthlete,  setSelectedAthlete]  = useState<Profile | null>(null)
   const [loading,          setLoading]          = useState(true)
   const [pendingCount,     setPendingCount]     = useState(0)
+  const [programId,        setProgramId]        = useState('')
 
   useEffect(() => {
     if (authLoading) return
@@ -369,6 +490,8 @@ export default function AtletasPage() {
         getAthletes(programSlug).then(setAthletes),
         getMyPrograms(user.id),
       ])
+      const current = programs.find(p => p.slug === programSlug)
+      if (current) setProgramId(current.id)
       const reqs = await getPendingJoinRequests(programs.map(p => p.id))
       setPendingCount(reqs.length)
       setLoading(false)
@@ -446,11 +569,19 @@ export default function AtletasPage() {
           athlete={selectedAthlete}
           onBack={() => setSelectedAthlete(null)}
           programSlug={programSlug}
+          programId={programId}
+          onAthleteRemoved={() => {
+            setAthletes(prev => prev.filter(a => a.id !== selectedAthlete.id))
+            setSelectedAthlete(null)
+          }}
         />
       ) : (
         <AthleteList
           athletes={athletes}
           onSelect={setSelectedAthlete}
+          programId={programId}
+          programSlug={programSlug}
+          onAthleteAdded={athlete => setAthletes(prev => [...prev, athlete].sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '')))}
         />
       )}
     </main>

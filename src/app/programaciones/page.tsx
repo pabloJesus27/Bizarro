@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { getMyAthletePrograms, getDiscoverPrograms, getMyJoinRequests, createJoinRequest } from '@/lib/db'
+import { getMyAthletePrograms, getDiscoverPrograms, getMyJoinRequests, createJoinRequest, cancelJoinRequest } from '@/lib/db'
 import type { AthleteProgramEntry, ProgramEntry, JoinRequest } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
 
@@ -22,6 +22,9 @@ export default function ProgramacionesPage() {
   const [joinRequests,  setJoinRequests]  = useState<JoinRequest[]>([])
   const [loading,       setLoading]       = useState(true)
   const [requesting,    setRequesting]    = useState<string | null>(null)
+  const [cancelling,    setCancelling]    = useState<string | null>(null)
+  const [leaving,       setLeaving]       = useState<string | null>(null)
+  const [confirmLeave,  setConfirmLeave]  = useState<string | null>(null)
   const [tab,           setTab]           = useState<'mis' | 'descubrir'>('mis')
 
   useEffect(() => {
@@ -56,10 +59,42 @@ export default function ProgramacionesPage() {
         created_at: new Date().toISOString(),
         programs: { name: program.name, slug: program.slug },
       }])
-    } catch {
-      // ya existe solicitud
+    } catch (err) {
+      console.error('Error al solicitar:', err)
     } finally {
       setRequesting(null)
+    }
+  }
+
+  async function handleLeave(ap: AthleteProgramEntry) {
+    if (!user) return
+    setLeaving(ap.program_id)
+    try {
+      await fetch('/api/remove-athlete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ athleteId: user.id, programId: ap.program_id }),
+      })
+      setMyPrograms(prev => prev.filter(p => p.program_id !== ap.program_id))
+      setDiscover(prev => [...prev, { id: ap.program_id, name: ap.programs.name, slug: ap.programs.slug, owner_id: '', created_at: '' }])
+      setConfirmLeave(null)
+    } catch (err) {
+      console.error('Error al salir:', err)
+    } finally {
+      setLeaving(null)
+    }
+  }
+
+  async function handleCancel(program: ProgramEntry) {
+    if (!user) return
+    setCancelling(program.id)
+    try {
+      await cancelJoinRequest(user.id, program.id)
+      setJoinRequests(prev => prev.filter(r => r.program_id !== program.id))
+    } catch (err) {
+      console.error('Error al cancelar:', err)
+    } finally {
+      setCancelling(null)
     }
   }
 
@@ -127,6 +162,12 @@ export default function ProgramacionesPage() {
                           Desde {new Date(ap.joined_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                       </div>
+                      <button
+                        onClick={() => setConfirmLeave(ap.program_id)}
+                        className="text-neutral-600 hover:text-red-400 text-xs font-mono uppercase tracking-widest border border-neutral-800 hover:border-red-400 rounded-full px-3 py-1 transition"
+                      >
+                        Salir
+                      </button>
                     </div>
                   )
                 })}
@@ -161,12 +202,18 @@ export default function ProgramacionesPage() {
                       <p className="flex-1 text-white font-black text-sm uppercase tracking-tight">{program.name}</p>
 
                       {status === 'pending' && (
-                        <span className="text-neutral-500 text-xs font-mono uppercase tracking-widest">Pendiente</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-neutral-500 text-xs font-mono uppercase tracking-widest">Pendiente</span>
+                          <button
+                            onClick={() => handleCancel(program)}
+                            disabled={cancelling === program.id}
+                            className="text-xs font-mono uppercase tracking-widest text-neutral-600 hover:text-red-400 border border-neutral-800 hover:border-red-400 rounded-full px-3 py-1 transition disabled:opacity-50"
+                          >
+                            {cancelling === program.id ? '...' : 'Cancelar'}
+                          </button>
+                        </div>
                       )}
-                      {status === 'rejected' && (
-                        <span className="text-red-600 text-xs font-mono uppercase tracking-widest">Rechazado</span>
-                      )}
-                      {status === null && (
+                      {(status === null || status === 'rejected') && (
                         <button
                           onClick={() => handleRequest(program)}
                           disabled={requesting === program.id}
@@ -184,6 +231,38 @@ export default function ProgramacionesPage() {
         )}
 
       </div>
+
+      {confirmLeave && (() => {
+        const ap = myPrograms.find(p => p.program_id === confirmLeave)
+        if (!ap) return null
+        return (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-6">
+            <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-6 w-full max-w-sm">
+              <p className="text-white font-black text-lg uppercase tracking-tight mb-1">Salir del programa</p>
+              <p className="text-neutral-500 text-sm font-mono mb-6">
+                ¿Quieres salir de <span className="text-white">{ap.programs.name}</span>?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmLeave(null)}
+                  disabled={leaving === confirmLeave}
+                  className="flex-1 border border-neutral-800 text-neutral-500 hover:text-white font-mono text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleLeave(ap)}
+                  disabled={leaving === confirmLeave}
+                  className="flex-1 bg-red-500 hover:bg-red-400 text-white font-black text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
+                >
+                  {leaving === confirmLeave ? '...' : 'Salir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
     </main>
   )
 }

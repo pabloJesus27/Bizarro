@@ -24,7 +24,9 @@ export default function LoginPage() {
       const profile = await getProfile(data.user!.id)
       if (profile?.role === 'coach') {
         router.push('/select-program')
-      } else if (profile?.program === 'libre' || !profile?.program) {
+      } else if (!profile?.program) {
+        router.push('/elegir-modo')
+      } else if (profile.program === 'libre') {
         router.push('/libre')
       } else {
         router.push('/elegir-modo')

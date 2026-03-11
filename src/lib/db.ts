@@ -176,12 +176,29 @@ export async function updateProfileProgram(userId: string, program: string): Pro
   if (error) throw error
 }
 
-export async function getAthletes(program: string): Promise<Profile[]> {
+export async function getAthletes(programSlug: string): Promise<Profile[]> {
+  const { data: program } = await supabase
+    .from('programs')
+    .select('id')
+    .eq('slug', programSlug)
+    .single()
+
+  if (!program) return []
+
+  const { data: entries, error: entriesError } = await supabase
+    .from('athlete_programs')
+    .select('athlete_id')
+    .eq('program_id', program.id)
+
+  if (entriesError) throw entriesError
+  if (!entries || entries.length === 0) return []
+
+  const athleteIds = entries.map((e: { athlete_id: string }) => e.athlete_id)
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('role', 'athlete')
-    .eq('program', program)
+    .in('id', athleteIds)
     .order('full_name', { ascending: true })
 
   if (error) throw error
@@ -305,11 +322,24 @@ export interface JoinRequest {
   programs?: { name: string; slug: string }
 }
 
+export async function cancelJoinRequest(athleteId: string, programId: string): Promise<void> {
+  const res = await fetch('/api/cancel-join-request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ athleteId, programId }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Error al cancelar solicitud')
+}
+
 export async function createJoinRequest(athleteId: string, programId: string): Promise<void> {
-  const { error } = await supabase
-    .from('join_requests')
-    .insert({ athlete_id: athleteId, program_id: programId })
-  if (error) throw error
+  const res = await fetch('/api/create-join-request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ athleteId, programId }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Error al crear solicitud')
 }
 
 export async function getMyJoinRequests(userId: string): Promise<JoinRequest[]> {
@@ -317,6 +347,7 @@ export async function getMyJoinRequests(userId: string): Promise<JoinRequest[]> 
     .from('join_requests')
     .select('*, programs(name, slug)')
     .eq('athlete_id', userId)
+    .neq('status', 'accepted')
   if (error) throw error
   return data
 }
@@ -333,9 +364,14 @@ export async function getPendingJoinRequests(programIds: string[]): Promise<Join
   return data
 }
 
-export async function acceptJoinRequest(requestId: string, athleteId: string, programId: string): Promise<void> {
-  await supabase.from('join_requests').update({ status: 'accepted' }).eq('id', requestId)
-  await supabase.from('athlete_programs').insert({ athlete_id: athleteId, program_id: programId })
+export async function acceptJoinRequest(requestId: string, athleteId: string, programId: string, programSlug: string): Promise<void> {
+  const res = await fetch('/api/accept-join-request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestId, athleteId, programId, programSlug }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Error al aceptar solicitud')
 }
 
 export async function rejectJoinRequest(requestId: string): Promise<void> {
@@ -397,6 +433,27 @@ export async function createCoachInvite(userId: string): Promise<string> {
     .insert({ token, created_by: userId })
   if (error) throw error
   return token
+}
+
+export async function removeAthleteFromProgram(athleteId: string, programId: string): Promise<void> {
+  const res = await fetch('/api/remove-athlete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ athleteId, programId }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Error al quitar atleta')
+}
+
+export async function addAthleteByEmail(email: string, programId: string, programSlug: string): Promise<Profile> {
+  const res = await fetch('/api/add-athlete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, programId, programSlug }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Error al añadir atleta')
+  return json.profile
 }
 
 export async function upsertResult(result: NewResult): Promise<Result> {

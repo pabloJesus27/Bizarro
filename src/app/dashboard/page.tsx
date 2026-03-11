@@ -345,7 +345,9 @@ export default function DashboardPage() {
     getProfile(user.id).then(profile => {
       setIsCoach(profile?.role === 'coach')
       const programFromUrl = searchParams.get('program')
-      setProgram(programFromUrl ?? profile?.program ?? 'bizarro')
+      const resolvedProgram = programFromUrl ?? profile?.program ?? null
+      if (!resolvedProgram) { router.push('/elegir-modo'); return }
+      setProgram(resolvedProgram)
       setLoading(false)
     })
   }, [authLoading, user, router])
