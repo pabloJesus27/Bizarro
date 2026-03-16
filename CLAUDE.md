@@ -83,6 +83,12 @@ src/
 
 **Coach:** crear/editar/eliminar WODs, ver rankings, gestionar atletas, aprobar solicitudes, generar invitaciones, cargar semanas desde imagen, multi-programa.
 
+## Librerías de utilidades
+
+- `src/lib/week-utils.ts` — `DAY_SHORT`, `isSunday`, `getWeekDates`, `formatWeekRange`. Usar siempre desde aquí, nunca redefinir en páginas.
+- `src/lib/wod-utils.ts` — `parseTime`, `parseAmrap`, `parseNumber`, `sortRanking`. Idem.
+- `src/lib/api-auth.ts` — `getAuthenticatedUser`, `isProgramOwner`. Helper de autorización para rutas API.
+
 ## Estado del proyecto (actualizado 2026-03-16)
 
 - Autenticación completa (login, registro, recuperación, invitaciones)
@@ -92,9 +98,32 @@ src/
 - Sistema de solicitudes de unión con notificaciones por email (Resend)
 - Rankings por WOD con paginación
 - Personal records
+- Seguridad de rutas API: add-athlete, remove-athlete, accept-join-request verifican sesión y ownership
+- accept-join-request usa RPC PostgreSQL (transacción atómica)
+- use-invite: update atómico para evitar race condition
 - Manejo de errores revisado (sin console.log en producción, errores visibles al usuario)
+- Código duplicado centralizado en week-utils.ts y wod-utils.ts
 
 ## Pendiente / Conocido
 
-- Componentes grandes sin dividir: `timer/page.tsx` (1222 líneas), `admin/page.tsx` (759 líneas), `libre/page.tsx` (733 líneas), `dashboard/page.tsx` (632 líneas)
+### UX
+- `dashboard/page.tsx` línea ~560: mensaje de error del timer dice "Comprueba la API key" — el usuario final no puede hacer nada con eso. Cambiar a mensaje genérico.
+- Eliminar atleta es irreversible sin opción de recuperación (`admin/atletas/page.tsx`).
+- Estados de carga visualmente inconsistentes entre páginas (algunos usan `w-px h-10 animate-pulse`, otros spinners diferentes).
+
+### Seguridad
+- `getAthletes` en `db.ts` no verifica que el caller sea coach del programa — cualquier usuario autenticado podría obtener la lista de atletas de cualquier programa.
+- No hay rate limiting en ninguna ruta API (riesgo de fuerza bruta en login/registro).
+- `add-athlete/route.ts` usa `listUsers()` completo para buscar por email — ineficiente y permite enumerar usuarios.
+
+### Casos edge
+- Si el token de sesión expira a mitad de operación, `db.ts` devuelve array vacío en lugar de error — el usuario ve datos vacíos sin saber por qué.
+- `elegir-modo`: si `getProfile` falla, ya tiene `.catch()` con mensaje. Pero `getMyAthletePrograms` dentro del `.then()` puede fallar sin capturarse — envolver en try/catch.
+- Resultado guardado localmente en UI pero podría no haberse grabado en BD si `upsertResult` falla silenciosamente (`dashboard/page.tsx`).
+
+### Deuda técnica
+- Componentes grandes sin dividir: `timer/page.tsx` (~1200 líneas), `admin/page.tsx` (~700 líneas), `libre/page.tsx` (~700 líneas), `dashboard/page.tsx` (~600 líneas)
+- `ResultModal` casi idéntico en `dashboard/page.tsx` y `libre/page.tsx` — candidato a componente compartido en `src/components/`
+- Naming inconsistente: `loading` vs `isLoading` mezclados entre páginas
+- Estilos de botón inconsistentes: `disabled:opacity-40` vs `disabled:opacity-50`
 - Sin tests automatizados
