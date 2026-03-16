@@ -7,7 +7,7 @@ import { getWodsForWeek, getResultsForWods, upsertResult, getProfile, getWodRank
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, Result, WodType } from '@/lib/types'
 import AppHeader from '@/components/AppHeader'
-import { DAY_SHORT, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
 import { sortRanking } from '@/lib/wod-utils'
 
 const WOD_TYPE_LABEL: Record<string, string> = {
