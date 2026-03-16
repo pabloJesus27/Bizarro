@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser, isProgramOwner } from '@/lib/api-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,11 +8,17 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req)
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
   const { email, programId, programSlug } = await req.json()
 
   if (!email || !programId || !programSlug) {
     return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
   }
+
+  const isOwner = await isProgramOwner(user.id, programId)
+  if (!isOwner) return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
 
   // 1. Buscar usuario por email
   const { data: { users }, error: authError } = await supabase.auth.admin.listUsers()

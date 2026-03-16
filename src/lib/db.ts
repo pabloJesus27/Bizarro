@@ -365,9 +365,10 @@ export async function getPendingJoinRequests(programIds: string[]): Promise<Join
 }
 
 export async function acceptJoinRequest(requestId: string, athleteId: string, programId: string, programSlug: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/accept-join-request', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
     body: JSON.stringify({ requestId, athleteId, programId, programSlug }),
   })
   const json = await res.json()
@@ -436,9 +437,10 @@ export async function createCoachInvite(userId: string): Promise<string> {
 }
 
 export async function removeAthleteFromProgram(athleteId: string, programId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/remove-athlete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
     body: JSON.stringify({ athleteId, programId }),
   })
   const json = await res.json()
@@ -446,9 +448,10 @@ export async function removeAthleteFromProgram(athleteId: string, programId: str
 }
 
 export async function addAthleteByEmail(email: string, programId: string, programSlug: string): Promise<Profile> {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/add-athlete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
     body: JSON.stringify({ email, programId, programSlug }),
   })
   const json = await res.json()

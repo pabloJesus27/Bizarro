@@ -18,6 +18,7 @@ export default function ElegirModoPage() {
 
   const [programs, setPrograms] = useState<AthleteProgramEntry[]>([])
   const [ready,    setReady]    = useState(false)
+  const [error,    setError]    = useState<string | null>(null)
 
   useEffect(() => {
     if (loading) return
@@ -30,13 +31,27 @@ export default function ElegirModoPage() {
       const myPrograms = await getMyAthletePrograms(user.id)
       setPrograms(myPrograms)
       setReady(true)
+    }).catch(() => {
+      setError('No se pudieron cargar tus programas. Inténtalo de nuevo.')
     })
   }, [loading, user, router])
 
   if (!ready) {
     return (
       <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
+        {error ? (
+          <div className="text-center flex flex-col gap-4">
+            <p className="text-red-400 text-xs font-mono">{error}</p>
+            <button
+              onClick={() => router.refresh()}
+              className="text-neutral-500 hover:text-white text-xs font-mono uppercase tracking-widest transition"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <div className="w-px h-10 bg-white animate-pulse" />
+        )}
       </main>
     )
   }

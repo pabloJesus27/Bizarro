@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { getMyAthletePrograms, getDiscoverPrograms, getMyJoinRequests, createJoinRequest, cancelJoinRequest } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import type { AthleteProgramEntry, ProgramEntry, JoinRequest } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
 
@@ -26,6 +27,7 @@ export default function ProgramacionesPage() {
   const [leaving,       setLeaving]       = useState<string | null>(null)
   const [confirmLeave,  setConfirmLeave]  = useState<string | null>(null)
   const [tab,           setTab]           = useState<'mis' | 'descubrir'>('mis')
+  const [error,         setError]         = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -40,8 +42,8 @@ export default function ProgramacionesPage() {
       setDiscover(disc)
       setJoinRequests(reqs)
       setLoading(false)
-    }).catch(err => {
-      console.error('Error cargando programaciones:', err)
+    }).catch(() => {
+      setError('Error al cargar los programas. Recarga la página.')
       setLoading(false)
     })
   }, [authLoading, user, router])
@@ -59,8 +61,8 @@ export default function ProgramacionesPage() {
         created_at: new Date().toISOString(),
         programs: { name: program.name, slug: program.slug },
       }])
-    } catch (err) {
-      console.error('Error al solicitar:', err)
+    } catch {
+      setError('No se pudo enviar la solicitud. Inténtalo de nuevo.')
     } finally {
       setRequesting(null)
     }
@@ -70,16 +72,17 @@ export default function ProgramacionesPage() {
     if (!user) return
     setLeaving(ap.program_id)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       await fetch('/api/remove-athlete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
         body: JSON.stringify({ athleteId: user.id, programId: ap.program_id }),
       })
       setMyPrograms(prev => prev.filter(p => p.program_id !== ap.program_id))
       setDiscover(prev => [...prev, { id: ap.program_id, name: ap.programs.name, slug: ap.programs.slug, owner_id: '', created_at: '' }])
       setConfirmLeave(null)
-    } catch (err) {
-      console.error('Error al salir:', err)
+    } catch {
+      setError('No se pudo salir del programa. Inténtalo de nuevo.')
     } finally {
       setLeaving(null)
     }
@@ -91,8 +94,8 @@ export default function ProgramacionesPage() {
     try {
       await cancelJoinRequest(user.id, program.id)
       setJoinRequests(prev => prev.filter(r => r.program_id !== program.id))
-    } catch (err) {
-      console.error('Error al cancelar:', err)
+    } catch {
+      setError('No se pudo cancelar la solicitud. Inténtalo de nuevo.')
     } finally {
       setCancelling(null)
     }
@@ -115,6 +118,12 @@ export default function ProgramacionesPage() {
       <AppHeader />
 
       <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
+
+        {error && (
+          <div className="mb-6 px-4 py-3 bg-red-950 border border-red-800 rounded-xl">
+            <p className="text-red-400 text-xs font-mono">{error}</p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 bg-neutral-900 rounded-full p-1 w-fit mb-10">

@@ -1,0 +1,36 @@
+## El Constructor — Prompt 02: Generación de Código Funcional
+## Adaptado al stack de Bizarro
+
+Actua como un desarrollador senior especializado en TypeScript con Next.js 16 (App Router), Supabase y Tailwind CSS v4.
+
+Necesito que implementes lo siguiente:
+
+## Funcionalidad
+[Describe exactamente qué debe hacer el código. Ej: "Un Server Action que reciba el ID de un atleta,
+consulte sus WODs de la semana actual en Supabase y devuelva los resultados ordenados por fecha."]
+
+## Contexto técnico
+- Stack: TypeScript, Next.js 16 App Router, Supabase JS v2, Tailwind CSS v4
+- Base de datos: Supabase (PostgreSQL). El schema ya existe.
+- Auth: Supabase Auth (el usuario autenticado se obtiene con supabase.auth.getUser())
+- Acceso a BD: usar el cliente de src/lib/supabase.ts o src/lib/db.ts según corresponda
+- Convenciones del proyecto:
+  - Rutas en src/app/
+  - Componentes del cliente con "use client" al inicio
+  - Server Actions en archivos separados o en el propio page.tsx si son simples
+  - Nombres de archivos en kebab-case
+  - Tipos e interfaces en src/lib/types.ts
+
+## Requisitos del código
+1. Código listo para producción, no ejemplos simplificados.
+2. Incluir validación de inputs y manejo de errores completo.
+3. Aplicar el principio de responsabilidad única.
+4. Añadir tipos TypeScript en todo momento.
+5. Incluir comentarios SOLO donde la lógica no sea obvia.
+6. Si necesitas alguna dependencia externa, indícala al inicio con el comando de instalación.
+7. No hardcodear credenciales. Usar siempre process.env.NOMBRE_VARIABLE.
+
+## Formato de entrega
+Entrega el código en bloques separados por archivo.
+Indica la ruta de cada archivo como encabezado (ej: // src/app/dashboard/page.tsx).
+Al final, incluye una sección breve "Cómo probarlo" con los pasos exactos.

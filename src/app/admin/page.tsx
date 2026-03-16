@@ -252,8 +252,8 @@ function RankingSection({ wod }: { wod: Wod }) {
     setLoading(true)
     setPage(0)
     getWodRanking(wod.id)
-      .then(data => { console.log('ranking data:', data); setEntries(sortRanking(data, wod.type)) })
-      .catch(err => console.error('ranking error:', JSON.stringify(err)))
+      .then(data => setEntries(sortRanking(data, wod.type)))
+      .catch(() => { /* ranking no disponible */ })
       .finally(() => setLoading(false))
   }, [wod.id, wod.type])
 
@@ -354,6 +354,7 @@ export default function AdminPage() {
   const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
   const [inviteUrl,     setInviteUrl]     = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError,   setInviteError]   = useState<string | null>(null)
   const [programName,   setProgramName]   = useState('')
   const [pendingCount,  setPendingCount]  = useState(0)
 
@@ -421,11 +422,14 @@ export default function AdminPage() {
   async function handleGenerateInvite() {
     if (!user) return
     setInviteLoading(true)
+    setInviteError(null)
     try {
       const token = await createCoachInvite(user.id)
       const url = `${window.location.origin}/register?invite=${token}`
       setInviteUrl(url)
-    } catch { } finally {
+    } catch {
+      setInviteError('No se pudo generar el enlace. Inténtalo de nuevo.')
+    } finally {
       setInviteLoading(false)
     }
   }
@@ -533,13 +537,18 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ) : (
-                  <button
-                    onClick={handleGenerateInvite}
-                    disabled={inviteLoading}
-                    className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition border-b border-neutral-900 disabled:opacity-40"
-                  >
-                    {inviteLoading ? 'Generando...' : 'Generar invitación'}
-                  </button>
+                  <>
+                    <button
+                      onClick={handleGenerateInvite}
+                      disabled={inviteLoading}
+                      className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition border-b border-neutral-900 disabled:opacity-40"
+                    >
+                      {inviteLoading ? 'Generando...' : 'Generar invitación'}
+                    </button>
+                    {inviteError && (
+                      <p className="px-4 py-2 text-red-400 text-xs font-mono border-b border-neutral-900">{inviteError}</p>
+                    )}
+                  </>
                 )}
 
                 <button
