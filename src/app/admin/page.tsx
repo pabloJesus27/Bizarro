@@ -9,10 +9,8 @@ import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRank
 import LoadWeekModal from '@/components/LoadWeekModal'
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
-
-// ── Constants ──────────────────────────────────────────
-
-const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { sortRanking } from '@/lib/wod-utils'
 
 const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'Gymnastics', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
 
@@ -28,28 +26,6 @@ const WOD_TYPE_LABEL: Record<string, string> = {
 }
 
 // ── Week utils ─────────────────────────────────────────
-
-function isSunday(date: string): boolean {
-  return new Date(date + 'T00:00:00').getDay() === 0
-}
-
-function getWeekDates(offset = 0): string[] {
-  const today = new Date()
-  const dow = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7)
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday)
-    d.setDate(monday.getDate() + i)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })
-}
-
-function formatWeekRange(dates: string[]): string {
-  const from = new Date(dates[0] + 'T00:00:00')
-  const to   = new Date(dates[6] + 'T00:00:00')
-  return `${from.getDate()} – ${to.getDate()} ${to.toLocaleDateString('es-ES', { month: 'long' })}`
-}
 
 // ── WOD Form Modal ─────────────────────────────────────
 
@@ -186,44 +162,6 @@ function WodModal({ date, block, wod, onClose, onSaved, inline = false, program 
 // ── Ranking helpers ────────────────────────────────────
 
 const PAGE_SIZE = 5
-
-function parseTime(t: string): number {
-  const m = t.match(/(\d+):(\d+)/)
-  return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : Infinity
-}
-
-function parseAmrap(s: string): number {
-  const m = s.match(/(\d+)\+(\d+)/)
-  if (m) return parseInt(m[1]) * 10000 + parseInt(m[2])
-  const n = parseInt(s)
-  return isNaN(n) ? 0 : n * 10000
-}
-
-function parseNumber(s: string): number {
-  const m = s.match(/[\d.]+/)
-  return m ? parseFloat(m[0]) : 0
-}
-
-function sortRanking(entries: RankingEntry[], type: WodType): RankingEntry[] {
-  return [...entries].sort((a, b) => {
-    switch (type) {
-      case 'For Time':
-        return parseTime(a.score_time ?? '') - parseTime(b.score_time ?? '')
-      case 'AMRAP':
-        return parseAmrap(b.score_rounds ?? '0') - parseAmrap(a.score_rounds ?? '0')
-      case 'For Max':
-        return parseNumber(b.score_rounds ?? '0') - parseNumber(a.score_rounds ?? '0')
-      case 'Strength':
-        return (b.score_weight ?? 0) - (a.score_weight ?? 0)
-      case 'EMOM': {
-        const wDiff = (b.score_weight ?? 0) - (a.score_weight ?? 0)
-        if (wDiff !== 0) return wDiff
-        return parseNumber(b.score_rounds ?? '0') - parseNumber(a.score_rounds ?? '0')
-      }
-      default: return 0
-    }
-  })
-}
 
 function formatScore(entry: RankingEntry, type: WodType): string {
   switch (type) {

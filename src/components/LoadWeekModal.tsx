@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { WodType } from '@/lib/types'
+import { DAY_SHORT } from '@/lib/week-utils'
 
 const WOD_TYPE_LABEL: Record<string, string> = {
   'For Time':   'FOR TIME',
@@ -13,8 +14,6 @@ const WOD_TYPE_LABEL: Record<string, string> = {
   'For Max':    'FOR MAX',
   'Other':      'WOD',
 }
-
-const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 interface ParsedWod {
   date: string
