@@ -49,6 +49,22 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
     try {
+      // Rate limit pre-check
+      try {
+        const rlRes = await fetch('/api/auth/check-rate-limit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, action: 'register' }),
+        })
+        const rlResult = await rlRes.json()
+        if (rlRes.ok && rlResult.allowed === false) {
+          setError(rlResult.error ?? 'Demasiados intentos. Por favor espera antes de volver a intentarlo.')
+          return
+        }
+      } catch {
+        // fail-open
+      }
+
       const data = await signUp(email, password, fullName, inviteToken ? null : (selectedProgram ?? 'libre'))
 
       if (inviteToken && data.user) {

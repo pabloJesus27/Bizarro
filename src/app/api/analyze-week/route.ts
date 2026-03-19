@@ -1,9 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/api-auth'
+import { checkAiRateLimit } from '@/lib/ai-rate-limit'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req)
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const allowed = await checkAiRateLimit(user.id, 'analyze-week', 5)
+  if (!allowed) return NextResponse.json(
+    { error: 'Límite diario alcanzado. Inténtalo mañana.' },
+    { status: 429 }
+  )
+
   const { imageBase64, mediaType, weekDates } = await req.json()
 
   const [lunes, martes, miercoles, jueves, viernes, sabado] = weekDates
@@ -69,6 +80,6 @@ Devuelve SOLO un array JSON sin markdown ni explicaciones:
     const wods = JSON.parse(cleaned)
     return NextResponse.json({ wods })
   } catch {
-    return NextResponse.json({ error: 'Error al interpretar la imagen', raw }, { status: 500 })
+    return NextResponse.json({ error: 'Error al interpretar la imagen' }, { status: 500 })
   }
 }

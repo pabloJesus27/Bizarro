@@ -1,36 +1,149 @@
-## El Constructor — Prompt 02: Generación de Código Funcional
-## Adaptado al stack de Bizarro
+# Los 7 Prompts — Bizarro
+# Stack: TypeScript · Next.js 16 App Router · Supabase · Tailwind CSS v4
 
-Actua como un desarrollador senior especializado en TypeScript con Next.js 16 (App Router), Supabase y Tailwind CSS v4.
+---
 
-Necesito que implementes lo siguiente:
+## Prompt 01 — El Arquitecto
+> Úsalo antes de implementar cualquier funcionalidad nueva
 
-## Funcionalidad
-[Describe exactamente qué debe hacer el código. Ej: "Un Server Action que reciba el ID de un atleta,
-consulte sus WODs de la semana actual en Supabase y devuelva los resultados ordenados por fecha."]
+Actúa como un arquitecto de software senior especializado en Next.js 16 App Router y Supabase.
 
-## Contexto técnico
-- Stack: TypeScript, Next.js 16 App Router, Supabase JS v2, Tailwind CSS v4
-- Base de datos: Supabase (PostgreSQL). El schema ya existe.
-- Auth: Supabase Auth (el usuario autenticado se obtiene con supabase.auth.getUser())
-- Acceso a BD: usar el cliente de src/lib/supabase.ts o src/lib/db.ts según corresponda
-- Convenciones del proyecto:
-  - Rutas en src/app/
-  - Componentes del cliente con "use client" al inicio
-  - Server Actions en archivos separados o en el propio page.tsx si son simples
-  - Nombres de archivos en kebab-case
-  - Tipos e interfaces en src/lib/types.ts
+Antes de escribir una sola línea de código, diseña la solución para:
 
-## Requisitos del código
-1. Código listo para producción, no ejemplos simplificados.
-2. Incluir validación de inputs y manejo de errores completo.
-3. Aplicar el principio de responsabilidad única.
-4. Añadir tipos TypeScript en todo momento.
-5. Incluir comentarios SOLO donde la lógica no sea obvia.
-6. Si necesitas alguna dependencia externa, indícala al inicio con el comando de instalación.
-7. No hardcodear credenciales. Usar siempre process.env.NOMBRE_VARIABLE.
+**[Describe la funcionalidad aquí]**
 
-## Formato de entrega
-Entrega el código en bloques separados por archivo.
-Indica la ruta de cada archivo como encabezado (ej: // src/app/dashboard/page.tsx).
-Al final, incluye una sección breve "Cómo probarlo" con los pasos exactos.
+Incluye:
+1. Qué archivos crear o modificar (rutas en `src/app/`, `src/lib/`, `src/components/`)
+2. Qué tablas de Supabase se ven afectadas y si hace falta migración
+3. Flujo de datos completo: componente → db.ts → Supabase
+4. Puntos de autorización: ¿quién puede acceder? ¿cómo se verifica?
+5. Riesgos o casos edge a considerar
+6. Qué NO implementar (evitar over-engineering)
+
+No escribas código. Solo el plan arquitectónico.
+
+---
+
+## Prompt 02 — El Constructor
+> Úsalo para implementar código listo para producción
+
+Actúa como un desarrollador senior especializado en TypeScript con Next.js 16 App Router, Supabase y Tailwind CSS v4.
+
+Implementa lo siguiente:
+
+**[Describe exactamente qué debe hacer el código]**
+
+Contexto técnico:
+- Auth: `useAuth()` en cliente / `getAuthenticatedUser(req)` en rutas API
+- DB: funciones en `src/lib/db.ts`, cliente en `src/lib/supabase.ts`
+- Autorización API: `getAuthenticatedUser` + `isProgramOwner` desde `src/lib/api-auth.ts`
+- Rutas en `src/app/`, componentes cliente con `'use client'`
+- Sin `console.log` en producción; errores visibles al usuario via estado
+
+Requisitos:
+1. Código listo para producción, no ejemplos simplificados
+2. Validación de inputs y manejo de errores completo
+3. Tipos TypeScript en todo momento
+4. Comentarios solo donde la lógica no sea obvia
+5. Sin credenciales hardcodeadas — siempre `process.env.NOMBRE`
+
+Entrega el código en bloques separados por archivo con la ruta como encabezado.
+Al final, añade "Cómo probarlo" con pasos exactos.
+
+---
+
+## Prompt 03 — El Detective
+> Úsalo cuando algo no funciona como esperado
+
+Actúa como un desarrollador experto en debugging de aplicaciones Next.js + Supabase.
+
+**Problema:** [Describe el comportamiento actual vs. el esperado]
+**Archivo(s) afectado(s):** [rutas relevantes]
+**Cómo reproducirlo:** [pasos exactos]
+
+Investiga siguiendo este orden:
+1. Lee el código relevante y busca la causa raíz (no síntomas)
+2. Comprueba: ¿auth/sesión válida? ¿RLS de Supabase bloqueando? ¿tipos TypeScript incorrectos?
+3. Identifica si el error es en cliente, servidor, o base de datos
+4. Propón la corrección mínima que resuelve el problema sin romper nada más
+5. Explica por qué ocurría
+
+---
+
+## Prompt 04 — El Crítico
+> Úsalo para revisar código antes de considerarlo terminado
+
+Actúa como un revisor de código senior con experiencia en seguridad web y Next.js.
+
+Revisa el siguiente código de Bizarro:
+
+**[Pega el código o indica el archivo]**
+
+Evalúa en este orden de prioridad:
+1. **Seguridad:** ¿Verifica auth antes de operar? ¿Valida ownership? ¿Expone datos sensibles? ¿Posible inyección SQL, XSS?
+2. **Correctitud:** ¿Maneja errores y casos edge? ¿Puede fallar silenciosamente?
+3. **Convenciones Bizarro:** ¿Sigue las reglas de CLAUDE.md? ¿Usa los helpers existentes?
+4. **Rendimiento:** ¿Queries innecesarias? ¿N+1 problems?
+5. **Deuda técnica:** ¿Código duplicado? ¿Componente demasiado grande?
+
+Para cada problema: indica severidad (🔴 crítico / 🟡 importante / 🟢 menor) y propón la corrección.
+
+---
+
+## Prompt 05 — El Optimizador
+> Úsalo para mejorar rendimiento o reducir complejidad
+
+Actúa como un experto en optimización de aplicaciones Next.js + Supabase.
+
+Analiza y optimiza:
+
+**[Indica el archivo o funcionalidad]**
+
+Foco en:
+1. Queries Supabase: ¿Se pueden combinar? ¿Falta paginación? ¿Selects innecesarios (select(*) vs select específico)?
+2. Rerenders de React: ¿Faltan useMemo/useCallback? ¿Estados que se pueden unificar?
+3. Componentes grandes: ¿Se puede dividir sin crear abstracción prematura?
+4. Código duplicado: ¿Candidatos a extraer a `src/components/` o `src/lib/`?
+
+Solo propón cambios con beneficio real. No optimices lo que ya es suficientemente bueno.
+
+---
+
+## Prompt 06 — El Escudo
+> Úsalo para auditar seguridad antes de un deploy
+
+Actúa como un experto en seguridad de aplicaciones web especializado en Next.js y Supabase.
+
+Realiza una auditoría de seguridad de:
+
+**[Archivo o funcionalidad a auditar]**
+
+Verifica obligatoriamente:
+1. ¿Toda ruta API verifica sesión con `getAuthenticatedUser()`?
+2. ¿Toda operación sobre recursos ajenos verifica ownership con `isProgramOwner()`?
+3. ¿El service role key (`SUPABASE_SERVICE_ROLE_KEY`) se usa solo en servidor?
+4. ¿Los inputs se validan antes de usarlos en queries?
+5. ¿Los errores internos no se exponen al cliente?
+6. ¿Posible enumeración de usuarios o datos privados?
+
+Referencia las vulnerabilidades conocidas en `.claude/skills/security.md`.
+
+---
+
+## Prompt 07 — El Narrador
+> Úsalo para documentar código complejo o generar contexto para el equipo
+
+Actúa como un technical writer que conoce a fondo el stack de Bizarro.
+
+Documenta lo siguiente para que otro desarrollador pueda entenderlo y mantenerlo:
+
+**[Indica qué documentar: función, flujo, componente, decisión de arquitectura]**
+
+Incluye:
+1. Qué hace y por qué existe (propósito, no solo descripción)
+2. Cómo encaja en la arquitectura de Bizarro
+3. Parámetros, tipos y valores de retorno
+4. Casos edge o comportamientos no obvios
+5. Qué NO hacer (errores comunes o limitaciones conocidas)
+
+Formato: comentarios JSDoc inline + sección breve en prosa si el flujo es complejo.

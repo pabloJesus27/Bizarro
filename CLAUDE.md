@@ -104,26 +104,80 @@ src/
 - Manejo de errores revisado (sin console.log en producción, errores visibles al usuario)
 - Código duplicado centralizado en week-utils.ts y wod-utils.ts
 
+## Comportamiento según tipo de tarea
+
+Identifica la intención del usuario por sus palabras clave y aplica el comportamiento correspondiente:
+
+| Si el usuario dice... | Comportamiento a aplicar |
+|---|---|
+| "construye", "implementa", "crea", "añade" | Constructor: código listo para producción, tipos TS, validación, sin console.log |
+| "revisa", "audita", "comprueba seguridad" | Escudo: verificar auth, ownership, inputs, errores expuestos |
+| "hay un bug", "no funciona", "investiga", "por qué" | Detective: causa raíz primero, corrección mínima |
+| "optimiza", "refactoriza", "está muy grande" | Optimizador: queries, rerenders, código duplicado |
+| "antes de implementar", "cómo lo harías", "diseña" | Arquitecto: plan sin código, flujo de datos, riesgos |
+| "documenta", "explica este código" | Narrador: JSDoc + contexto para otros desarrolladores |
+
+Combina siempre con la skill del área correspondiente antes de actuar.
+
+---
+
+## Memoria persistente (Engram)
+
+Tienes acceso a memoria persistente via MCP (Engram).
+
+**Al iniciar cada sesión:** llama a `mem_context` para recuperar el estado anterior.
+
+**Guarda automáticamente cuando:**
+- Se resuelve un bug o vulnerabilidad
+- Se toma una decisión de arquitectura
+- Se descubre un patrón nuevo relevante para el proyecto
+- Se completa una feature significativa
+
+**Formato obligatorio al guardar:**
+```
+what:    qué se hizo
+why:     por qué era necesario
+where:   archivo(s) afectado(s) con ruta
+learned: qué aprender de esto para el futuro
+```
+
+**Al terminar la sesión:** llama a `mem_session_end` para guardar el resumen.
+
+**Nunca guardes** en Engram lo que ya está en skills o CLAUDE.md — evita duplicar contexto estático.
+
+---
+
+## Mantenimiento de Skills
+
+Cuando resuelvas un bug, vulnerabilidad o caso edge documentado en `.claude/skills/`:
+- Elimina el problema de la skill si está completamente resuelto
+- Añade el nuevo patrón aprendido si es relevante para el futuro
+- Actualiza ejemplos de código si el patrón correcto ha cambiado
+
+Aplica esto siempre al final de cada tarea, sin que el usuario tenga que pedírtelo.
+
+---
+
+## Skills disponibles
+
+Carga la skill correspondiente antes de trabajar en cada área:
+
+| Área | Skill |
+|---|---|
+| Rutas API, vulnerabilidades, autorización | `.claude/skills/security.md` |
+| Login, registro, sesión, AuthContext, avatares | `.claude/skills/auth.md` |
+| Timer con IA, tipos de timer, /api/generate-timer | `.claude/skills/timer-ia.md` |
+| Queries Supabase, db.ts, schema, RPC | `.claude/skills/supabase-db.md` |
+| Panel coach, atletas, invitaciones, multi-programa | `.claude/skills/coach-panel.md` |
+
+---
+
 ## Pendiente / Conocido
 
 ### UX
-- `dashboard/page.tsx` línea ~560: mensaje de error del timer dice "Comprueba la API key" — el usuario final no puede hacer nada con eso. Cambiar a mensaje genérico.
-- Eliminar atleta es irreversible sin opción de recuperación (`admin/atletas/page.tsx`).
-- Estados de carga visualmente inconsistentes entre páginas (algunos usan `w-px h-10 animate-pulse`, otros spinners diferentes).
-
-### Seguridad
-- `getAthletes` en `db.ts` no verifica que el caller sea coach del programa — cualquier usuario autenticado podría obtener la lista de atletas de cualquier programa.
-- No hay rate limiting en ninguna ruta API (riesgo de fuerza bruta en login/registro).
-- `add-athlete/route.ts` usa `listUsers()` completo para buscar por email — ineficiente y permite enumerar usuarios.
-
-### Casos edge
-- Si el token de sesión expira a mitad de operación, `db.ts` devuelve array vacío en lugar de error — el usuario ve datos vacíos sin saber por qué.
-- `elegir-modo`: si `getProfile` falla, ya tiene `.catch()` con mensaje. Pero `getMyAthletePrograms` dentro del `.then()` puede fallar sin capturarse — envolver en try/catch.
-- Resultado guardado localmente en UI pero podría no haberse grabado en BD si `upsertResult` falla silenciosamente (`dashboard/page.tsx`).
 
 ### Deuda técnica
 - Componentes grandes sin dividir: `timer/page.tsx` (~1200 líneas), `admin/page.tsx` (~700 líneas), `libre/page.tsx` (~700 líneas), `dashboard/page.tsx` (~600 líneas)
-- `ResultModal` casi idéntico en `dashboard/page.tsx` y `libre/page.tsx` — candidato a componente compartido en `src/components/`
 - Naming inconsistente: `loading` vs `isLoading` mezclados entre páginas
 - Estilos de botón inconsistentes: `disabled:opacity-40` vs `disabled:opacity-50`
 - Sin tests automatizados

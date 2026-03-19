@@ -177,13 +177,17 @@ export async function updateProfileProgram(userId: string, program: string): Pro
 }
 
 export async function getAthletes(programSlug: string): Promise<Profile[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+
   const { data: program } = await supabase
     .from('programs')
-    .select('id')
+    .select('id, owner_id')
     .eq('slug', programSlug)
     .single()
 
   if (!program) return []
+  if (program.owner_id !== user.id) throw new Error('No autorizado')
 
   const { data: entries, error: entriesError } = await supabase
     .from('athlete_programs')
@@ -222,7 +226,7 @@ export async function getResultsForWods(wodIds: string[]): Promise<Result[]> {
   if (wodIds.length === 0) return []
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) throw new Error('SESSION_EXPIRED')
 
   const { data, error } = await supabase
     .from('results')
@@ -238,7 +242,7 @@ export async function getResultsForWods(wodIds: string[]): Promise<Result[]> {
 
 export async function getMyPRs(): Promise<PersonalRecord[]> {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) throw new Error('SESSION_EXPIRED')
 
   const { data, error } = await supabase
     .from('personal_records')
@@ -268,9 +272,11 @@ export async function maybeUpdatePR(
   const isNewPR = !current || weight > current.weight
   if (!isNewPR) return { isNewPR: false }
 
-  await supabase
+  const { error: upsertError } = await supabase
     .from('personal_records')
     .upsert({ user_id: userId, exercise, weight, achieved_at: achievedAt, wod_id: wodId }, { onConflict: 'user_id,exercise' })
+
+  if (upsertError) return { isNewPR: false }
 
   return { isNewPR: true }
 }
@@ -323,9 +329,10 @@ export interface JoinRequest {
 }
 
 export async function cancelJoinRequest(athleteId: string, programId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/cancel-join-request', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
     body: JSON.stringify({ athleteId, programId }),
   })
   const json = await res.json()
@@ -333,9 +340,10 @@ export async function cancelJoinRequest(athleteId: string, programId: string): P
 }
 
 export async function createJoinRequest(athleteId: string, programId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/create-join-request', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
     body: JSON.stringify({ athleteId, programId }),
   })
   const json = await res.json()
@@ -350,6 +358,16 @@ export async function getMyJoinRequests(userId: string): Promise<JoinRequest[]> 
     .neq('status', 'accepted')
   if (error) throw error
   return data
+}
+
+export async function getMyAcceptedJoinRequests(userId: string): Promise<JoinRequest[]> {
+  const { data, error } = await supabase
+    .from('join_requests')
+    .select('*, programs(name, slug)')
+    .eq('athlete_id', userId)
+    .eq('status', 'accepted')
+  if (error) throw error
+  return data ?? []
 }
 
 export async function getPendingJoinRequests(programIds: string[]): Promise<JoinRequest[]> {
@@ -427,6 +445,15 @@ export async function createProgram(name: string, slug: string, userId: string):
   return data
 }
 
+export async function getProgramBySlug(slug: string): Promise<{ name: string; slug: string } | null> {
+  const { data } = await supabase
+    .from('programs')
+    .select('name, slug')
+    .eq('slug', slug)
+    .single()
+  return data ?? null
+}
+
 export async function createCoachInvite(userId: string): Promise<string> {
   const token = crypto.randomUUID()
   const { error } = await supabase
@@ -436,6 +463,7 @@ export async function createCoachInvite(userId: string): Promise<string> {
   return token
 }
 
+// Solo para coaches: expulsar a un atleta del programa
 export async function removeAthleteFromProgram(athleteId: string, programId: string): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/remove-athlete', {
@@ -445,6 +473,18 @@ export async function removeAthleteFromProgram(athleteId: string, programId: str
   })
   const json = await res.json()
   if (!res.ok) throw new Error(json.error ?? 'Error al quitar atleta')
+}
+
+// Para atletas: salir voluntariamente de un programa propio
+export async function leaveProgram(athleteId: string, programId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/leave-program', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+    body: JSON.stringify({ athleteId, programId }),
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error ?? 'Error al salir del programa')
 }
 
 export async function addAthleteByEmail(email: string, programId: string, programSlug: string): Promise<Profile> {

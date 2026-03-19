@@ -46,6 +46,7 @@ export default function MaximosPage() {
 
   const [prs,     setPrs]     = useState<PersonalRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -53,6 +54,13 @@ export default function MaximosPage() {
 
     getMyPRs()
       .then(setPrs)
+      .catch(err => {
+        if (err instanceof Error && err.message === 'SESSION_EXPIRED') {
+          router.push('/login')
+        } else {
+          setError('No se pudieron cargar los máximos.')
+        }
+      })
       .finally(() => setLoading(false))
   }, [authLoading, user, router])
 
@@ -74,6 +82,10 @@ export default function MaximosPage() {
       <AppHeader />
 
       <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
+
+        {error && (
+          <p className="text-red-400 text-sm text-center py-4">{error}</p>
+        )}
 
         {GROUPS.map(group => (
           <div key={group.label} className="mb-10">

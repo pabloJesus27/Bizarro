@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import type { WodType } from '@/lib/types'
 import { DAY_SHORT } from '@/lib/week-utils'
+import { supabase } from '@/lib/supabase'
 
 const WOD_TYPE_LABEL: Record<string, string> = {
   'For Time':   'FOR TIME',
@@ -60,9 +61,10 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
     setLoading(true)
     setError('')
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/analyze-week', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
         body: JSON.stringify({ imageBase64, mediaType, weekDates }),
       })
       const { wods: parsed, error: apiError } = await res.json()

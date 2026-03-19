@@ -16,6 +16,22 @@ export default function ForgotPasswordPage() {
     setError('')
     setLoading(true)
     try {
+      // Rate limit pre-check
+      try {
+        const rlRes = await fetch('/api/auth/check-rate-limit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, action: 'reset_password' }),
+        })
+        const rlResult = await rlRes.json()
+        if (rlRes.ok && rlResult.allowed === false) {
+          setError(rlResult.error ?? 'Demasiados intentos. Por favor espera antes de volver a intentarlo.')
+          return
+        }
+      } catch {
+        // fail-open
+      }
+
       await resetPasswordRequest(email)
       setSent(true)
     } catch (err: unknown) {

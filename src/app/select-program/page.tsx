@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getProfile } from '@/lib/db'
-import { getMyPrograms, createProgram, deleteProgram } from '@/lib/db'
+import { getMyPrograms, createProgram, deleteProgram, createCoachInvite } from '@/lib/db'
 import type { ProgramEntry } from '@/lib/db'
 
 function slugify(name: string): string {
@@ -20,14 +20,19 @@ export default function SelectProgramPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const [programs,     setPrograms]     = useState<ProgramEntry[]>([])
+  const [programs,        setPrograms]        = useState<ProgramEntry[]>([])
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [deleting,     setDeleting]     = useState(false)
-  const [loadingData,  setLoadingData]  = useState(true)
-  const [creating,     setCreating]     = useState(false)
-  const [showForm,     setShowForm]     = useState(false)
-  const [newName,      setNewName]      = useState('')
-  const [formError,    setFormError]    = useState('')
+  const [deleting,        setDeleting]        = useState(false)
+  const [loadingData,     setLoadingData]     = useState(true)
+  const [creating,        setCreating]        = useState(false)
+  const [showForm,        setShowForm]        = useState(false)
+  const [newName,         setNewName]         = useState('')
+  const [formError,       setFormError]       = useState('')
+
+  const [inviteUrl,     setInviteUrl]     = useState<string | null>(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError,   setInviteError]   = useState<string | null>(null)
+  const [inviteCopied,  setInviteCopied]  = useState(false)
 
   useEffect(() => {
     if (loading) return
@@ -41,6 +46,27 @@ export default function SelectProgramPage() {
       .then(setPrograms)
       .finally(() => setLoadingData(false))
   }, [loading, user, router])
+
+  async function handleGenerateInvite() {
+    if (!user) return
+    setInviteLoading(true)
+    setInviteError(null)
+    try {
+      const token = await createCoachInvite(user.id)
+      setInviteUrl(`${window.location.origin}/register?invite=${token}`)
+    } catch {
+      setInviteError('No se pudo generar el enlace. Inténtalo de nuevo.')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  function handleCopyInvite() {
+    if (!inviteUrl) return
+    navigator.clipboard.writeText(inviteUrl)
+    setInviteCopied(true)
+    setTimeout(() => setInviteCopied(false), 2000)
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -67,8 +93,8 @@ export default function SelectProgramPage() {
       await deleteProgram(id)
       setPrograms(prev => prev.filter(p => p.id !== id))
       setConfirmDeleteId(null)
-    } catch (err: unknown) {
-      console.error(err)
+    } catch {
+      // error silenciado — el usuario ya ve el botón habilitarse de nuevo
     } finally {
       setDeleting(false)
     }
@@ -94,109 +120,155 @@ export default function SelectProgramPage() {
         <h1 className="text-white font-black text-3xl uppercase tracking-tighter">Mis programas</h1>
       </div>
 
-      <div className="flex flex-col sm:flex-row flex-wrap gap-6 w-full max-w-2xl justify-center">
+      <div className="flex flex-col w-full max-w-2xl gap-6">
 
-        {programs.map(program => (
-          <div key={program.id} className="relative group w-full sm:w-48">
-            {confirmDeleteId === program.id ? (
-              <div className="border border-red-800 rounded-2xl p-6 flex flex-col items-center gap-3 w-full">
-                <p className="text-white text-sm font-mono text-center">¿Eliminar <span className="font-black">{program.name}</span>?</p>
-                <p className="text-neutral-500 text-xs font-mono text-center">No se puede deshacer</p>
-                <button
-                  onClick={() => handleDelete(program.id)}
-                  disabled={deleting}
-                  className="w-full bg-red-600 hover:bg-red-500 text-white font-black uppercase text-xs rounded-xl px-3 py-2 transition disabled:opacity-50"
-                >
-                  {deleting ? '...' : 'Sí, eliminar'}
-                </button>
-                <button
-                  onClick={() => setConfirmDeleteId(null)}
-                  className="w-full border border-neutral-700 text-neutral-400 hover:text-white font-mono text-xs rounded-xl px-3 py-2 transition"
-                >
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              <>
-                <button
-                  onClick={() => router.push(`/admin?program=${program.slug}`)}
-                  className="group border border-neutral-800 rounded-2xl p-8 flex flex-col items-center gap-4 hover:border-white transition-colors w-full"
-                >
-                  {slugToImage[program.slug] ? (
-                    <img
-                      src={slugToImage[program.slug]}
-                      alt={program.name}
-                      className="w-16 h-16 object-contain"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
-                      <span className="text-white font-black text-xl uppercase">
-                        {program.name[0]}
-                      </span>
+        {/* Lista de programas */}
+        <div className="flex flex-col sm:flex-row flex-wrap gap-6 justify-center">
+
+          {programs.map(program => (
+            <div key={program.id} className="relative group w-full sm:w-48">
+              {confirmDeleteId === program.id ? (
+                <div className="border border-red-800 rounded-2xl p-6 flex flex-col items-center gap-3 w-full">
+                  <p className="text-white text-sm font-mono text-center">¿Eliminar <span className="font-black">{program.name}</span>?</p>
+                  <p className="text-neutral-500 text-xs font-mono text-center">No se puede deshacer</p>
+                  <button
+                    onClick={() => handleDelete(program.id)}
+                    disabled={deleting}
+                    className="w-full bg-red-600 hover:bg-red-500 text-white font-black uppercase text-xs rounded-xl px-3 py-2 transition disabled:opacity-50"
+                  >
+                    {deleting ? '...' : 'Sí, eliminar'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="w-full border border-neutral-700 text-neutral-400 hover:text-white font-mono text-xs rounded-xl px-3 py-2 transition"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push(`/admin?program=${program.slug}`)}
+                    className="group border border-neutral-800 rounded-2xl p-8 flex flex-col items-center gap-4 hover:border-white transition-colors w-full"
+                  >
+                    {slugToImage[program.slug] ? (
+                      <img
+                        src={slugToImage[program.slug]}
+                        alt={program.name}
+                        className="w-16 h-16 object-contain"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
+                        <span className="text-white font-black text-xl uppercase">
+                          {program.name[0]}
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <p className="text-white font-black text-sm uppercase tracking-tight">{program.name}</p>
                     </div>
-                  )}
-                  <div className="text-center">
-                    <p className="text-white font-black text-sm uppercase tracking-tight">{program.name}</p>
-                  </div>
-                  <span className="text-neutral-600 text-xs uppercase tracking-widest font-mono group-hover:text-white transition-colors">
-                    Entrar →
-                  </span>
-                </button>
-                <button
-                  onClick={e => { e.stopPropagation(); setConfirmDeleteId(program.id) }}
-                  className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-neutral-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm font-bold"
-                  title="Eliminar programa"
-                >
-                  ✕
-                </button>
-              </>
-            )}
-          </div>
-        ))}
+                    <span className="text-neutral-600 text-xs uppercase tracking-widest font-mono group-hover:text-white transition-colors">
+                      Entrar →
+                    </span>
+                  </button>
 
-        {/* Crear nuevo programa */}
-        {showForm ? (
-          <form
-            onSubmit={handleCreate}
-            className="border border-neutral-800 rounded-2xl p-8 flex flex-col gap-4 w-full sm:w-48"
-          >
-            <input
-              type="text"
-              placeholder="Nombre del programa"
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              autoFocus
-              className="bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white transition"
-            />
-            {formError && <p className="text-red-400 text-xs font-mono">{formError}</p>}
-            <button
-              type="submit"
-              disabled={creating || !newName.trim()}
-              className="bg-white text-black font-black uppercase tracking-widest rounded-xl px-4 py-2 text-xs hover:bg-neutral-200 disabled:opacity-50 transition"
-            >
-              {creating ? 'Creando...' : 'Crear'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowForm(false); setNewName(''); setFormError('') }}
-              className="text-neutral-600 hover:text-white text-xs font-mono transition text-center"
-            >
-              Cancelar
-            </button>
-          </form>
-        ) : (
-          <button
-            onClick={() => setShowForm(true)}
-            className="group border-2 border-dashed border-neutral-800 rounded-2xl p-8 flex flex-col items-center gap-4 hover:border-neutral-600 transition-colors w-full sm:w-48"
-          >
-            <div className="w-12 h-12 rounded-full border-2 border-dashed border-neutral-700 flex items-center justify-center group-hover:border-neutral-500 transition">
-              <span className="text-neutral-600 text-2xl group-hover:text-neutral-400 transition">+</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); setConfirmDeleteId(program.id) }}
+                    className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-neutral-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100 text-sm font-bold"
+                    title="Eliminar programa"
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
             </div>
-            <span className="text-neutral-600 text-xs uppercase tracking-widest font-mono group-hover:text-neutral-400 transition">
-              Nuevo programa
-            </span>
-          </button>
-        )}
+          ))}
+
+          {/* Crear nuevo programa */}
+          {showForm ? (
+            <form
+              onSubmit={handleCreate}
+              className="border border-neutral-800 rounded-2xl p-8 flex flex-col gap-4 w-full sm:w-48"
+            >
+              <input
+                type="text"
+                placeholder="Nombre del programa"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                autoFocus
+                className="bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white transition"
+              />
+              {formError && <p className="text-red-400 text-xs font-mono">{formError}</p>}
+              <button
+                type="submit"
+                disabled={creating || !newName.trim()}
+                className="bg-white text-black font-black uppercase tracking-widest rounded-xl px-4 py-2 text-xs hover:bg-neutral-200 disabled:opacity-50 transition"
+              >
+                {creating ? 'Creando...' : 'Crear'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowForm(false); setNewName(''); setFormError('') }}
+                className="text-neutral-600 hover:text-white text-xs font-mono transition text-center"
+              >
+                Cancelar
+              </button>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowForm(true)}
+              className="group border-2 border-dashed border-neutral-800 rounded-2xl p-8 flex flex-col items-center gap-4 hover:border-neutral-600 transition-colors w-full sm:w-48"
+            >
+              <div className="w-12 h-12 rounded-full border-2 border-dashed border-neutral-700 flex items-center justify-center group-hover:border-neutral-500 transition">
+                <span className="text-neutral-600 text-2xl group-hover:text-neutral-400 transition">+</span>
+              </div>
+              <span className="text-neutral-600 text-xs uppercase tracking-widest font-mono group-hover:text-neutral-400 transition">
+                Nuevo programa
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Invitación de coach */}
+        <div className="border-t border-white/10 pt-6">
+          <p className="text-sm text-white/50 mb-3">Invitar nuevo coach</p>
+          {inviteUrl ? (
+            <div className="flex gap-2 items-center">
+              <input
+                readOnly
+                value={inviteUrl}
+                className="flex-1 bg-neutral-900 text-white text-xs font-mono px-3 py-2 rounded-xl border border-neutral-700 min-w-0"
+              />
+              <button
+                onClick={handleCopyInvite}
+                className="shrink-0 px-3 py-2 rounded-xl border border-neutral-700 text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:border-neutral-500 transition"
+              >
+                {inviteCopied ? '¡Copiado!' : 'Copiar'}
+              </button>
+              <button
+                onClick={() => { setInviteUrl(null); setInviteError(null) }}
+                className="shrink-0 text-neutral-600 hover:text-white text-lg leading-none transition"
+                aria-label="Cerrar"
+              >
+                &times;
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={handleGenerateInvite}
+                disabled={inviteLoading}
+                className="w-full border border-neutral-800 text-neutral-500 font-mono uppercase tracking-widest rounded-xl px-3 py-2 hover:border-neutral-600 hover:text-neutral-300 disabled:opacity-40 active:scale-95 transition-all text-xs"
+              >
+                {inviteLoading ? 'Generando...' : '+ Generar invitación'}
+              </button>
+              {inviteError && (
+                <p className="text-red-400 text-xs font-mono">{inviteError}</p>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   )

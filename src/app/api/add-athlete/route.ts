@@ -20,24 +20,15 @@ export async function POST(req: NextRequest) {
   const isOwner = await isProgramOwner(user.id, programId)
   if (!isOwner) return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
 
-  // 1. Buscar usuario por email
-  const { data: { users }, error: authError } = await supabase.auth.admin.listUsers()
-  if (authError) return NextResponse.json({ error: 'Error al buscar usuario' }, { status: 500 })
-
-  const authUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
-  if (!authUser) {
-    return NextResponse.json({ error: 'No existe ningún usuario con ese email' }, { status: 404 })
-  }
-
-  // 2. Verificar que tiene perfil de atleta
+  // 1. Buscar usuario por email directamente en profiles
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', authUser.id)
+    .eq('email', email.toLowerCase())
     .single()
 
   if (profileError || !profile) {
-    return NextResponse.json({ error: 'El usuario no tiene perfil' }, { status: 404 })
+    return NextResponse.json({ error: 'No existe ningún usuario con ese email' }, { status: 404 })
   }
 
   if (profile.role === 'coach') {
@@ -48,7 +39,7 @@ export async function POST(req: NextRequest) {
   const { data: existing } = await supabase
     .from('athlete_programs')
     .select('id')
-    .eq('athlete_id', authUser.id)
+    .eq('athlete_id', profile.id)
     .eq('program_id', programId)
     .single()
 
@@ -59,13 +50,13 @@ export async function POST(req: NextRequest) {
   // 4. Añadir al programa
   await supabase
     .from('athlete_programs')
-    .insert({ athlete_id: authUser.id, program_id: programId })
+    .insert({ athlete_id: profile.id, program_id: programId })
 
   // 5. Actualizar profiles.program para que aparezca en getAthletes
   await supabase
     .from('profiles')
     .update({ program: programSlug, role: 'athlete' })
-    .eq('id', authUser.id)
+    .eq('id', profile.id)
 
   return NextResponse.json({ profile: { ...profile, program: programSlug } })
 }

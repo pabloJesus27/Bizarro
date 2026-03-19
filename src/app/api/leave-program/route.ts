@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser, isProgramOwner } from '@/lib/api-auth'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,13 +21,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'programId inválido' }, { status: 400 })
   }
 
-  // Solo el owner del programa (coach) puede expulsar a un atleta
-  const isOwner = await isProgramOwner(user.id, programId)
-  if (!isOwner) {
+  // Un atleta solo puede salirse a sí mismo — nunca a otro usuario
+  if (user.id !== athleteId) {
     return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
   }
 
-  // Obtener slug del programa para comparar con profiles.program
+  // Obtener slug del programa para limpiar profiles.program si corresponde
   const { data: program, error: programError } = await supabase
     .from('programs')
     .select('slug')
@@ -49,14 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 
-  // Eliminar join_requests para que el atleta pueda volver a solicitar
-  await supabase
-    .from('join_requests')
-    .delete()
-    .eq('athlete_id', athleteId)
-    .eq('program_id', programId)
-
-  // Limpiar profiles.program solo si era este programa el activo del atleta
+  // Limpiar profiles.program solo si era el programa activo del atleta
   await supabase
     .from('profiles')
     .update({ program: null })

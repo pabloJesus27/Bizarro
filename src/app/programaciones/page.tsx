@@ -4,8 +4,15 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { getMyAthletePrograms, getDiscoverPrograms, getMyJoinRequests, createJoinRequest, cancelJoinRequest } from '@/lib/db'
-import { supabase } from '@/lib/supabase'
+import {
+  getMyAthletePrograms,
+  getDiscoverPrograms,
+  getMyJoinRequests,
+  getMyAcceptedJoinRequests,
+  createJoinRequest,
+  cancelJoinRequest,
+  leaveProgram,
+} from '@/lib/db'
 import type { AthleteProgramEntry, ProgramEntry, JoinRequest } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
 
@@ -14,20 +21,38 @@ const slugImages: Record<string, string> = {
   entrenemos: '/entrenemos.png',
 }
 
+const SEEN_KEY_PREFIX = 'accepted_seen_'
+
+function getSeenKey(requestId: string): string {
+  return `${SEEN_KEY_PREFIX}${requestId}`
+}
+
+function markAsSeen(requestId: string): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(getSeenKey(requestId), 'true')
+  }
+}
+
+function isSeen(requestId: string): boolean {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(getSeenKey(requestId)) === 'true'
+}
+
 export default function ProgramacionesPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const [myPrograms,    setMyPrograms]    = useState<AthleteProgramEntry[]>([])
-  const [discover,      setDiscover]      = useState<ProgramEntry[]>([])
-  const [joinRequests,  setJoinRequests]  = useState<JoinRequest[]>([])
-  const [loading,       setLoading]       = useState(true)
-  const [requesting,    setRequesting]    = useState<string | null>(null)
-  const [cancelling,    setCancelling]    = useState<string | null>(null)
-  const [leaving,       setLeaving]       = useState<string | null>(null)
-  const [confirmLeave,  setConfirmLeave]  = useState<string | null>(null)
-  const [tab,           setTab]           = useState<'mis' | 'descubrir'>('mis')
-  const [error,         setError]         = useState<string | null>(null)
+  const [myPrograms,             setMyPrograms]             = useState<AthleteProgramEntry[]>([])
+  const [discover,               setDiscover]               = useState<ProgramEntry[]>([])
+  const [joinRequests,           setJoinRequests]           = useState<JoinRequest[]>([])
+  const [acceptedNotifications,  setAcceptedNotifications]  = useState<JoinRequest[]>([])
+  const [loading,                setLoading]                = useState(true)
+  const [requesting,             setRequesting]             = useState<string | null>(null)
+  const [cancelling,             setCancelling]             = useState<string | null>(null)
+  const [leaving,                setLeaving]                = useState<string | null>(null)
+  const [confirmLeave,           setConfirmLeave]           = useState<string | null>(null)
+  const [tab,                    setTab]                    = useState<'mis' | 'descubrir'>('mis')
+  const [error,                  setError]                  = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -37,16 +62,24 @@ export default function ProgramacionesPage() {
       getMyAthletePrograms(user.id),
       getDiscoverPrograms(user.id),
       getMyJoinRequests(user.id),
-    ]).then(([mine, disc, reqs]) => {
+      getMyAcceptedJoinRequests(user.id),
+    ]).then(([mine, disc, reqs, accepted]) => {
       setMyPrograms(mine)
       setDiscover(disc)
       setJoinRequests(reqs)
+      const unseen = accepted.filter(r => r.id && !isSeen(r.id))
+      setAcceptedNotifications(unseen)
       setLoading(false)
     }).catch(() => {
       setError('Error al cargar los programas. Recarga la página.')
       setLoading(false)
     })
   }, [authLoading, user, router])
+
+  function dismissNotification(requestId: string): void {
+    markAsSeen(requestId)
+    setAcceptedNotifications(prev => prev.filter(n => n.id !== requestId))
+  }
 
   async function handleRequest(program: ProgramEntry) {
     if (!user) return
@@ -72,12 +105,7 @@ export default function ProgramacionesPage() {
     if (!user) return
     setLeaving(ap.program_id)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      await fetch('/api/remove-athlete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ athleteId: user.id, programId: ap.program_id }),
-      })
+      await leaveProgram(user.id, ap.program_id)
       setMyPrograms(prev => prev.filter(p => p.program_id !== ap.program_id))
       setDiscover(prev => [...prev, { id: ap.program_id, name: ap.programs.name, slug: ap.programs.slug, owner_id: '', created_at: '' }])
       setConfirmLeave(null)
@@ -118,6 +146,43 @@ export default function ProgramacionesPage() {
       <AppHeader />
 
       <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
+
+        {/* Accepted join request notifications */}
+        {acceptedNotifications.length > 0 && (
+          <div className="flex flex-col gap-3 mb-6">
+            {acceptedNotifications.map(notification => {
+              const programName = notification.programs?.name ?? 'tu programa'
+              const programSlug = notification.programs?.slug ?? ''
+              return (
+                <div
+                  key={notification.id}
+                  className="bg-green-500/20 border border-green-500/40 rounded-xl p-4 flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-green-400 text-lg">✓</span>
+                    <p className="text-white text-sm">
+                      ¡Tu solicitud al programa <strong>{programName}</strong> fue aceptada!
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => router.push(`/dashboard?program=${programSlug}`)}
+                      className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Ir al programa →
+                    </button>
+                    <button
+                      onClick={() => dismissNotification(notification.id)}
+                      className="text-white/40 hover:text-white transition-colors text-lg leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 px-4 py-3 bg-red-950 border border-red-800 rounded-xl">

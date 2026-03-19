@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { signIn } from '@/lib/auth'
-import { getProfile } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
+import { getProfile, getMyAthletePrograms } from '@/lib/db'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,16 +20,41 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const data = await signIn(email, password)
-      const profile = await getProfile(data.user!.id)
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const result = await res.json()
+
+      if (!res.ok) {
+        setError(result.error ?? 'Error al iniciar sesión')
+        return
+      }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token:  result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      })
+
+      if (sessionError) {
+        setError('Error al establecer la sesión. Inténtalo de nuevo.')
+        return
+      }
+
+      const profile = await getProfile(result.session.user.id)
       if (profile?.role === 'coach') {
         router.push('/select-program')
-      } else if (!profile?.program) {
-        router.push('/elegir-modo')
-      } else if (profile.program === 'libre') {
-        router.push('/libre')
       } else {
-        router.push('/elegir-modo')
+        let destination = '/elegir-modo'
+        try {
+          const programs = await getMyAthletePrograms(result.session.user.id)
+          destination = programs.length > 0 ? '/elegir-modo' : '/libre'
+        } catch {
+          // fall back to /elegir-modo
+        }
+        router.push(destination)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión')

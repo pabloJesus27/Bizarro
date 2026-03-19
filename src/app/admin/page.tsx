@@ -2,11 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { signOut } from '@/lib/auth'
-import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRanking, createCoachInvite, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
+import { getProfile, getWodsForWeek, createWod, updateWod, deleteWod, getWodRanking, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
 import LoadWeekModal from '@/components/LoadWeekModal'
+import CoachHeader from '@/components/CoachHeader'
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
@@ -287,12 +286,8 @@ export default function AdminPage() {
   const [deletingId,    setDeletingId]    = useState<string | null>(null)
   const [pendingBlock,  setPendingBlock]  = useState<number | null>(null)
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
-  const [profileOpen,   setProfileOpen]   = useState(false)
   const [profileName,   setProfileName]   = useState('')
   const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
-  const [inviteUrl,     setInviteUrl]     = useState<string | null>(null)
-  const [inviteLoading, setInviteLoading] = useState(false)
-  const [inviteError,   setInviteError]   = useState<string | null>(null)
   const [programName,   setProgramName]   = useState('')
   const [pendingCount,  setPendingCount]  = useState(0)
 
@@ -357,26 +352,6 @@ export default function AdminPage() {
     setWods(updated)
   }
 
-  async function handleGenerateInvite() {
-    if (!user) return
-    setInviteLoading(true)
-    setInviteError(null)
-    try {
-      const token = await createCoachInvite(user.id)
-      const url = `${window.location.origin}/register?invite=${token}`
-      setInviteUrl(url)
-    } catch {
-      setInviteError('No se pudo generar el enlace. Inténtalo de nuevo.')
-    } finally {
-      setInviteLoading(false)
-    }
-  }
-
-  async function handleLogout() {
-    await signOut()
-    router.push('/login')
-  }
-
   const dayWods   = wods.filter(w => w.date === selectedDate)
   const activeWod = dayWods.find(w => w.block === selectedBlock)
 
@@ -393,113 +368,14 @@ export default function AdminPage() {
       <main className="min-h-screen bg-black flex flex-col">
 
         {/* Header */}
-        <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
-          <div className="flex items-center gap-3">
-            {(() => {
-              const slugImages: Record<string, string> = { bizarro: '/logoBizarro.png', entrenemos: '/entrenemos.png' }
-              const img = slugImages[programSlug]
-              return img
-                ? <Image src={img} alt={programName} width={48} height={48} className="object-contain" />
-                : <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center"><span className="text-white font-black text-sm uppercase">{programName[0]}</span></div>
-            })()}
-            <span className="text-white font-black text-xl tracking-tighter">{programName.toUpperCase()}</span>
-          </div>
-
-          {/* Centered tabs */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
-            <button
-              onClick={() => router.push('/admin')}
-              className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-white"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => router.push(`/admin/atletas?program=${programSlug}`)}
-              className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
-            >
-              Mis atletas
-            </button>
-            <button
-              onClick={() => router.push(`/admin/notificaciones?program=${programSlug}`)}
-              className="relative px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
-            >
-              Notificaciones
-              {pendingCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-black">
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <button
-              onClick={() => router.push('/select-program')}
-              className="text-neutral-600 hover:text-white text-sm transition font-mono"
-            >
-              ← Programas
-            </button>
-
-          <div className="relative flex items-center">
-            <button
-              onClick={() => { setProfileOpen(v => !v); setInviteUrl(null) }}
-              className="flex items-center gap-2 hover:opacity-80 transition"
-            >
-              {avatarUrl
-                ? <Image src={avatarUrl} alt="avatar" width={28} height={28} className="rounded-full object-cover" unoptimized />
-                : (
-                  <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center">
-                    <span className="text-white text-xs font-black">{profileName[0]?.toUpperCase()}</span>
-                  </div>
-                )}
-              <span className="text-white text-sm font-mono">{profileName.split(' ')[0]}</span>
-            </button>
-
-            {profileOpen && (
-              <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[220px]">
-                {inviteUrl ? (
-                  <div className="px-4 py-3 border-b border-neutral-900">
-                    <p className="text-neutral-500 text-xs font-mono mb-2">Copia el enlace:</p>
-                    <div className="flex gap-2">
-                      <input
-                        readOnly
-                        value={inviteUrl}
-                        className="flex-1 bg-neutral-900 text-white text-xs font-mono px-2 py-1.5 rounded-lg border border-neutral-700 min-w-0"
-                      />
-                      <button
-                        onClick={() => { navigator.clipboard.writeText(inviteUrl) }}
-                        className="text-xs font-mono text-neutral-400 hover:text-white transition px-2 border border-neutral-700 rounded-lg"
-                      >
-                        Copiar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleGenerateInvite}
-                      disabled={inviteLoading}
-                      className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition border-b border-neutral-900 disabled:opacity-40"
-                    >
-                      {inviteLoading ? 'Generando...' : 'Generar invitación'}
-                    </button>
-                    {inviteError && (
-                      <p className="px-4 py-2 text-red-400 text-xs font-mono border-b border-neutral-900">{inviteError}</p>
-                    )}
-                  </>
-                )}
-
-                <button
-                  onClick={async () => { setProfileOpen(false); await handleLogout() }}
-                  className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition"
-                >
-                  Salir
-                </button>
-              </div>
-            )}
-          </div>
-          </div>
-        </header>
+        <CoachHeader
+          activeTab="home"
+          pendingCount={pendingCount}
+          programSlug={programSlug}
+          programName={programName}
+          profileName={profileName}
+          avatarUrl={avatarUrl}
+        />
 
         {/* Week navigation */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-900">

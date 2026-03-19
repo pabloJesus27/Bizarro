@@ -6,11 +6,7 @@ import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { getProfile, getMyPrograms, getPendingJoinRequests, acceptJoinRequest, rejectJoinRequest } from '@/lib/db'
 import type { JoinRequest } from '@/lib/db'
-
-const slugImages: Record<string, string> = {
-  bizarro: '/logoBizarro.png',
-  entrenemos: '/entrenemos.png',
-}
+import CoachHeader from '@/components/CoachHeader'
 
 export default function NotificacionesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -18,10 +14,12 @@ export default function NotificacionesPage() {
   const searchParams = useSearchParams()
   const programSlug = searchParams.get('program') ?? 'bizarro'
 
-  const [requests,  setRequests]  = useState<JoinRequest[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [acting,    setActing]    = useState<string | null>(null)
+  const [requests,    setRequests]    = useState<JoinRequest[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [acting,      setActing]      = useState<string | null>(null)
   const [programName, setProgramName] = useState('')
+  const [profileName, setProfileName] = useState('')
+  const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -29,6 +27,9 @@ export default function NotificacionesPage() {
 
     getProfile(user.id).then(async profile => {
       if (profile?.role !== 'coach') { router.push('/dashboard'); return }
+
+      setProfileName(profile?.full_name ?? '')
+      setAvatarUrl(profile?.avatar_url ?? null)
 
       const programs = await getMyPrograms(user.id)
       const current = programs.find(p => p.slug === programSlug)
@@ -69,53 +70,18 @@ export default function NotificacionesPage() {
     )
   }
 
-  const img = slugImages[programSlug]
-
   return (
     <main className="min-h-screen bg-black flex flex-col">
 
       {/* Header */}
-      <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
-        <div className="flex items-center gap-3">
-          {img
-            ? <Image src={img} alt={programName} width={48} height={48} className="object-contain" />
-            : <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center"><span className="text-white font-black text-sm uppercase">{programSlug[0]}</span></div>
-          }
-          <span className="text-white font-black text-xl tracking-tighter">{programName.toUpperCase()}</span>
-        </div>
-
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
-          <button
-            onClick={() => router.push(`/admin?program=${programSlug}`)}
-            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
-          >
-            Home
-          </button>
-          <button
-            onClick={() => router.push(`/admin/atletas?program=${programSlug}`)}
-            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
-          >
-            Mis atletas
-          </button>
-          <button
-            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition bg-white text-black relative"
-          >
-            Notificaciones
-            {requests.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-black">
-                {requests.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        <button
-          onClick={() => router.push('/select-program')}
-          className="text-neutral-600 hover:text-white text-xs font-mono transition uppercase tracking-widest"
-        >
-          ← Programas
-        </button>
-      </header>
+      <CoachHeader
+        activeTab="notificaciones"
+        pendingCount={requests.length}
+        programSlug={programSlug}
+        programName={programName}
+        profileName={profileName}
+        avatarUrl={avatarUrl}
+      />
 
       {/* Content */}
       <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">

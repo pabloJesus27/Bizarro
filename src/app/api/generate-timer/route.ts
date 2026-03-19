@@ -1,10 +1,25 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/api-auth'
+import { checkAiRateLimit } from '@/lib/ai-rate-limit'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req)
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const allowed = await checkAiRateLimit(user.id, 'generate-timer', 20)
+  if (!allowed) return NextResponse.json(
+    { error: 'Límite diario alcanzado. Inténtalo mañana.' },
+    { status: 429 }
+  )
+
   const { title, description, type } = await req.json()
+
+  if ((title?.length ?? 0) > 200 || (description?.length ?? 0) > 2000) {
+    return NextResponse.json({ error: 'Input demasiado largo' }, { status: 400 })
+  }
 
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',

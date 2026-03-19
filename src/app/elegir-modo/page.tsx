@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
@@ -20,21 +20,29 @@ export default function ElegirModoPage() {
   const [ready,    setReady]    = useState(false)
   const [error,    setError]    = useState<string | null>(null)
 
-  useEffect(() => {
-    if (loading) return
+  const loadData = useCallback(async () => {
     if (!user) { router.push('/login'); return }
 
-    getProfile(user.id).then(async profile => {
+    setError(null)
+    setReady(false)
+
+    try {
+      const profile = await getProfile(user.id)
       if (!profile) { router.push('/login'); return }
       if (profile.role === 'coach') { router.push('/select-program'); return }
 
       const myPrograms = await getMyAthletePrograms(user.id)
       setPrograms(myPrograms)
       setReady(true)
-    }).catch(() => {
+    } catch {
       setError('No se pudieron cargar tus programas. Inténtalo de nuevo.')
-    })
-  }, [loading, user, router])
+    }
+  }, [user, router])
+
+  useEffect(() => {
+    if (loading) return
+    loadData()
+  }, [loading, loadData])
 
   if (!ready) {
     return (
@@ -43,7 +51,7 @@ export default function ElegirModoPage() {
           <div className="text-center flex flex-col gap-4">
             <p className="text-red-400 text-xs font-mono">{error}</p>
             <button
-              onClick={() => router.refresh()}
+              onClick={loadData}
               className="text-neutral-500 hover:text-white text-xs font-mono uppercase tracking-widest transition"
             >
               Reintentar
@@ -98,7 +106,10 @@ export default function ElegirModoPage() {
 
         {/* Por libre */}
         <button
-          onClick={() => router.push('/libre')}
+          onClick={async () => {
+            if (user) await updateProfileProgram(user.id, 'libre')
+            router.push('/libre')
+          }}
           className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors"
         >
           <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center">

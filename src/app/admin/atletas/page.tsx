@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { signOut } from '@/lib/auth'
 import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser, getMyPrograms, getPendingJoinRequests, addAthleteByEmail, removeAthleteFromProgram } from '@/lib/db'
 import type { Wod, Result, WodType, Profile } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import CoachHeader from '@/components/CoachHeader'
 
 const WOD_TYPE_LABEL: Record<string, string> = {
   'For Time': 'FOR TIME',
@@ -143,7 +143,7 @@ function AthleteList({ athletes, onSelect, programId, programSlug, onAthleteAdde
                 disabled={adding || !email.trim()}
                 className="flex-1 bg-white text-black font-black text-xs uppercase tracking-widest rounded-full py-2.5 hover:bg-neutral-200 transition disabled:opacity-50"
               >
-                {adding ? '...' : 'Añadir'}
+                {adding ? 'Agregando...' : 'Agregar atleta'}
               </button>
             </div>
           </div>
@@ -262,23 +262,26 @@ function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRem
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-6">
             <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-6 w-full max-w-sm">
               <p className="text-white font-black text-lg uppercase tracking-tight mb-1">Quitar atleta</p>
-              <p className="text-neutral-500 text-sm font-mono mb-6">
-                ¿Quieres quitar a <span className="text-white">{athlete.full_name ?? 'este atleta'}</span> del programa?
+              <p className="text-neutral-500 text-sm font-mono mb-2">
+                <span className="text-white">{athlete.full_name ?? 'Este atleta'}</span> perderá el acceso al programa de forma inmediata.
               </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConfirmRemove(false)}
-                  disabled={removing}
-                  className="flex-1 border border-neutral-800 text-neutral-500 hover:text-white font-mono text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
+              <p className="text-neutral-600 text-xs font-mono mb-6">
+                Sus resultados y marcas personales se conservan — solo se elimina la inscripción.
+              </p>
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={handleRemove}
                   disabled={removing}
-                  className="flex-1 bg-red-500 hover:bg-red-400 text-white font-black text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
+                  className="w-full bg-red-500 hover:bg-red-400 text-white font-black text-xs uppercase tracking-widest rounded-full py-2.5 transition disabled:opacity-50"
                 >
-                  {removing ? '...' : 'Quitar'}
+                  {removing ? '...' : 'Sí, quitar del programa'}
+                </button>
+                <button
+                  onClick={() => setConfirmRemove(false)}
+                  disabled={removing}
+                  className="w-full text-neutral-600 hover:text-neutral-400 font-mono text-xs uppercase tracking-widest py-2 transition disabled:opacity-50"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>
@@ -446,11 +449,16 @@ export default function AtletasPage() {
   const searchParams = useSearchParams()
   const programSlug = searchParams.get('program') ?? 'bizarro'
 
+  const athleteIdParam = searchParams.get('athlete')
+
   const [athletes,         setAthletes]         = useState<Profile[]>([])
   const [selectedAthlete,  setSelectedAthlete]  = useState<Profile | null>(null)
   const [loading,          setLoading]          = useState(true)
   const [pendingCount,     setPendingCount]     = useState(0)
   const [programId,        setProgramId]        = useState('')
+  const [programName,      setProgramName]      = useState('')
+  const [profileName,      setProfileName]      = useState('')
+  const [avatarUrl,        setAvatarUrl]        = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -459,22 +467,25 @@ export default function AtletasPage() {
     getProfile(user.id).then(async profile => {
       if (profile?.role !== 'coach') { router.push('/dashboard'); return }
 
-      const [, programs] = await Promise.all([
-        getAthletes(programSlug).then(setAthletes),
+      setProfileName(profile?.full_name ?? '')
+      setAvatarUrl(profile?.avatar_url ?? null)
+
+      const [loadedAthletes, programs] = await Promise.all([
+        getAthletes(programSlug),
         getMyPrograms(user.id),
       ])
+      setAthletes(loadedAthletes)
+      if (athleteIdParam) {
+        const found = loadedAthletes.find(a => a.id === athleteIdParam)
+        if (found) setSelectedAthlete(found)
+      }
       const current = programs.find(p => p.slug === programSlug)
-      if (current) setProgramId(current.id)
+      if (current) { setProgramId(current.id); setProgramName(current.name) }
       const reqs = await getPendingJoinRequests(programs.map(p => p.id))
       setPendingCount(reqs.length)
       setLoading(false)
     })
-  }, [authLoading, user, router, programSlug])
-
-  async function handleLogout() {
-    await signOut()
-    router.push('/login')
-  }
+  }, [authLoading, user, router, programSlug, athleteIdParam])
 
   if (authLoading || loading) {
     return (
@@ -488,70 +499,37 @@ export default function AtletasPage() {
     <main className="min-h-screen bg-black flex flex-col">
 
       {/* Header */}
-      <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
-        <div className="flex items-center gap-3">
-          {(() => {
-            const slugImages: Record<string, string> = { bizarro: '/logoBizarro.png', entrenemos: '/entrenemos.png' }
-            const img = slugImages[programSlug]
-            return img
-              ? <Image src={img} alt={programSlug} width={48} height={48} className="object-contain" />
-              : <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center"><span className="text-white font-black text-sm uppercase">{programSlug[0]}</span></div>
-          })()}
-          <span className="text-white font-black text-xl tracking-tighter">{programSlug.toUpperCase()}</span>
-        </div>
-
-        {/* Centered tabs */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
-          <button
-            onClick={() => router.push(`/admin?program=${programSlug}`)}
-            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
-          >
-            Home
-          </button>
-          <button
-            onClick={() => router.push(`/admin/atletas?program=${programSlug}`)}
-            className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-white"
-          >
-            Mis atletas
-          </button>
-          <button
-            onClick={() => router.push(`/admin/notificaciones?program=${programSlug}`)}
-            className="relative px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
-          >
-            Notificaciones
-            {pendingCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-black">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-        </div>
-
-        <div className="flex items-center gap-5">
-          <button
-            onClick={handleLogout}
-            className="text-neutral-600 hover:text-white text-sm transition font-mono"
-          >
-            Salir →
-          </button>
-        </div>
-      </header>
+      <CoachHeader
+        activeTab="atletas"
+        pendingCount={pendingCount}
+        programSlug={programSlug}
+        programName={programName}
+        profileName={profileName}
+        avatarUrl={avatarUrl}
+      />
 
       {selectedAthlete ? (
         <AthleteWeekView
           athlete={selectedAthlete}
-          onBack={() => setSelectedAthlete(null)}
+          onBack={() => {
+            setSelectedAthlete(null)
+            router.push(`/admin/atletas?program=${programSlug}`)
+          }}
           programSlug={programSlug}
           programId={programId}
           onAthleteRemoved={() => {
             setAthletes(prev => prev.filter(a => a.id !== selectedAthlete.id))
             setSelectedAthlete(null)
+            router.push(`/admin/atletas?program=${programSlug}`)
           }}
         />
       ) : (
         <AthleteList
           athletes={athletes}
-          onSelect={setSelectedAthlete}
+          onSelect={(athlete) => {
+            setSelectedAthlete(athlete)
+            router.push(`/admin/atletas?program=${programSlug}&athlete=${athlete.id}`)
+          }}
           programId={programId}
           programSlug={programSlug}
           onAthleteAdded={athlete => setAthletes(prev => [...prev, athlete].sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '')))}
