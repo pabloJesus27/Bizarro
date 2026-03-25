@@ -1,21 +1,23 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs } from '@/lib/db'
-import type { PersonalRecord } from '@/lib/db'
+import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessage } from '@/lib/db'
+import type { PersonalRecord, CoachMessage } from '@/lib/db'
 import type { Wod, Result, Program } from '@/lib/types'
 import AppHeader from '@/components/AppHeader'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
 import PRCalculator from '@/components/PRCalculator'
+import CoachMessageCard from '@/components/CoachMessageCard'
+import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 
 // ── Dashboard Page ─────────────────────────────────────
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -37,6 +39,7 @@ export default function DashboardPage() {
   const [generatingTimer, setGeneratingTimer] = useState(false)
   const [timerError,      setTimerError]      = useState(false)
   const [wodError,        setWodError]        = useState<string | null>(null)
+  const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -61,6 +64,7 @@ export default function DashboardPage() {
     if (loading || !program) return
     setWodLoading(true)
     setWodError(null)
+    getCoachMessage(program, weekDates[0]).then(setCoachMessage).catch(() => setCoachMessage(null))
     getWodsForWeek(weekDates[0], weekDates[6], program)
       .then(async weekWods => {
         setWods(weekWods)
@@ -212,7 +216,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col px-6 py-8 max-w-2xl mx-auto w-full">
+        <div className="flex-1 flex flex-col lg:flex-row px-6 py-8 max-w-5xl mx-auto w-full gap-8">
+
+          {/* Coach message — desktop */}
+          {coachMessage && (
+            <div className="hidden lg:block w-64 shrink-0 pt-0">
+              <CoachMessageCard message={coachMessage} />
+            </div>
+          )}
+
+          <div className="flex-1 flex flex-col min-w-0">
 
           {wodError && (
             <p className="text-red-400 text-sm text-center py-4">{wodError}</p>
@@ -336,7 +349,11 @@ export default function DashboardPage() {
             </div>
           )}
           </>)}
-          </div>
+          </div>{/* end flex-1 inner */}
+
+        </div>{/* end content outer */}
+
+      <CoachMessageBubble message={coachMessage} />
 
       </main>
 
@@ -350,5 +367,13 @@ export default function DashboardPage() {
       )}
 
     </>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardContent />
+    </Suspense>
   )
 }

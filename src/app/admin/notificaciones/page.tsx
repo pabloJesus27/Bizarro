@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
@@ -8,7 +8,7 @@ import { getProfile, getMyPrograms, getPendingJoinRequests, acceptJoinRequest, r
 import type { JoinRequest } from '@/lib/db'
 import CoachHeader from '@/components/CoachHeader'
 
-export default function NotificacionesPage() {
+function NotificacionesContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -134,5 +134,13 @@ export default function NotificacionesPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function NotificacionesPage() {
+  return (
+    <Suspense>
+      <NotificacionesContent />
+    </Suspense>
   )
 }

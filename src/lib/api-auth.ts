@@ -22,3 +22,12 @@ export async function isProgramOwner(userId: string, programId: string): Promise
     .single()
   return data?.owner_id === userId
 }
+
+export async function isProgramOwnerBySlug(userId: string, programSlug: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('programs')
+    .select('owner_id')
+    .eq('slug', programSlug)
+    .single()
+  return data?.owner_id === userId
+}

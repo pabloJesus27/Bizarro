@@ -526,3 +526,26 @@ export async function upsertResult(result: NewResult): Promise<Result> {
   if (error) throw error
   return data
 }
+
+// ── Coach Messages ─────────────────────────────────────
+
+export interface CoachMessage {
+  id: string
+  program_slug: string
+  week_start: string
+  content: string
+  created_by: string
+  created_at: string
+}
+
+export async function getCoachMessage(programSlug: string, weekStart: string): Promise<CoachMessage | null> {
+  const { data, error } = await supabase
+    .from('coach_messages')
+    .select('*')
+    .eq('program_slug', programSlug)
+    .eq('week_start', weekStart)
+    .single()
+
+  if (error && error.code !== 'PGRST116') throw error
+  return data
+}

@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signUp } from '@/lib/auth'
 import { getAllPrograms } from '@/lib/db'
 import type { ProgramEntry } from '@/lib/db'
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const inviteToken  = searchParams.get('invite')
@@ -231,5 +231,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterContent />
+    </Suspense>
   )
 }

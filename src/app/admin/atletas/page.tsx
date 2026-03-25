@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
@@ -425,7 +425,7 @@ function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRem
 
 // ── Page ───────────────────────────────────────────────
 
-export default function AtletasPage() {
+function AtletasContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -518,5 +518,13 @@ export default function AtletasPage() {
         />
       )}
     </main>
+  )
+}
+
+export default function AtletasPage() {
+  return (
+    <Suspense>
+      <AtletasContent />
+    </Suspense>
   )
 }

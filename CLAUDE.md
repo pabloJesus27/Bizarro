@@ -291,4 +291,3 @@ Cuando lances un sub-agente, incluye en el prompt:
 ### UX
 
 ### Deuda técnica
-- Sin tests automatizados

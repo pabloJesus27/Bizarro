@@ -16,20 +16,23 @@ interface ParsedWod {
 
 interface Props {
   weekDates: string[]
+  programSlug?: string
   onConfirm: (wods: ParsedWod[]) => Promise<void>
   onClose: () => void
 }
 
-export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) {
+export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClose }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageBase64,  setImageBase64]  = useState<string>('')
   const [mediaType,    setMediaType]    = useState<string>('image/jpeg')
-  const [step,         setStep]         = useState<'upload' | 'preview'>('upload')
+  const [step,         setStep]         = useState<'upload' | 'preview' | 'message'>('upload')
   const [loading,      setLoading]      = useState(false)
   const [saving,       setSaving]       = useState(false)
+  const [savingMsg,    setSavingMsg]    = useState(false)
   const [wods,         setWods]         = useState<ParsedWod[]>([])
   const [error,        setError]        = useState('')
+  const [message,      setMessage]      = useState('')
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -40,7 +43,6 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string
       setImagePreview(dataUrl)
-      // Strip data URL prefix to get pure base64
       setImageBase64(dataUrl.split(',')[1])
     }
     reader.readAsDataURL(file)
@@ -72,11 +74,31 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
     setSaving(true)
     try {
       await onConfirm(wods)
-      onClose()
+      if (programSlug) {
+        setStep('message')
+      } else {
+        onClose()
+      }
     } catch {
       setError('Error al guardar los WODs')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleSaveMessage() {
+    if (!message.trim()) { onClose(); return }
+    setSavingMsg(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      await fetch('/api/coach-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ program_slug: programSlug, week_start: weekDates[0], content: message }),
+      })
+    } finally {
+      setSavingMsg(false)
+      onClose()
     }
   }
 
@@ -85,7 +107,6 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
     return `${DAY_SHORT[d.getDay()]} ${d.getDate()}`
   }
 
-  // Group wods by date for preview
   const grouped = wods.reduce<Record<string, ParsedWod[]>>((acc, wod) => {
     if (!acc[wod.date]) acc[wod.date] = []
     acc[wod.date].push(wod)
@@ -100,9 +121,11 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
         <div className="flex items-start justify-between p-6 border-b border-neutral-900">
           <div>
             <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-              {step === 'upload' ? 'Subir imagen' : `${wods.length} WODs detectados`}
+              {step === 'upload' ? 'Subir imagen' : step === 'preview' ? `${wods.length} WODs detectados` : 'Opcional'}
             </p>
-            <h2 className="text-white font-black text-xl tracking-tight uppercase">Cargar semana</h2>
+            <h2 className="text-white font-black text-xl tracking-tight uppercase">
+              {step === 'message' ? 'Indicaciones de la semana' : 'Cargar semana'}
+            </h2>
           </div>
           <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
             &times;
@@ -184,6 +207,21 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
               {error && <p className="text-red-400 text-sm font-mono">{error}</p>}
             </div>
           )}
+
+          {step === 'message' && (
+            <div className="flex flex-col gap-4">
+              <p className="text-neutral-500 text-sm font-mono">
+                Escribe unas indicaciones para tus atletas sobre cómo afrontar esta semana. Es opcional.
+              </p>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                placeholder="Ej: Esta semana toca intensidad alta en fuerza. Prioriza descanso entre series..."
+                rows={5}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-3 text-white text-sm font-mono placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 resize-none"
+              />
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -196,7 +234,7 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
             >
               {loading ? 'Analizando...' : 'Analizar imagen'}
             </button>
-          ) : (
+          ) : step === 'preview' ? (
             <>
               <button
                 onClick={() => { setStep('upload'); setWods([]); setError('') }}
@@ -210,6 +248,22 @@ export default function LoadWeekModal({ weekDates, onConfirm, onClose }: Props) 
                 className="flex-1 bg-white text-black font-black uppercase tracking-widest rounded-xl px-4 py-4 hover:bg-neutral-200 disabled:opacity-50 active:scale-95 transition-all"
               >
                 {saving ? 'Guardando...' : 'Confirmar'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onClose}
+                className="flex-1 border border-neutral-700 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-white transition text-sm"
+              >
+                Cerrar sin mensaje
+              </button>
+              <button
+                onClick={handleSaveMessage}
+                disabled={savingMsg || !message.trim()}
+                className="flex-1 bg-white text-black font-black uppercase tracking-widest rounded-xl px-4 py-4 hover:bg-neutral-200 disabled:opacity-50 active:scale-95 transition-all"
+              >
+                {savingMsg ? 'Guardando...' : 'Guardar y cerrar'}
               </button>
             </>
           )}

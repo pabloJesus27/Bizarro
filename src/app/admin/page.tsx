@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getProfile, getWodsForWeek, createWod, deleteWod, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
@@ -14,7 +14,7 @@ import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 
 // ── Admin Page ─────────────────────────────────────────
 
-export default function AdminPage() {
+function AdminContent() {
   const { user, loading: authLoading } = useAuth()
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -319,10 +319,19 @@ export default function AdminPage() {
       {loadWeekOpen && (
         <LoadWeekModal
           weekDates={weekDates}
+          programSlug={programSlug}
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
         />
       )}
     </>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense>
+      <AdminContent />
+    </Suspense>
   )
 }

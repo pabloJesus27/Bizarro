@@ -32,7 +32,10 @@
       "Bash(git stash:*)",
       "mcp__plugin_engram_engram__mem_update",
       "mcp__plugin_engram_engram__mem_session_summary",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
