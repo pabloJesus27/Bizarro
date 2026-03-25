@@ -1,0 +1,44 @@
+'use client'
+
+import { useState } from 'react'
+import { fmt } from './timer-utils'
+import { ClockFace, Connector } from './ClockFace'
+import type { TimerConfig } from '@/lib/types'
+
+export default function ForTimeSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
+  const [hasCap, setHasCap] = useState(false)
+  const [capMinutes, setCapMinutes] = useState(20)
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
+      <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">Complete the workout as fast as possible</p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={() => setHasCap(v => !v)} className="flex items-center gap-2">
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${hasCap ? 'bg-white border-white' : 'border-neutral-600'}`}>
+              {hasCap && <span className="text-black text-xs font-black">✓</span>}
+            </div>
+            <span className="text-neutral-400 text-sm font-mono">Time cap</span>
+          </button>
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={capMinutes}
+            disabled={!hasCap}
+            onFocus={e => e.target.select()}
+            onChange={e => setCapMinutes(Math.max(1, Math.min(60, Number(e.target.value))))}
+            className={`w-16 bg-neutral-900 font-black text-xl text-center border rounded-lg px-3 py-2 focus:outline-none tabular-nums transition ${hasCap ? 'text-white border-neutral-700 focus:border-white' : 'text-neutral-700 border-neutral-800 cursor-not-allowed'}`}
+          />
+          <p className={`text-sm font-mono transition ${hasCap ? 'text-neutral-400' : 'text-neutral-700'}`}>min</p>
+        </div>
+      </div>
+      <Connector />
+      <ClockFace
+        display={hasCap ? fmt(capMinutes * 60) : '00:00'}
+        label={hasCap ? 'Time cap' : 'Sin límite'}
+        onStart={() => onStart({ type: 'fortime', capSeconds: hasCap ? capMinutes * 60 : 0 })}
+      />
+    </div>
+  )
+}

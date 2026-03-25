@@ -4,17 +4,7 @@ import { useRef, useState } from 'react'
 import type { WodType } from '@/lib/types'
 import { DAY_SHORT } from '@/lib/week-utils'
 import { supabase } from '@/lib/supabase'
-
-const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time':   'FOR TIME',
-  'AMRAP':      'AMRAP',
-  'EMOM':       'EMOM',
-  'Strength':   'STRENGTH',
-  'Gymnastics': 'GYMNASTICS',
-  'Warmup':     'WARMUP',
-  'For Max':    'FOR MAX',
-  'Other':      'WOD',
-}
+import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 
 interface ParsedWod {
   date: string

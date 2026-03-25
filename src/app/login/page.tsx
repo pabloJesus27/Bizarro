@@ -57,7 +57,16 @@ export default function LoginPage() {
         router.push(destination)
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
+      const msg = err instanceof Error ? err.message.toLowerCase() : ''
+      if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password')) {
+        setError('Email o contraseña incorrectos.')
+      } else if (msg.includes('email not confirmed')) {
+        setError('Confirma tu email antes de iniciar sesión.')
+      } else if (msg.includes('too many requests') || msg.includes('rate limit')) {
+        setError('Demasiados intentos. Espera unos minutos.')
+      } else {
+        setError('No se pudo iniciar sesión. Inténtalo de nuevo.')
+      }
     } finally {
       setLoading(false)
     }

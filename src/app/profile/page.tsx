@@ -73,8 +73,18 @@ export default function ProfilePage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
 
-    const ext      = file.name.split('.').pop()
-    const path     = `${user.id}/avatar.${ext}`
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+    if (!ext || !allowedExts.includes(ext) || !file.type.startsWith('image/')) {
+      setError('Solo se permiten imágenes (jpg, png, webp, gif)')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La imagen no puede superar 5 MB')
+      return
+    }
+
+    const path = `${user.id}/avatar.${ext}`
 
     setUploading(true)
     setError('')
@@ -91,7 +101,7 @@ export default function ProfilePage() {
       setAvatarUrl(url)
       setTab('foto')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al subir la imagen')
+      setError('No se pudo subir la imagen. Inténtalo de nuevo.')
     } finally {
       setUploading(false)
     }
@@ -108,7 +118,7 @@ export default function ProfilePage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setError('No se pudo guardar el perfil. Inténtalo de nuevo.')
     } finally {
       setSaving(false)
     }

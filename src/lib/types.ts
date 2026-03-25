@@ -1,4 +1,15 @@
 export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Gymnastics' | 'Warmup' | 'For Max' | 'Other'
+
+export type MixBlock = { label: string; seconds: number }
+
+export type TimerConfig =
+  | { type: 'amrap';    totalSeconds: number }
+  | { type: 'emom';     totalSeconds: number }
+  | { type: 'fortime';  capSeconds: number }
+  | { type: 'tabata';   workSeconds: number; restSeconds: number; rounds: number }
+  | { type: 'mix';      blocks: MixBlock[] }
+  | { type: 'interval'; totalSeconds: number; intervalSeconds: number; workLabel: string; restLabel: string; startWithRest: boolean }
+  | { type: 'countdown'; totalSeconds: number }
 export type Program  = 'bizarro' | 'entrenemos' | 'libre'
 
 export interface Wod {

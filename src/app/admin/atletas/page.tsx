@@ -7,26 +7,8 @@ import { useAuth } from '@/context/AuthContext'
 import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser, getMyPrograms, getPendingJoinRequests, addAthleteByEmail, removeAthleteFromProgram } from '@/lib/db'
 import type { Wod, Result, WodType, Profile } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import CoachHeader from '@/components/CoachHeader'
-
-const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time': 'FOR TIME',
-  'AMRAP':    'AMRAP',
-  'EMOM':     'EMOM',
-  'Strength': 'STRENGTH',
-  'Warmup':   'WARMUP',
-  'For Max':  'FOR MAX',
-  'Other':    'WOD',
-}
-
-function getScoreDisplay(wod: Wod, result: Result): string {
-  if (wod.type === 'For Time'                        && result.score_time)   return result.score_time
-  if ((wod.type === 'AMRAP' || wod.type === 'EMOM')  && result.score_rounds) return result.score_rounds
-  if (wod.type === 'Strength'                        && result.score_weight) return `${result.score_weight} kg`
-  if (wod.type === 'For Max'                         && result.score_rounds) return result.score_rounds
-  if (result.score_notes) return result.score_notes
-  return '—'
-}
 
 function getInitials(name: string | null): string {
   if (!name) return '?'

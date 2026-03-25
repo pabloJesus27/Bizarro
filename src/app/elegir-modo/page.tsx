@@ -16,9 +16,10 @@ export default function ElegirModoPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const [programs, setPrograms] = useState<AthleteProgramEntry[]>([])
-  const [ready,    setReady]    = useState(false)
-  const [error,    setError]    = useState<string | null>(null)
+  const [programs,     setPrograms]     = useState<AthleteProgramEntry[]>([])
+  const [ready,        setReady]        = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!user) { router.push('/login'); return }
@@ -80,11 +81,18 @@ export default function ElegirModoPage() {
           return (
             <button
               key={ap.id}
+              disabled={isNavigating}
               onClick={async () => {
-                if (user) await updateProfileProgram(user.id, slug)
-                router.push(`/dashboard?program=${slug}`)
+                setIsNavigating(true)
+                try {
+                  if (user) await updateProfileProgram(user.id, slug)
+                  router.push(`/dashboard?program=${slug}`)
+                } catch {
+                  setError('No se pudo seleccionar el programa. Inténtalo de nuevo.')
+                  setIsNavigating(false)
+                }
               }}
-              className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors"
+              className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors disabled:opacity-50"
             >
               {img ? (
                 <Image src={img} alt={name} width={56} height={56} className="object-contain" />
@@ -106,11 +114,18 @@ export default function ElegirModoPage() {
 
         {/* Por libre */}
         <button
+          disabled={isNavigating}
           onClick={async () => {
-            if (user) await updateProfileProgram(user.id, 'libre')
-            router.push('/libre')
+            setIsNavigating(true)
+            try {
+              if (user) await updateProfileProgram(user.id, 'libre')
+              router.push('/libre')
+            } catch {
+              setError('No se pudo seleccionar el modo libre. Inténtalo de nuevo.')
+              setIsNavigating(false)
+            }
           }}
-          className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors"
+          className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors disabled:opacity-50"
         >
           <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center">
             <span className="text-white font-black text-2xl">✦</span>

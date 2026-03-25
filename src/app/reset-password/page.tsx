@@ -4,9 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { updatePassword } from '@/lib/auth'
+import { useAuth } from '@/context/AuthContext'
+import { getProfile } from '@/lib/db'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [password,  setPassword]  = useState('')
   const [password2, setPassword2] = useState('')
   const [loading,   setLoading]   = useState(false)
@@ -26,9 +29,10 @@ export default function ResetPasswordPage() {
     setLoading(true)
     try {
       await updatePassword(password)
-      router.push('/dashboard')
+      const profile = user ? await getProfile(user.id) : null
+      router.push(profile?.role === 'coach' ? '/select-program' : '/dashboard')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar la contraseña')
+      setError('No se pudo actualizar la contraseña. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }

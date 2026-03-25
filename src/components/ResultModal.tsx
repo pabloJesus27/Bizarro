@@ -3,17 +3,7 @@
 import { useState } from 'react'
 import { upsertResult, maybeUpdatePR } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
-
-const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time':   'FOR TIME',
-  'AMRAP':      'AMRAP',
-  'EMOM':       'EMOM',
-  'Strength':   'STRENGTH',
-  'Gymnastics': 'GYMNASTICS',
-  'Warmup':     'WARMUP',
-  'For Max':    'FOR MAX',
-  'Other':      'WOD',
-}
+import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 
 export default function ResultModal({ wod, existing, onClose, onSaved }: {
   wod:       Wod
@@ -32,6 +22,15 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (scoreWeight) {
+      const w = parseFloat(scoreWeight)
+      if (isNaN(w) || w <= 0 || w > 500) {
+        setError('El peso debe estar entre 0 y 500 kg')
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const result = await upsertResult({
@@ -52,7 +51,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
 
       onSaved(result, isNewPR)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setError('No se pudo guardar el resultado. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -117,7 +116,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
                 Peso (kg)
               </label>
               <input
-                type="number" step="0.5" placeholder="102.5" value={scoreWeight}
+                type="number" step="0.5" min="0" max="500" placeholder="102.5" value={scoreWeight}
                 onChange={e => setScoreWeight(e.target.value)}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />

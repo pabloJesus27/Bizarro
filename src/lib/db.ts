@@ -281,6 +281,20 @@ export async function maybeUpdatePR(
   return { isNewPR: true }
 }
 
+export async function saveManualPR(exercise: string, weight: number, achievedAt: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('SESSION_EXPIRED')
+
+  const { error } = await supabase
+    .from('personal_records')
+    .upsert(
+      { user_id: user.id, exercise, weight, achieved_at: achievedAt, wod_id: null },
+      { onConflict: 'user_id,exercise' }
+    )
+
+  if (error) throw new Error(error.message)
+}
+
 // ── Athlete Programs ──────────────────────────────────
 
 export interface AthleteProgramEntry {

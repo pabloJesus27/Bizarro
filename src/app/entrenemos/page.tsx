@@ -9,18 +9,9 @@ import { getWodsForWeek, createWod, updateWod, deleteWod } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 
 const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
-
-const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time': 'FOR TIME',
-  'AMRAP':    'AMRAP',
-  'EMOM':     'EMOM',
-  'Strength': 'STRENGTH',
-  'Warmup':   'WARMUP',
-  'For Max':  'FOR MAX',
-  'Other':    'WOD',
-}
 
 // ── WOD Modal ──────────────────────────────────────────
 
@@ -50,7 +41,7 @@ function WodModal({ date, block, wod, onClose, onSaved }: {
         : await createWod({ date, block, title, type, description, program: 'entrenemos' })
       onSaved(saved)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setError('No se pudo guardar el WOD. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }

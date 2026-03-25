@@ -1,0 +1,18 @@
+export function fmt(s: number): string {
+  const m = Math.floor(Math.abs(s) / 60)
+  const sec = Math.abs(s) % 60
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+}
+
+export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 0.5) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.frequency.value = freq
+  osc.type = 'sine'
+  gain.gain.setValueAtTime(vol, ctx.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
+  osc.start()
+  osc.stop(ctx.currentTime + dur)
+}

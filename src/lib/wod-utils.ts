@@ -1,5 +1,24 @@
 import type { RankingEntry } from '@/lib/db'
-import type { WodType } from '@/lib/types'
+import type { Wod, WodType, Result } from '@/lib/types'
+
+export const WOD_TYPE_LABEL: Record<string, string> = {
+  'For Time':   'FOR TIME',
+  'AMRAP':      'AMRAP',
+  'EMOM':       'EMOM',
+  'Strength':   'STRENGTH',
+  'Gymnastics': 'GYMNASTICS',
+  'Warmup':     'WARMUP',
+  'For Max':    'FOR MAX',
+  'Other':      'WOD',
+}
+
+export function getScoreDisplay(wod: Wod, result: Result): string {
+  if (wod.type === 'For Time'                        && result.score_time)   return result.score_time
+  if ((wod.type === 'AMRAP' || wod.type === 'EMOM')  && result.score_rounds) return result.score_rounds
+  if (wod.type === 'For Max'                         && result.score_rounds) return result.score_rounds
+  if (wod.type === 'Strength'                        && result.score_weight) return `${result.score_weight} kg`
+  return result.score_notes ?? '—'
+}
 
 export function parseTime(t: string): number {
   const m = t.match(/(\d+):(\d+)/)

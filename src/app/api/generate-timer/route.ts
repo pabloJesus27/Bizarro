@@ -69,7 +69,26 @@ Solo JSON, sin explicación ni markdown.`,
 
   try {
     const clean = text.replace(/```json\n?|\n?```/g, '').trim()
-    return NextResponse.json(JSON.parse(clean))
+    const cfg = JSON.parse(clean)
+
+    const validTypes = ['amrap', 'emom', 'fortime', 'tabata', 'mix']
+    if (!cfg || !validTypes.includes(cfg.type)) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if ((cfg.type === 'amrap' || cfg.type === 'emom') && !(cfg.totalSeconds > 0)) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'fortime' && typeof cfg.capSeconds !== 'number') {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'tabata' && !(cfg.workSeconds > 0 && cfg.restSeconds > 0 && cfg.rounds > 0)) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'mix' && (!Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number }) => !b.label || !(b.seconds > 0)))) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+
+    return NextResponse.json(cfg)
   } catch {
     return NextResponse.json({ error: 'parse_error' }, { status: 500 })
   }

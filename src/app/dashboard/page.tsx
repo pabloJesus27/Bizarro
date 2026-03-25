@@ -3,108 +3,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getWodsForWeek, getResultsForWods, getProfile, getWodRanking } from '@/lib/db'
-import type { RankingEntry } from '@/lib/db'
-import type { Wod, Result, WodType } from '@/lib/types'
+import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs } from '@/lib/db'
+import type { PersonalRecord } from '@/lib/db'
+import type { Wod, Result, Program } from '@/lib/types'
 import AppHeader from '@/components/AppHeader'
 import ResultModal from '@/components/ResultModal'
+import RankingSection from '@/components/RankingSection'
+import PRCalculator from '@/components/PRCalculator'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
-import { sortRanking } from '@/lib/wod-utils'
-
-const WOD_TYPE_LABEL: Record<string, string> = {
-  'For Time':   'FOR TIME',
-  'AMRAP':      'AMRAP',
-  'EMOM':       'EMOM',
-  'Strength':   'STRENGTH',
-  'Gymnastics': 'GYMNASTICS',
-  'Warmup':     'WARMUP',
-  'For Max':    'FOR MAX',
-  'Other':      'WOD',
-}
-
-// ── Helpers ────────────────────────────────────────────
-
-function getScoreDisplay(wod: Wod, result: Result): string {
-  if (wod.type === 'For Time'                        && result.score_time)   return result.score_time
-  if ((wod.type === 'AMRAP' || wod.type === 'EMOM')  && result.score_rounds) return result.score_rounds
-  if (wod.type === 'Strength'                        && result.score_weight) return `${result.score_weight} kg`
-  if (wod.type === 'For Max'                         && result.score_rounds) return result.score_rounds
-  if (result.score_notes) return result.score_notes
-  return '—'
-}
-
-function formatScore(entry: RankingEntry, type: WodType): string {
-  switch (type) {
-    case 'For Time':  return entry.score_time   ?? '—'
-    case 'AMRAP':     return entry.score_rounds  ?? '—'
-    case 'For Max':   return entry.score_rounds  ?? '—'
-    case 'Strength':  return entry.score_weight != null ? `${entry.score_weight} kg` : '—'
-    case 'EMOM': {
-      const parts = []
-      if (entry.score_weight) parts.push(`${entry.score_weight} kg`)
-      if (entry.score_rounds) parts.push(entry.score_rounds)
-      return parts.join(' · ') || '—'
-    }
-    default: return entry.score_notes ?? '—'
-  }
-}
-
-function RankingSection({ wod }: { wod: Wod }) {
-  const [entries, setEntries] = useState<RankingEntry[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    getWodRanking(wod.id)
-      .then(data => setEntries(sortRanking(data, wod.type)))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [wod.id, wod.type])
-
-  if (loading) return (
-    <div className="mt-10 border-t border-neutral-900 pt-8">
-      <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono">Cargando ranking...</p>
-    </div>
-  )
-
-  if (entries.length === 0) return (
-    <div className="mt-10 border-t border-neutral-900 pt-8">
-      <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono">Sin resultados aún</p>
-    </div>
-  )
-
-  return (
-    <div className="mt-10 border-t border-neutral-900 pt-8">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-5">
-        Ranking · {entries.length} {entries.length === 1 ? 'atleta' : 'atletas'}
-      </p>
-      <div className="flex flex-col gap-3">
-        {entries.map((entry, i) => {
-          const pos   = i + 1
-          const name  = entry.profiles?.full_name ?? 'Atleta'
-          const score = formatScore(entry, wod.type)
-          const posLabel = pos.toString().padStart(2, '0')
-          return (
-            <div key={entry.id} className={`flex items-center gap-4 px-4 py-3 rounded-xl ${pos === 1 ? 'border border-neutral-700 bg-neutral-950' : 'border border-neutral-900'}`}>
-              <span className={`font-black font-mono text-sm w-6 ${pos === 1 ? 'text-white' : 'text-neutral-600'}`}>
-                {posLabel}
-              </span>
-              <span className={`flex-1 font-medium text-sm ${pos === 1 ? 'text-white' : 'text-neutral-400'}`}>
-                {name}
-              </span>
-              <span className={`font-black font-mono text-sm ${pos === 1 ? 'text-white' : 'text-neutral-400'}`}>
-                {score}
-              </span>
-              <span className={`text-xs font-mono px-2 py-0.5 rounded-full border ${entry.rx ? 'border-neutral-700 text-neutral-400' : 'border-neutral-800 text-neutral-600'}`}>
-                {entry.rx ? 'RX' : 'SC'}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
+import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 
 // ── Dashboard Page ─────────────────────────────────────
 
@@ -124,8 +31,9 @@ export default function DashboardPage() {
   const [newPR,         setNewPR]         = useState<string | null>(null)
   const [modalWod,      setModalWod]      = useState<Wod | null>(null)
   const searchParams = useSearchParams()
+  const [prs,             setPrs]             = useState<PersonalRecord[]>([])
   const [isCoach,         setIsCoach]         = useState(false)
-  const [program,         setProgram]         = useState<string>('bizarro')
+  const [program,         setProgram]         = useState<Program>('bizarro')
   const [generatingTimer, setGeneratingTimer] = useState(false)
   const [timerError,      setTimerError]      = useState(false)
   const [wodError,        setWodError]        = useState<string | null>(null)
@@ -137,12 +45,13 @@ export default function DashboardPage() {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
 
-    getProfile(user.id).then(profile => {
+    Promise.all([getProfile(user.id), getMyPRs().catch(() => [])]).then(([profile, userPRs]) => {
       setIsCoach(profile?.role === 'coach')
+      setPrs(userPRs)
       const programFromUrl = searchParams.get('program')
       const resolvedProgram = programFromUrl ?? profile?.program ?? null
       if (!resolvedProgram) { router.push('/elegir-modo'); return }
-      setProgram(resolvedProgram)
+      setProgram(resolvedProgram as Program)
       setLoading(false)
     })
   }, [authLoading, user, router])
@@ -250,7 +159,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setWeekOffset(o => o - 1)}
             disabled={weekOffset <= -26}
-            className="text-neutral-600 hover:text-white transition font-mono text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="text-neutral-600 hover:text-white transition font-mono text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ← anterior
           </button>
@@ -344,6 +253,8 @@ export default function DashboardPage() {
 
           {activeWod ? (
             <>
+            <div className="flex gap-6 items-start">
+            <div className="flex-1 min-w-0">
               {/* Type badge */}
               <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1 mb-5 w-fit">
                 <span className="text-neutral-400 text-xs uppercase tracking-widest font-mono">
@@ -367,7 +278,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => handleGenerateTimer(activeWod)}
                     disabled={generatingTimer}
-                    className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
                   </button>
@@ -411,6 +322,9 @@ export default function DashboardPage() {
                 )
               )}
 
+            </div>
+            <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+            </div>
               {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
             </>
           ) : (

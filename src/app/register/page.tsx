@@ -79,7 +79,14 @@ export default function RegisterPage() {
 
       setSuccess(true)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al registrarse')
+      const msg = err instanceof Error ? err.message.toLowerCase() : ''
+      if (msg.includes('already registered') || msg.includes('user already exists')) {
+        setError('Ya existe una cuenta con ese email.')
+      } else if (msg.includes('password') && msg.includes('short')) {
+        setError('La contraseña es demasiado corta.')
+      } else {
+        setError('No se pudo crear la cuenta. Inténtalo de nuevo.')
+      }
     } finally {
       setLoading(false)
     }

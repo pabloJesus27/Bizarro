@@ -81,7 +81,7 @@ export default function SelectProgramPage() {
       setShowForm(false)
       router.push(`/admin?program=${program.slug}`)
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : 'Error al crear el programa')
+      setFormError('No se pudo crear el programa. Inténtalo de nuevo.')
     } finally {
       setCreating(false)
     }
@@ -258,7 +258,7 @@ export default function SelectProgramPage() {
               <button
                 onClick={handleGenerateInvite}
                 disabled={inviteLoading}
-                className="w-full border border-neutral-800 text-neutral-500 font-mono uppercase tracking-widest rounded-xl px-3 py-2 hover:border-neutral-600 hover:text-neutral-300 disabled:opacity-40 active:scale-95 transition-all text-xs"
+                className="w-full border border-neutral-800 text-neutral-500 font-mono uppercase tracking-widest rounded-xl px-3 py-2 hover:border-neutral-600 hover:text-neutral-300 disabled:opacity-50 active:scale-95 transition-all text-xs"
               >
                 {inviteLoading ? 'Generando...' : '+ Generar invitación'}
               </button>
