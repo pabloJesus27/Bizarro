@@ -293,7 +293,15 @@ function DashboardContent() {
               </div>
 
               {activeTab === 'ranking' ? (
-                <RankingSection wod={activeWod} refreshKey={rankingKey} />
+                <div className="relative">
+                  <button
+                    onClick={() => setActiveTab('wod')}
+                    className="absolute -top-1 right-0 text-neutral-600 hover:text-white transition text-lg leading-none"
+                  >
+                    ×
+                  </button>
+                  <RankingSection wod={activeWod} refreshKey={rankingKey} />
+                </div>
               ) : (
                 <>
                 {/* Title */}
