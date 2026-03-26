@@ -35,7 +35,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(npm test:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(git restore:*)",
+      "Bash(npx vitest:*)",
+      "Bash(wc -l /Users/posebussuarez/Documents/MisProyectos/Bizarro/src/app/*/page.tsx)",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\\\\|BUG\" /Users/posebussuarez/Documents/MisProyectos/Bizarro/src --include=*.tsx --include=*.ts)"
     ]
   }
 }
