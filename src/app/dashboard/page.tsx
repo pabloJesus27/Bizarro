@@ -289,7 +289,7 @@ function DashboardContent() {
                   >
                     Ranking
                     {activeTab === 'ranking' && (
-                      <span className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 text-neutral-500 text-sm leading-none">×</span>
+                      <span className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 text-neutral-500 text-lg leading-none">×</span>
                     )}
                   </button>
                 )}
