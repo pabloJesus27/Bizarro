@@ -168,10 +168,10 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
           {wod.type === 'For Max' && (
             <div>
               <label className="block text-neutral-500 text-xs uppercase tracking-widest mb-1 font-mono">
-                Reps / Calorías
+                Total
               </label>
               <input
-                type="text" placeholder="47 cals / 32 reps" value={scoreRounds}
+                type="number" min="0" placeholder="47" value={scoreRounds}
                 onChange={e => { setScoreRounds(e.target.value); markDirty() }}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />
