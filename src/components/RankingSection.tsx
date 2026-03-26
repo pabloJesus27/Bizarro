@@ -24,7 +24,7 @@ function formatScore(entry: RankingEntry, type: WodType): string {
   }
 }
 
-export default function RankingSection({ wod }: { wod: Wod }) {
+export default function RankingSection({ wod, refreshKey = 0 }: { wod: Wod; refreshKey?: number }) {
   const [entries, setEntries] = useState<RankingEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [page,    setPage]    = useState(0)
@@ -36,7 +36,7 @@ export default function RankingSection({ wod }: { wod: Wod }) {
       .then(data => setEntries(sortRanking(data, wod.type)))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [wod.id, wod.type])
+  }, [wod.id, wod.type, refreshKey])
 
   if (loading) return (
     <div className="mt-10 border-t border-neutral-900 pt-8">

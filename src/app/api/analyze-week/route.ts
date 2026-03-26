@@ -48,14 +48,16 @@ Las fechas de esta semana son:
 Para cada celda con contenido, devuelve un WOD con:
 - date: fecha YYYY-MM-DD del día correspondiente
 - block: número de bloque (1 para Warm Up, 2 para Bloque #1, 3 para Bloque #2, 4 para Warm Up 2, 5 para Bloque #3, 6 para Bloque #4)
-- title: título corto descriptivo (máximo 5 palabras)
-- type: uno de "Warmup" | "Strength" | "Gymnastics" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
+- title: identifica la parte PRINCIPAL del bloque (no el calentamiento ni los ejercicios técnicos previos). Para bloques de fuerza/halterofilia usa solo el nombre del ejercicio principal (ej: "Cluster", "Clean & Jerk", "Back Squat"). Si hay una progresión técnica antes del ejercicio principal (muscle clean, tall clean, drills), ignórala y pon solo el ejercicio final. Para WODs metabólicos usa un título corto descriptivo. Máximo 4 palabras.
+- type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
 - description: texto completo exacto del WOD tal como aparece en la imagen
 
 Reglas para el tipo:
 - Warm Up → siempre "Warmup"
 - Sets/reps con barra o pesas → "Strength"
 - Handstand, muscle up, ring, gymnastics → "Gymnastics"
+- Ejercicios de core, abdominales, giros de cintura, plancha, GHD → "Core"
+- Estiramientos, foam roller, movilidad, recuperación activa → "Mobility"
 - AMRAP → "AMRAP"
 - For time / tiempo límite → "For Time"
 - EMOM → "EMOM"

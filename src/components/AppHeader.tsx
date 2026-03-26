@@ -17,6 +17,8 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
 
   const [timerOpen,   setTimerOpen]   = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [drawerOpen,     setDrawerOpen]     = useState(false)
+  const [timerExpanded,  setTimerExpanded]  = useState(false)
   const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null)
   const [program,     setProgram]     = useState<string | null>(null)
   const [profileName, setProfileName] = useState('')
@@ -45,6 +47,18 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
     <>
       <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
         <div className="flex items-center gap-3">
+          {/* Hamburger — solo móvil */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="lg:hidden text-neutral-500 hover:text-white transition mr-1"
+            aria-label="Abrir menú"
+          >
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect y="3" width="22" height="2" rx="1" fill="currentColor"/>
+              <rect y="10" width="22" height="2" rx="1" fill="currentColor"/>
+              <rect y="17" width="22" height="2" rx="1" fill="currentColor"/>
+            </svg>
+          </button>
           {program && program !== 'libre' && (() => {
             const img = slugImages[program]
             const displayName = img ? program : (programName ?? null)
@@ -63,7 +77,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
             )
           })()}
         </div>
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-neutral-900 rounded-full p-1">
+        <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-1 bg-neutral-900 rounded-full p-1">
           <button
             onClick={() => homeRoute ? router.push(homeRoute) : router.push(program === 'libre' ? '/libre' : `/dashboard?program=${program ?? 'bizarro'}`)}
             className="px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition text-neutral-500 hover:text-neutral-300"
@@ -130,6 +144,69 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
         </div>
       </header>
       {timerOpen && <TimerModal onClose={() => setTimerOpen(false)} />}
+
+      {/* Drawer móvil */}
+      {drawerOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            onClick={() => setDrawerOpen(false)}
+          />
+          {/* Panel */}
+          <div className="fixed left-0 top-0 h-full w-64 bg-neutral-950 border-r border-neutral-800 z-50 flex flex-col lg:hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-900">
+              <span className="text-white font-black text-lg tracking-tight uppercase">Menú</span>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="text-neutral-500 hover:text-white text-2xl leading-none transition"
+              >
+                &times;
+              </button>
+            </div>
+            <nav className="flex flex-col p-4 gap-1">
+              <button
+                onClick={() => { setDrawerOpen(false); homeRoute ? router.push(homeRoute) : router.push(program === 'libre' ? '/libre' : `/dashboard?program=${program ?? 'bizarro'}`) }}
+                className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => setTimerExpanded(v => !v)}
+                className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition flex items-center justify-between"
+              >
+                Timer
+                <span className="text-neutral-600 text-xs">{timerExpanded ? '▲' : '▼'}</span>
+              </button>
+              {timerExpanded && (
+                <div className="flex flex-col pl-4">
+                  {(['amrap', 'fortime', 'emom', 'tabata', 'mix'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => { setDrawerOpen(false); setTimerExpanded(false); router.push('/timer?type=' + t) }}
+                      className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-mono uppercase tracking-widest text-neutral-500 hover:text-white hover:bg-neutral-900 transition"
+                    >
+                      {t === 'fortime' ? 'For Time' : t === 'mix' ? 'Mix' : t.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => { setDrawerOpen(false); router.push('/maximos') }}
+                className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
+              >
+                Mis PRs
+              </button>
+              <button
+                onClick={() => { setDrawerOpen(false); router.push('/programaciones') }}
+                className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
+              >
+                Programaciones
+              </button>
+            </nav>
+          </div>
+        </>
+      )}
     </>
   )
 }

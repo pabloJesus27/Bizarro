@@ -31,6 +31,7 @@ const GROUPS = [
       'Power Snatch',
       'Hang Power Snatch',
       'Clean & Jerk',
+      'Cluster',
     ],
   },
 ]

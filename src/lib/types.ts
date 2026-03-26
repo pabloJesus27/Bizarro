@@ -1,4 +1,4 @@
-export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Gymnastics' | 'Warmup' | 'For Max' | 'Other'
+export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Gymnastics' | 'Core' | 'Mobility' | 'Warmup' | 'For Max' | 'Other'
 
 export type MixBlock = { label: string; seconds: number }
 

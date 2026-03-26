@@ -31,6 +31,7 @@ function DashboardContent() {
   const [loading,       setLoading]       = useState(true)
   const [wodLoading,    setWodLoading]    = useState(false)
   const [newPR,         setNewPR]         = useState<string | null>(null)
+  const [rankingKey,    setRankingKey]    = useState(0)
   const [modalWod,      setModalWod]      = useState<Wod | null>(null)
   const searchParams = useSearchParams()
   const [prs,             setPrs]             = useState<PersonalRecord[]>([])
@@ -108,6 +109,7 @@ function DashboardContent() {
       return [...prev, result]
     })
     setModalWod(null)
+    setRankingKey(k => k + 1)
     if (isNewPR && activeWod) {
       setNewPR(activeWod.title)
       setTimeout(() => setNewPR(null), 4000)
@@ -266,7 +268,6 @@ function DashboardContent() {
 
           {activeWod ? (
             <>
-            <div className="flex gap-6 items-start">
             <div className="flex-1 min-w-0">
               {/* Type badge */}
               <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1 mb-5 w-fit">
@@ -280,65 +281,68 @@ function DashboardContent() {
                 {activeWod.title}
               </h1>
 
-              {/* Description */}
-              <pre className="text-neutral-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-12">
-                {activeWod.description}
-              </pre>
+              {/* Description + PRCalculator side by side from here */}
+              <div className="flex gap-6 items-start">
+                <div className="flex-1 min-w-0">
+                  {/* Description */}
+                  <pre className="text-neutral-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-12">
+                    {activeWod.description}
+                  </pre>
 
-              {/* Generar timer */}
-              {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
-                <div className="mb-6">
-                  <button
-                    onClick={() => handleGenerateTimer(activeWod)}
-                    disabled={generatingTimer}
-                    className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
-                  </button>
-                  {timerError && (
-                    <p className="text-red-500 text-xs font-mono mt-2 text-center">
-                      No se pudo generar el temporizador. Inténtalo de nuevo.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Result + Ranking — oculto en bloques de Warmup */}
-              {activeWod.type !== 'Warmup' && (
-                activeResult ? (
-                  <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
-                    <div>
-                      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-                        Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
-                      </p>
-                      <p className="text-white font-black text-2xl tracking-tight">
-                        {getScoreDisplay(activeWod, activeResult)}
-                      </p>
-                      {activeResult.score_notes && (
-                        <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
+                  {/* Generar timer */}
+                  {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
+                    <div className="mb-6">
+                      <button
+                        onClick={() => handleGenerateTimer(activeWod)}
+                        disabled={generatingTimer}
+                        className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
+                      </button>
+                      {timerError && (
+                        <p className="text-red-500 text-xs font-mono mt-2 text-center">
+                          No se pudo generar el temporizador. Inténtalo de nuevo.
+                        </p>
                       )}
                     </div>
-                    <button
-                      onClick={() => setModalWod(activeWod)}
-                      className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
-                    >
-                      ✏ <span>Editar</span>
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setModalWod(activeWod)}
-                    className="w-full bg-white text-black font-black text-lg uppercase tracking-widest rounded-xl px-6 py-5 hover:bg-neutral-100 active:scale-[0.98] transition-all"
-                  >
-                    Registrar resultado
-                  </button>
-                )
-              )}
+                  )}
 
+                  {/* Result + Ranking — oculto en bloques de Warmup */}
+                  {activeWod.type !== 'Warmup' && (
+                    activeResult ? (
+                      <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
+                        <div>
+                          <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+                            Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
+                          </p>
+                          <p className="text-white font-black text-2xl tracking-tight">
+                            {getScoreDisplay(activeWod, activeResult)}
+                          </p>
+                          {activeResult.score_notes && (
+                            <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setModalWod(activeWod)}
+                          className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
+                        >
+                          ✏ <span>Editar</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setModalWod(activeWod)}
+                        className="w-full bg-white text-black font-black text-lg uppercase tracking-widest rounded-xl px-6 py-5 hover:bg-neutral-100 active:scale-[0.98] transition-all"
+                      >
+                        Registrar resultado
+                      </button>
+                    )
+                  )}
+                </div>
+                <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+              </div>
             </div>
-            <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
-            </div>
-              {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
+              {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} refreshKey={rankingKey} />}
             </>
           ) : (
             <div className="flex-1 flex flex-col justify-center pt-8">

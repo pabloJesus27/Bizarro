@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { upsertResult, maybeUpdatePR } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
-import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
+import { WOD_TYPE_LABEL, detectPRExercise } from '@/lib/wod-utils'
 
 export default function ResultModal({ wod, existing, onClose, onSaved }: {
   wod:       Wod
@@ -44,9 +44,12 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
 
       let isNewPR = false
       if (wod.type === 'Strength' && scoreWeight && result.user_id) {
-        const today = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })()
-        const pr = await maybeUpdatePR(result.user_id, wod.title, parseFloat(scoreWeight), today, wod.id)
-        isNewPR = pr.isNewPR
+        const exercise = detectPRExercise(wod.title)
+        if (exercise) {
+          const today = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })()
+          const pr = await maybeUpdatePR(result.user_id, exercise, parseFloat(scoreWeight), today, wod.id)
+          isNewPR = pr.isNewPR
+        }
       }
 
       onSaved(result, isNewPR)

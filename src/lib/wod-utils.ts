@@ -1,12 +1,97 @@
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, WodType, Result } from '@/lib/types'
 
+// ── PR auto-detection ──────────────────────────────────
+
+// Exercises that can have an auto-updated PR (must match Máximos page list)
+const PR_WHITELIST = new Set([
+  'back squat', 'front squat', 'overhead squat', 'deadlift',
+  'bench press', 'strict press', 'push press', 'pull ups',
+  'clean', 'power clean', 'hang power clean',
+  'snatch', 'power snatch', 'hang power snatch',
+  'clean & jerk', 'clean and jerk', 'cluster',
+])
+
+// All detectable exercise names for PR detection (sorted by length in use)
+const PR_DETECTABLE = [
+  'Clean & Jerk', 'Clean and Jerk',
+  'Hang Power Snatch', 'Hang Power Clean',
+  'Power Snatch', 'Power Clean',
+  'Hang Snatch', 'Hang Clean',
+  'Muscle Snatch', 'Muscle Clean',
+  'Squat Snatch', 'Squat Clean',
+  'Tall Clean', 'Overhead Squat',
+  'Shoulder Press', 'Split Jerk', 'Push Jerk', 'Push Press',
+  'Strict Press', 'Bench Press',
+  'Front Squat', 'Back Squat',
+  'Deadlift', 'Pull Ups', 'Cluster',
+  'Snatch', 'Clean', 'Jerk',
+]
+
+const PR_DETECTABLE_SORTED = [...PR_DETECTABLE].sort((a, b) => b.length - a.length)
+
+// Non-whitelist exercises that signal a complex when alongside a whitelist exercise
+const COMPLEX_SIGNALS = new Set(['push jerk', 'split jerk', 'jerk', 'shoulder press'])
+
+// Whitelist exercises that commonly appear as companions in a complex
+// (front squat, push press, strict press) and should be deprioritized
+// when a non-companion whitelist exercise is also present
+const COMPANION_EXERCISES = new Set(['front squat', 'push press', 'strict press'])
+
+/**
+ * Returns the exercise name to update as PR, or null if this WOD
+ * doesn't represent a single simple exercise.
+ *
+ * Rules:
+ * - Filter detected exercises to whitelist only (ignores drills like muscle clean)
+ * - No non-whitelist complex-signal exercise (push jerk, jerk…)
+ * - If multiple whitelist exercises: demote companions (front squat, push press…)
+ *   and return the remaining single main exercise
+ */
+export function detectPRExercise(title: string): string | null {
+  const found: string[] = []
+  let remaining = title.toLowerCase()
+  for (const ex of PR_DETECTABLE_SORTED) {
+    if (remaining.includes(ex.toLowerCase())) {
+      found.push(ex)
+      remaining = remaining.replaceAll(ex.toLowerCase(), '')
+    }
+  }
+
+  // Ignore technical drills — only keep exercises that have a PR slot in Máximos
+  const whitelisted = found.filter(ex => PR_WHITELIST.has(ex.toLowerCase()))
+
+  // Non-whitelist complex signals (push jerk, jerk…) cancel the update
+  const hasComplexSignal = found.some(ex => COMPLEX_SIGNALS.has(ex.toLowerCase()))
+  if (hasComplexSignal && whitelisted.length > 0) return null
+
+  if (whitelisted.length === 0) return null
+
+  // Single whitelist exercise — straightforward
+  if (whitelisted.length === 1) {
+    const exercise = whitelisted[0]
+    if (exercise.toLowerCase() === 'clean and jerk') return 'Clean & Jerk'
+    return exercise
+  }
+
+  // Multiple whitelist exercises: demote companions to find the main lift
+  // e.g. "Front Squat + Cluster" → Cluster is the main lift
+  const mains = whitelisted.filter(ex => !COMPANION_EXERCISES.has(ex.toLowerCase()))
+  if (mains.length !== 1) return null
+
+  const exercise = mains[0]
+  if (exercise.toLowerCase() === 'clean and jerk') return 'Clean & Jerk'
+  return exercise
+}
+
 export const WOD_TYPE_LABEL: Record<string, string> = {
   'For Time':   'FOR TIME',
   'AMRAP':      'AMRAP',
   'EMOM':       'EMOM',
   'Strength':   'STRENGTH',
   'Gymnastics': 'GYMNASTICS',
+  'Core':       'CORE',
+  'Mobility':   'MOBILITY',
   'Warmup':     'WARMUP',
   'For Max':    'FOR MAX',
   'Other':      'WOD',
