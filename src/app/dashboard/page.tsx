@@ -281,7 +281,7 @@ function DashboardContent() {
                 {activeWod.type !== 'Warmup' && (
                   <button
                     onClick={() => setActiveTab(t => t === 'ranking' ? 'wod' : 'ranking')}
-                    className={`inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs uppercase tracking-widest font-mono transition border ${
+                    className={`relative inline-flex items-center px-4 py-1 rounded-full text-xs uppercase tracking-widest font-mono transition border ${
                       activeTab === 'ranking'
                         ? 'bg-white text-black border-white'
                         : 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'
@@ -289,7 +289,7 @@ function DashboardContent() {
                   >
                     Ranking
                     {activeTab === 'ranking' && (
-                      <span className="text-neutral-400 text-sm leading-none">×</span>
+                      <span className="absolute -top-1.5 -right-1.5 text-neutral-400 text-xs leading-none">×</span>
                     )}
                   </button>
                 )}
