@@ -13,7 +13,14 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
   onSaved:   (result: Result, isNewPR: boolean) => void
 }) {
   const [scoreTime,    setScoreTime]    = useState(existing?.score_time ?? '')
-  const [scoreRounds,  setScoreRounds]  = useState(existing?.score_rounds ?? '')
+  const [scoreRounds,  setScoreRounds]  = useState(() => {
+    const m = existing?.score_rounds?.match(/^(\d+)\+(\d+)$/)
+    return m ? m[1] : (existing?.score_rounds ?? '')
+  })
+  const [scoreReps,    setScoreReps]    = useState(() => {
+    const m = existing?.score_rounds?.match(/^(\d+)\+(\d+)$/)
+    return m ? m[2] : ''
+  })
   const [scoreWeight,  setScoreWeight]  = useState(existing?.score_weight?.toString() ?? '')
   const [notes,        setNotes]        = useState(existing?.score_notes ?? '')
   const [rx,           setRx]           = useState(existing?.rx ?? true)
@@ -48,7 +55,9 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
       const result = await upsertResult({
         wod_id:       wod.id,
         score_time:   scoreTime   || null,
-        score_rounds: scoreRounds || null,
+        score_rounds: (wod.type === 'AMRAP' || wod.type === 'EMOM')
+          ? (scoreRounds && scoreReps ? `${scoreRounds}+${scoreReps}` : scoreRounds || null)
+          : (scoreRounds || null),
         score_weight: scoreWeight ? parseFloat(scoreWeight) : null,
         score_notes:  notes       || null,
         rx,
@@ -133,15 +142,27 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
             </div>
           )}
           {(wod.type === 'AMRAP' || wod.type === 'EMOM') && (
-            <div>
-              <label className="block text-neutral-500 text-xs uppercase tracking-widest mb-1 font-mono">
-                Rondas + reps
-              </label>
-              <input
-                type="text" placeholder="7 rondas + 15 repeticiones" value={scoreRounds}
-                onChange={e => { setScoreRounds(e.target.value); markDirty() }}
-                className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
-              />
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-neutral-500 text-xs uppercase tracking-widest mb-1 font-mono">
+                  Rondas
+                </label>
+                <input
+                  type="number" min="0" placeholder="7" value={scoreRounds}
+                  onChange={e => { setScoreRounds(e.target.value); markDirty() }}
+                  className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-neutral-500 text-xs uppercase tracking-widest mb-1 font-mono">
+                  Reps extra
+                </label>
+                <input
+                  type="number" min="0" placeholder="15" value={scoreReps}
+                  onChange={e => { setScoreReps(e.target.value); markDirty() }}
+                  className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
+                />
+              </div>
             </div>
           )}
           {wod.type === 'For Max' && (
