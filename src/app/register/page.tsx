@@ -70,8 +70,8 @@ function RegisterContent() {
       if (inviteToken && data.user) {
         const res = await fetch('/api/use-invite', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: inviteToken, userId: data.user.id }),
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session?.access_token}` },
+          body: JSON.stringify({ token: inviteToken }),
         })
         const result = await res.json()
         if (result.error) { setError(result.error); setLoading(false); return }

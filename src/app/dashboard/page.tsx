@@ -12,7 +12,7 @@ import RankingSection from '@/components/RankingSection'
 import PRCalculator from '@/components/PRCalculator'
 import CoachMessageCard from '@/components/CoachMessageCard'
 import CoachMessageBubble from '@/components/CoachMessageBubble'
-import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 
 // ── Dashboard Page ─────────────────────────────────────
@@ -21,7 +21,7 @@ function DashboardContent() {
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
+  const today = useMemo(() => getTodayStr(), [])
 
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)

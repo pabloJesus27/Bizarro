@@ -4,9 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { createLibreWod, updateWod } from '@/lib/db'
 import type { Wod, WodType, NewWod } from '@/lib/types'
-import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
-
-const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'Gymnastics', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
+import { WOD_TYPE_LABEL, WOD_TYPES } from '@/lib/wod-utils'
 
 export default function WodForm({ date, block, wod, onSaved, onCancel }: {
   date:     string

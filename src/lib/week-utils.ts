@@ -1,5 +1,10 @@
 export const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
+export function getTodayStr(): string {
+  const n = new Date()
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
+}
+
 export function isSunday(date: string): boolean {
   return new Date(date + 'T00:00:00').getDay() === 0
 }

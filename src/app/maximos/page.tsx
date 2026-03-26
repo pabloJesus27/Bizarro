@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getMyPRs, saveManualPR } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
+import { getTodayStr } from '@/lib/week-utils'
 
 const GROUPS = [
   {
@@ -41,10 +42,6 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
-function today(): string {
-  const n = new Date()
-  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
-}
 
 export default function MaximosPage() {
   const { user, loading: authLoading } = useAuth()
@@ -106,7 +103,7 @@ export default function MaximosPage() {
     setSaving(true)
     setSaveError(null)
     try {
-      await saveManualPR(exercise, weight, today())
+      await saveManualPR(exercise, weight, getTodayStr())
       setPrs(prev => {
         const existing = prev.findIndex(p => p.exercise.toLowerCase() === exercise.toLowerCase())
         const updated: PersonalRecord = {
@@ -114,9 +111,9 @@ export default function MaximosPage() {
           user_id: prev[existing]?.user_id ?? '',
           exercise,
           weight,
-          achieved_at: today(),
+          achieved_at: getTodayStr(),
           wod_id: null,
-          created_at: prev[existing]?.created_at ?? today(),
+          created_at: prev[existing]?.created_at ?? getTodayStr(),
         }
         if (existing >= 0) {
           const next = [...prev]

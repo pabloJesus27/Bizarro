@@ -63,18 +63,21 @@ src/
 │   ├── db.ts                       # Todas las funciones de acceso a Supabase
 │   ├── auth.ts                     # signUp, signIn, signOut, resetPassword
 │   ├── supabase.ts                 # Cliente Supabase singleton
-│   ├── week-utils.ts               # DAY_SHORT, isSunday, getWeekDates, formatWeekRange
-│   ├── wod-utils.ts                # parseTime, parseAmrap, parseNumber, sortRanking
+│   ├── week-utils.ts               # DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr
+│   ├── wod-utils.ts                # WOD_TYPES, WOD_TYPE_LABEL, detectPRExercise, parseTime, parseAmrap, parseNumber, sortRanking, getScoreDisplay
 │   ├── api-auth.ts                 # getAuthenticatedUser, isProgramOwner
 │   ├── auth-rate-limit.ts          # Rate limiting para auth (auth_attempts en Supabase)
 │   └── ai-rate-limit.ts            # Rate limiting para endpoints de IA (ai_usage en Supabase)
 └── components/
     ├── AppHeader.tsx               # Header atleta con nav, timer modal, perfil
     ├── CoachHeader.tsx             # Header coach con nav y selección de programa
+    ├── CoachMessageCard.tsx        # Tarjeta mensaje del coach (desktop, sidebar)
+    ├── CoachMessageBubble.tsx      # Burbuja mensaje del coach (móvil, flotante)
+    ├── PRCalculator.tsx            # Calculadora de pesos basada en PRs del atleta
     ├── Timer.tsx                   # Modal timer simple
-    ├── LoadWeekModal.tsx           # Modal carga WODs desde imagen
-    ├── ResultModal.tsx             # Modal registro/edición de resultado
-    ├── RankingSection.tsx          # Sección ranking con paginación
+    ├── LoadWeekModal.tsx           # Modal carga WODs desde imagen (incluye mensaje del coach)
+    ├── ResultModal.tsx             # Modal registro/edición de resultado (auto-actualiza PR)
+    ├── RankingSection.tsx          # Sección ranking con paginación y refreshKey
     ├── timer/                      # Subcomponentes del timer
     │   ├── timer-utils.ts          # fmt(), beep()
     │   ├── ClockFace.tsx           # Cara del reloj (display)
@@ -107,6 +110,7 @@ src/
 | `join_requests` | id, athlete_id, program_id, status (pending\|accepted\|rejected) |
 | `personal_records` | id, user_id, exercise, weight, achieved_at, wod_id |
 | `coach_invites` | token, created_by, used_at |
+| `coach_messages` | id, program_slug, week_start, content, created_by, created_at — UNIQUE(program_slug, week_start) |
 
 ## Roles de usuario
 
@@ -116,29 +120,34 @@ src/
 
 ## Librerías de utilidades
 
-- `src/lib/week-utils.ts` — `DAY_SHORT`, `isSunday`, `getWeekDates`, `formatWeekRange`. Usar siempre desde aquí, nunca redefinir en páginas.
-- `src/lib/wod-utils.ts` — `parseTime`, `parseAmrap`, `parseNumber`, `sortRanking`. Idem.
+- `src/lib/week-utils.ts` — `DAY_SHORT`, `isSunday`, `getWeekDates`, `formatWeekRange`, `getTodayStr`. Usar siempre desde aquí, nunca redefinir en páginas.
+- `src/lib/wod-utils.ts` — `WOD_TYPES` (lista canónica), `WOD_TYPE_LABEL`, `detectPRExercise`, `parseTime`, `parseAmrap`, `parseNumber`, `sortRanking`, `getScoreDisplay`. Idem.
 - `src/lib/api-auth.ts` — `getAuthenticatedUser`, `isProgramOwner`. Helper de autorización para rutas API.
 - `src/lib/auth-rate-limit.ts` — `checkAuthRateLimit`, `recordAuthAttempt`. Usar en `/api/auth/login` y `/api/auth/check-rate-limit`.
 - `src/lib/ai-rate-limit.ts` — `checkAiRateLimit`, `recordAiUsage`. Usar en `/api/generate-timer` y `/api/analyze-week`.
 - `src/components/timer/timer-utils.ts` — `fmt()` (formatea segundos), `beep()` (audio feedback). Usar desde cualquier componente de timer.
 
-## Estado del proyecto (actualizado 2026-03-24)
+## Estado del proyecto (actualizado 2026-03-26)
 
 - Autenticación completa (login, registro, recuperación, invitaciones)
 - Multi-programa funcional (coaches pueden gestionar varios programas)
-- Timer con IA (Claude Haiku interpreta el WOD y genera la config)
-- Carga de semana por imagen (reconocimiento con IA)
+- Timer con IA (Claude Sonnet 4.6 interpreta el WOD y genera la config)
+- Carga de semana por imagen (reconocimiento con IA, incluye mensaje del coach)
 - Sistema de solicitudes de unión con notificaciones por email (Resend)
-- Rankings por WOD con paginación
-- Personal records
-- Seguridad de rutas API: add-athlete, remove-athlete, accept-join-request verifican sesión y ownership
+- Rankings por WOD con paginación; se refresca automáticamente al guardar resultado
+- Personal records con auto-actualización al guardar resultado de Strength
+- Calculadora de pesos por porcentaje de PR (`PRCalculator`) en el dashboard
+- Mensajes del coach por semana y programa (`coach_messages`), visibles en dashboard
+- Tipos de WOD: Warmup, Strength, Gymnastics, Core, Mobility, For Time, AMRAP, EMOM, For Max, Other
+- Seguridad de rutas API: add-athlete, remove-athlete, accept-join-request, use-invite verifican sesión y ownership
+- use-invite: JWT obligatorio — no acepta userId del cliente; update atómico anti-race-condition
+- add-athlete: busca email en auth.users via admin API (profiles no tiene columna email)
 - accept-join-request usa RPC PostgreSQL (transacción atómica)
-- use-invite: update atómico para evitar race condition
 - Manejo de errores revisado (sin console.log en producción, errores visibles al usuario)
-- Código duplicado centralizado en week-utils.ts y wod-utils.ts
 - Rate limiting en login (proxy server-side, 5/15min) y register/forgot-password (pre-check, 3/60min)
-- Refactor de componentes: subcomponentes extraídos de páginas grandes a `src/components/timer/`, `src/components/admin/`, `src/components/libre/`
+- Refactor de componentes: subcomponentes extraídos a `src/components/timer/`, `src/components/admin/`, `src/components/libre/`
+- `WOD_TYPES` y `getTodayStr` centralizados — no redefinir en páginas
+- Tests unitarios con Vitest: 62 tests en `wod-utils.test.ts`, `week-utils.test.ts`, `timer-utils.test.ts`
 
 ## Comportamiento según tipo de tarea
 
@@ -287,6 +296,11 @@ Cuando lances un sub-agente, incluye en el prompt:
 ---
 
 ## Pendiente / Conocido
+
+### Features no implementadas
+- Búsqueda de atletas por nombre en el panel de atletas
+- Ranking global de PRs entre atletas
+- Plantillas de WODs reutilizables
 
 ### UX
 

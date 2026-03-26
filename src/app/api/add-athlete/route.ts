@@ -20,11 +20,17 @@ export async function POST(req: NextRequest) {
   const isOwner = await isProgramOwner(user.id, programId)
   if (!isOwner) return NextResponse.json({ error: 'Prohibido' }, { status: 403 })
 
-  // 1. Buscar usuario por email directamente en profiles
+  // 1. Buscar usuario por email en auth.users (profiles no tiene columna email)
+  const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+  if (listError) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+
+  const authUser = listData.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+  if (!authUser) return NextResponse.json({ error: 'No existe ningún usuario con ese email' }, { status: 404 })
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('email', email.toLowerCase())
+    .eq('id', authUser.id)
     .single()
 
   if (profileError || !profile) {

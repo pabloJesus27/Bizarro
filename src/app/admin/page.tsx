@@ -9,7 +9,7 @@ import CoachHeader from '@/components/CoachHeader'
 import RankingSection from '@/components/RankingSection'
 import WodModal from '@/components/admin/WodModal'
 import type { Wod } from '@/lib/types'
-import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 
 // ── Admin Page ─────────────────────────────────────────
@@ -20,7 +20,7 @@ function AdminContent() {
   const searchParams = useSearchParams()
   const programSlug  = searchParams.get('program') ?? 'bizarro'
 
-  const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
+  const today = useMemo(() => getTodayStr(), [])
 
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)

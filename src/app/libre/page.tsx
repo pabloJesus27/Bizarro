@@ -12,7 +12,7 @@ import {
 } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
-import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import WodForm from '@/components/libre/WodForm'
 import PRCalculator from '@/components/PRCalculator'
@@ -23,7 +23,7 @@ export default function LibrePage() {
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
+  const today = useMemo(() => getTodayStr(), [])
 
   const [weekOffset,     setWeekOffset]     = useState(0)
   const [selectedDate,   setSelectedDate]   = useState(today)

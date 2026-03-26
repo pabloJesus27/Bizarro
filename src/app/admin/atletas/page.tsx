@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { getProfile, getAthletes, getWodsForWeek, getResultsForWodsAndUser, getMyPrograms, getPendingJoinRequests, addAthleteByEmail, removeAthleteFromProgram } from '@/lib/db'
 import type { Wod, Result, WodType, Profile } from '@/lib/types'
-import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import CoachHeader from '@/components/CoachHeader'
 
@@ -144,7 +144,7 @@ function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRem
   programId: string
   onAthleteRemoved: () => void
 }) {
-  const today = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
+  const today = useMemo(() => getTodayStr(), [])
 
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)

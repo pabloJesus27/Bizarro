@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import { createWod, updateWod } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
-import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
-
-const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'Gymnastics', 'Core', 'Mobility', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
+import { WOD_TYPE_LABEL, WOD_TYPES } from '@/lib/wod-utils'
 
 export default function WodModal({ date, block, wod, onClose, onSaved, inline = false, program = 'bizarro' }: {
   date:     string

@@ -1,6 +1,8 @@
 import type { RankingEntry } from '@/lib/db'
 import type { Wod, WodType, Result } from '@/lib/types'
 
+export const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'Gymnastics', 'Core', 'Mobility', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
+
 // ── PR auto-detection ──────────────────────────────────
 
 // Exercises that can have an auto-updated PR (must match Máximos page list)

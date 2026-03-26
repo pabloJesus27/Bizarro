@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,16 +8,13 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { token, userId } = await req.json()
+  const user = await getAuthenticatedUser(req)
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  if (!token || !userId) {
+  const { token } = await req.json()
+
+  if (!token) {
     return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
-  }
-
-  // Verificar que el userId corresponde a un usuario real
-  const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId)
-  if (userError || !user) {
-    return NextResponse.json({ error: 'Usuario no válido' }, { status: 400 })
   }
 
   // Buscar el token
@@ -47,7 +45,7 @@ export async function POST(req: NextRequest) {
   await supabase
     .from('profiles')
     .update({ role: 'coach' })
-    .eq('id', userId)
+    .eq('id', user.id)
 
   return NextResponse.json({ ok: true })
 }

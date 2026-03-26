@@ -8,10 +8,8 @@ import { signOut } from '@/lib/auth'
 import { getWodsForWeek, createWod, updateWod, deleteWod } from '@/lib/db'
 import type { Wod, WodType } from '@/lib/types'
 import LoadWeekModal from '@/components/LoadWeekModal'
-import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange } from '@/lib/week-utils'
-import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
-
-const WOD_TYPES: WodType[] = ['Warmup', 'Strength', 'For Time', 'AMRAP', 'EMOM', 'For Max', 'Other']
+import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
+import { WOD_TYPE_LABEL, WOD_TYPES } from '@/lib/wod-utils'
 
 // ── WOD Modal ──────────────────────────────────────────
 
@@ -122,7 +120,7 @@ export default function EntrenemosPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const today     = useMemo(() => (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` })(), [])
+  const today     = useMemo(() => getTodayStr(), [])
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)
   const [selectedBlock, setSelectedBlock] = useState(1)

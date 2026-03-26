@@ -1,5 +1,20 @@
 import { describe, it, expect } from 'vitest'
-import { isSunday, getWeekDates, formatWeekRange } from './week-utils'
+import { isSunday, getWeekDates, formatWeekRange, getTodayStr } from './week-utils'
+
+// ---------------------------------------------------------------------------
+// getTodayStr
+// ---------------------------------------------------------------------------
+describe('getTodayStr', () => {
+  it('devuelve formato YYYY-MM-DD', () => {
+    expect(getTodayStr()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('coincide con la fecha real de hoy', () => {
+    const n = new Date()
+    const expected = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
+    expect(getTodayStr()).toBe(expected)
+  })
+})
 
 // ---------------------------------------------------------------------------
 // isSunday
