@@ -35,7 +35,7 @@ Descripción: ${description}
 
 Tipos de timer disponibles:
 - amrap: { "type": "amrap", "totalSeconds": N }
-- emom: { "type": "emom", "totalSeconds": N }
+- emom: { "type": "emom", "totalSeconds": N, "intervalSeconds": N }  (intervalSeconds = duración de cada intervalo en segundos, ej: EMOM=60, E2MOM=120, E3MOM=180)
 - fortime: { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap explícito)
 - tabata: { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N }, ...] }
@@ -75,7 +75,10 @@ Solo JSON, sin explicación ni markdown.`,
     if (!cfg || !validTypes.includes(cfg.type)) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
     }
-    if ((cfg.type === 'amrap' || cfg.type === 'emom') && !(cfg.totalSeconds > 0)) {
+    if (cfg.type === 'emom' && !(cfg.totalSeconds > 0 && cfg.intervalSeconds > 0)) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'amrap' && !(cfg.totalSeconds > 0)) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
     }
     if (cfg.type === 'fortime' && typeof cfg.capSeconds !== 'number') {

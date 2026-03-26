@@ -4,7 +4,7 @@ export type MixBlock = { label: string; seconds: number }
 
 export type TimerConfig =
   | { type: 'amrap';    totalSeconds: number }
-  | { type: 'emom';     totalSeconds: number }
+  | { type: 'emom';     totalSeconds: number; intervalSeconds: number }
   | { type: 'fortime';  capSeconds: number }
   | { type: 'tabata';   workSeconds: number; restSeconds: number; rounds: number }
   | { type: 'mix';      blocks: MixBlock[] }

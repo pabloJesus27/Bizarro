@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { fmt, beep } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
-export default function SimpleTimer({ label, totalSeconds, onMinuteTick }: {
-  label: string; totalSeconds: number; onMinuteTick?: boolean
+export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
+  label: string; totalSeconds: number; intervalSeconds?: number
 }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
@@ -29,9 +29,9 @@ export default function SimpleTimer({ label, totalSeconds, onMinuteTick }: {
   useEffect(() => {
     if (!audioRef.current || elapsed === 0) return
     if (elapsed >= totalSeconds) { beep(audioRef.current, 440, 1.5, 0.8); return }
-    if (onMinuteTick && elapsed % 60 === 0) beep(audioRef.current, 880, 0.3)
+    if (intervalSeconds && elapsed % intervalSeconds === 0) beep(audioRef.current, 880, 0.3)
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 0.15)
-  }, [elapsed, totalSeconds, remaining, onMinuteTick])
+  }, [elapsed, totalSeconds, remaining, intervalSeconds])
 
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
 

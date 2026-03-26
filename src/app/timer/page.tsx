@@ -19,7 +19,7 @@ import MixSetup from '@/components/timer/MixSetup'
 function renderTimer(cfg: TimerConfig) {
   if (cfg.type === 'interval')  return <IntervalTimer config={cfg} />
   if (cfg.type === 'amrap')     return <SimpleTimer label="AMRAP" totalSeconds={cfg.totalSeconds} />
-  if (cfg.type === 'emom')      return <SimpleTimer label="EMOM" totalSeconds={cfg.totalSeconds} onMinuteTick />
+  if (cfg.type === 'emom')      return <SimpleTimer label="EMOM" totalSeconds={cfg.totalSeconds} intervalSeconds={cfg.intervalSeconds} />
   if (cfg.type === 'fortime')   return <ForTimeTimer capSeconds={cfg.capSeconds} />
   if (cfg.type === 'countdown') return <SimpleTimer label="COUNTDOWN" totalSeconds={cfg.totalSeconds} />
   if (cfg.type === 'tabata')    return <TabataTimer workSeconds={cfg.workSeconds} restSeconds={cfg.restSeconds} rounds={cfg.rounds} />
