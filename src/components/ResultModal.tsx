@@ -24,6 +24,9 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
 
   function markDirty() { if (!isDirty) setIsDirty(true) }
 
+  const timeValid   = !scoreTime   || /^\d{1,2}:\d{2}$/.test(scoreTime.trim())
+  const weightValid = !scoreWeight || (!isNaN(parseFloat(scoreWeight)) && parseFloat(scoreWeight) > 0 && parseFloat(scoreWeight) <= 500)
+
   function handleClose() {
     if (isDirty) { setConfirmClose(true) } else { onClose() }
   }
@@ -117,8 +120,16 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
               <input
                 type="text" placeholder="14:32" value={scoreTime}
                 onChange={e => { setScoreTime(e.target.value); markDirty() }}
-                className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
+                className={`w-full bg-neutral-900 text-white placeholder-neutral-600 border rounded-lg px-4 py-3 focus:outline-none transition ${
+                  !timeValid ? 'border-red-800 focus:border-red-500' : 'border-neutral-700 focus:border-white'
+                }`}
               />
+              {scoreTime && !timeValid && (
+                <p className="text-red-500 text-xs font-mono mt-1">Formato inválido — usa mm:ss (ej: 14:32)</p>
+              )}
+              {scoreTime && timeValid && (
+                <p className="text-green-600 text-xs font-mono mt-1">✓ Correcto</p>
+              )}
             </div>
           )}
           {(wod.type === 'AMRAP' || wod.type === 'EMOM') && (
@@ -153,8 +164,16 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
               <input
                 type="number" step="0.5" min="0" max="500" placeholder="102.5" value={scoreWeight}
                 onChange={e => { setScoreWeight(e.target.value); markDirty() }}
-                className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
+                className={`w-full bg-neutral-900 text-white placeholder-neutral-600 border rounded-lg px-4 py-3 focus:outline-none transition ${
+                  !weightValid ? 'border-red-800 focus:border-red-500' : 'border-neutral-700 focus:border-white'
+                }`}
               />
+              {scoreWeight && !weightValid && (
+                <p className="text-red-500 text-xs font-mono mt-1">Debe ser entre 0 y 500 kg</p>
+              )}
+              {scoreWeight && weightValid && (
+                <p className="text-green-600 text-xs font-mono mt-1">✓ Correcto</p>
+              )}
             </div>
           )}
           <div>
