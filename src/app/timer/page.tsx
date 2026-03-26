@@ -35,6 +35,21 @@ function TimerContent() {
   const [config, setConfig] = useState<TimerConfig | null>(null)
   const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
   const loadedRef = useRef(false)
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+
+  const timerActive = !!(config || generatedMixBlocks || manualType)
+
+  useEffect(() => {
+    if (!timerActive) return
+    if (!('wakeLock' in navigator)) return
+    navigator.wakeLock.request('screen').then(lock => {
+      wakeLockRef.current = lock
+    }).catch(() => {})
+    return () => {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+  }, [timerActive])
 
   useEffect(() => {
     if (manualType || loadedRef.current) return
