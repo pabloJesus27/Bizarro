@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -15,6 +16,7 @@ import {
 } from '@/lib/db'
 import type { AthleteProgramEntry, ProgramEntry, JoinRequest } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
+import { AthletePageLoading } from '@/components/PageLoading'
 
 const slugImages: Record<string, string> = {
   bizarro: '/logoBizarro.png',
@@ -135,9 +137,7 @@ export default function ProgramacionesPage() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <AthletePageLoading />
     )
   }
 

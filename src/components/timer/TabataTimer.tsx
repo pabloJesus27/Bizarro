@@ -65,7 +65,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
         <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
         <div className="flex-1 flex items-center justify-center">
-        <div className="relative w-[28rem] h-[28rem]">
+        <div className="relative w-[min(28rem,85vw)] h-[min(28rem,85vw)]">
           <svg viewBox="0 0 200 200" className="w-full h-full">
             <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
             {Array.from({ length: 60 }).map((_, i) => {

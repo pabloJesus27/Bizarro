@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getProfile, getWodsForWeek, createWod, deleteWod, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import CoachHeader from '@/components/CoachHeader'
+import { CoachPageLoading } from '@/components/PageLoading'
 import RankingSection from '@/components/RankingSection'
 import WodModal from '@/components/admin/WodModal'
 import type { Wod } from '@/lib/types'
@@ -103,9 +104,7 @@ function AdminContent() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <CoachPageLoading />
     )
   }
 

@@ -14,19 +14,19 @@ export default function AMRAPSetup({ onStart }: { onStart: (c: TimerConfig) => v
         <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono text-center">As Many Rounds As Possible</p>
         <div className="flex items-center justify-center gap-3">
           <input
-            type="number"
-            min={1}
-            max={60}
-            value={minutes}
+            type="text"
+            inputMode="numeric"
+            maxLength={2}
+            value={String(minutes)}
             onFocus={e => e.target.select()}
-            onChange={e => setMinutes(Math.max(1, Math.min(60, Number(e.target.value))))}
+            onChange={e => { const v = e.target.value.replace(/\D/g, ''); setMinutes(v === '' ? 0 : Math.min(60, Number(v))) }}
             className="w-16 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-3 py-2 focus:outline-none focus:border-white tabular-nums"
           />
           <p className="text-neutral-400 text-sm font-mono">minutos</p>
         </div>
       </div>
       <Connector />
-      <ClockFace display={fmt(minutes * 60)} label="Duración" onStart={() => onStart({ type: 'amrap', totalSeconds: minutes * 60 })} />
+      <ClockFace display={fmt(minutes * 60)} label="Duración" disabled={minutes === 0} onStart={() => onStart({ type: 'amrap', totalSeconds: minutes * 60 })} />
     </div>
   )
 }

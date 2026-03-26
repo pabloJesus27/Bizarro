@@ -1,11 +1,13 @@
 'use client'
 
+
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getMyPRs, saveManualPR } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import AppHeader from '@/components/AppHeader'
+import { AthletePageLoading } from '@/components/PageLoading'
 import { getTodayStr } from '@/lib/week-utils'
 
 const GROUPS = [
@@ -133,9 +135,7 @@ export default function MaximosPage() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <AthletePageLoading />
     )
   }
 

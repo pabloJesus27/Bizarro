@@ -46,7 +46,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
   return (
     <>
       <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 h-10">
           {/* Hamburger — solo móvil */}
           <button
             onClick={() => setDrawerOpen(true)}

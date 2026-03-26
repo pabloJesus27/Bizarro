@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getProfile, getMyPrograms, getPendingJoinRequests, acceptJoinRequest, rejectJoinRequest } from '@/lib/db'
 import type { JoinRequest } from '@/lib/db'
 import CoachHeader from '@/components/CoachHeader'
+import { CoachPageLoading } from '@/components/PageLoading'
 
 function NotificacionesContent() {
   const { user, loading: authLoading } = useAuth()
@@ -64,9 +65,7 @@ function NotificacionesContent() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <CoachPageLoading />
     )
   }
 

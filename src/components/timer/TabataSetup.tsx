@@ -9,6 +9,7 @@ export default function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => 
   const [work, setWork] = useState(20)
   const [rest, setRest] = useState(10)
   const [rounds, setRounds] = useState(8)
+  const isDisabled = work === 0 || rounds === 0
   return (
     <div className="flex flex-col items-center gap-4">
       <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
@@ -19,12 +20,12 @@ export default function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => 
             <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Trabajo</p>
             <div className="flex items-center gap-1">
               <input
-                type="number"
-                min={1}
-                max={60}
-                value={work}
+                type="text"
+                inputMode="numeric"
+                maxLength={2}
+                value={String(work)}
                 onFocus={e => e.target.select()}
-                onChange={e => setWork(Math.max(1, Math.min(60, Number(e.target.value))))}
+                onChange={e => { const v = e.target.value.replace(/\D/g, ''); setWork(v === '' ? 0 : Math.min(60, Number(v))) }}
                 className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
               />
               <p className="text-neutral-600 text-xs font-mono">seg</p>
@@ -35,12 +36,12 @@ export default function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => 
             <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Descanso</p>
             <div className="flex items-center gap-1">
               <input
-                type="number"
-                min={0}
-                max={60}
-                value={rest}
+                type="text"
+                inputMode="numeric"
+                maxLength={2}
+                value={String(rest)}
                 onFocus={e => e.target.select()}
-                onChange={e => setRest(Math.max(0, Math.min(60, Number(e.target.value))))}
+                onChange={e => { const v = e.target.value.replace(/\D/g, ''); setRest(v === '' ? 0 : Math.min(60, Number(v))) }}
                 className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
               />
               <p className="text-neutral-600 text-xs font-mono">seg</p>
@@ -50,19 +51,19 @@ export default function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => 
           <div className="flex flex-col items-center gap-1">
             <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Rondas</p>
             <input
-              type="number"
-              min={1}
-              max={30}
-              value={rounds}
+              type="text"
+              inputMode="numeric"
+              maxLength={2}
+              value={String(rounds)}
               onFocus={e => e.target.select()}
-              onChange={e => setRounds(Math.max(1, Math.min(30, Number(e.target.value))))}
+              onChange={e => { const v = e.target.value.replace(/\D/g, ''); setRounds(v === '' ? 0 : Math.min(30, Number(v))) }}
               className="w-12 bg-neutral-900 text-white font-black text-xl text-center border border-neutral-700 rounded-lg px-1 py-2 focus:outline-none focus:border-white tabular-nums"
             />
           </div>
         </div>
       </div>
       <Connector />
-      <ClockFace display={fmt((work + rest) * rounds)} label="Total" onStart={() => onStart({ type: 'tabata', workSeconds: work, restSeconds: rest, rounds })} />
+      <ClockFace display={fmt((work + rest) * rounds)} label="Total" disabled={isDisabled} onStart={() => onStart({ type: 'tabata', workSeconds: work, restSeconds: rest, rounds })} />
     </div>
   )
 }

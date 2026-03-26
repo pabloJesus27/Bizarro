@@ -8,6 +8,7 @@ import ForTimeTimer from '@/components/timer/ForTimeTimer'
 import TabataTimer from '@/components/timer/TabataTimer'
 import MixTimer from '@/components/timer/MixTimer'
 import IntervalTimer from '@/components/timer/IntervalTimer'
+import EMOMTimer from '@/components/timer/EMOMTimer'
 import AMRAPSetup from '@/components/timer/AMRAPSetup'
 import EMOMSetup from '@/components/timer/EMOMSetup'
 import ForTimeSetup from '@/components/timer/ForTimeSetup'
@@ -19,7 +20,7 @@ import MixSetup from '@/components/timer/MixSetup'
 function renderTimer(cfg: TimerConfig) {
   if (cfg.type === 'interval')  return <IntervalTimer config={cfg} />
   if (cfg.type === 'amrap')     return <SimpleTimer label="AMRAP" totalSeconds={cfg.totalSeconds} />
-  if (cfg.type === 'emom')      return <SimpleTimer label="EMOM" totalSeconds={cfg.totalSeconds} intervalSeconds={cfg.intervalSeconds} />
+  if (cfg.type === 'emom')      return <EMOMTimer totalSeconds={cfg.totalSeconds} intervalSeconds={cfg.intervalSeconds} />
   if (cfg.type === 'fortime')   return <ForTimeTimer capSeconds={cfg.capSeconds} />
   if (cfg.type === 'countdown') return <SimpleTimer label="COUNTDOWN" totalSeconds={cfg.totalSeconds} />
   if (cfg.type === 'tabata')    return <TabataTimer workSeconds={cfg.workSeconds} restSeconds={cfg.restSeconds} rounds={cfg.rounds} />
@@ -72,7 +73,7 @@ function TimerContent() {
 
   if (!manualType && !config && !generatedMixBlocks) return (
     <main className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-px h-10 bg-white animate-pulse" />
+      <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
     </main>
   )
 
@@ -123,7 +124,7 @@ export default function TimerPage() {
   return (
     <Suspense fallback={
       <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
+        <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
       </main>
     }>
       <TimerContent />

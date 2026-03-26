@@ -62,7 +62,7 @@ export default function EMOMSetup({ onStart }: { onStart: (c: TimerConfig) => vo
         </div>
       </div>
       <Connector />
-      <ClockFace display={fmt(totalSeconds)} label="Duración" onStart={() => onStart({ type: 'emom', totalSeconds, intervalSeconds })} />
+      <ClockFace display={fmt(totalSeconds)} label="Duración" disabled={totalSeconds === 0} onStart={() => onStart({ type: 'emom', totalSeconds, intervalSeconds })} />
     </div>
   )
 }

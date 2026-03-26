@@ -9,6 +9,7 @@ import type { Wod, Result, WodType, Profile } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import CoachHeader from '@/components/CoachHeader'
+import { CoachPageLoading } from '@/components/PageLoading'
 
 function getInitials(name: string | null): string {
   if (!name) return '?'
@@ -332,7 +333,7 @@ function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRem
       {/* Content */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-px h-10 bg-white animate-pulse" />
+          <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
         </div>
       ) : (
         <div className="flex-1 flex flex-col px-6 py-8 max-w-2xl mx-auto w-full">
@@ -471,9 +472,7 @@ function AtletasContent() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <CoachPageLoading />
     )
   }
 

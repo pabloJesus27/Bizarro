@@ -28,8 +28,17 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
 
   function addBlock() {
     if (!newLabel.trim()) return
-    const seconds = newLabel === 'EMOM' ? emomTotal : newLabel === 'Tabata' ? tabTotal : newMinutes * 60 + newSecs
-    setBlocks(prev => [...prev, { id: ++idCounter.current, label: newLabel.trim(), seconds }])
+    let block: MixBlockWithId
+    if (newLabel === 'EMOM') {
+      const intSecs = emomIntMin * 60 + emomIntSec
+      block = { id: ++idCounter.current, label: 'EMOM', seconds: emomTotal, intervalSeconds: intSecs }
+    } else if (newLabel === 'Tabata') {
+      block = { id: ++idCounter.current, label: 'Tabata', seconds: tabTotal, tabataWork: tabWork, tabataRest: tabRest }
+    } else {
+      const seconds = newMinutes * 60 + newSecs
+      block = { id: ++idCounter.current, label: newLabel.trim(), seconds }
+    }
+    setBlocks(prev => [...prev, block])
     setNewLabel('')
     setNewMinutes(1)
     setNewSecs(0)

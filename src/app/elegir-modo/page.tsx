@@ -59,7 +59,7 @@ export default function ElegirModoPage() {
             </button>
           </div>
         ) : (
-          <div className="w-px h-10 bg-white animate-pulse" />
+          <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
         )}
       </main>
     )

@@ -1,6 +1,6 @@
 'use client'
 
-export function ClockFace({ display, label, onStart }: { display: string; label: string; onStart: () => void }) {
+export function ClockFace({ display, label, onStart, disabled }: { display: string; label: string; onStart: () => void; disabled?: boolean }) {
   return (
     <div className="relative w-72 h-72">
       <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -30,7 +30,7 @@ export function ClockFace({ display, label, onStart }: { display: string; label:
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
         <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">{label}</p>
         <p className="text-white font-black text-5xl tabular-nums tracking-tighter leading-none">{display}</p>
-        <button onClick={onStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+        <button onClick={onStart} disabled={disabled} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs disabled:opacity-30 disabled:cursor-not-allowed">
           Listo
         </button>
       </div>

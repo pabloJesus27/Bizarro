@@ -1,6 +1,8 @@
 'use client'
 
+
 import { useEffect, useRef, useState } from 'react'
+import { AthletePageLoading } from '@/components/PageLoading'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
@@ -126,9 +128,7 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <AthletePageLoading />
     )
   }
 

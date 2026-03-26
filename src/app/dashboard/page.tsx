@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -7,6 +8,7 @@ import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessag
 import type { PersonalRecord, CoachMessage } from '@/lib/db'
 import type { Wod, Result, Program } from '@/lib/types'
 import AppHeader from '@/components/AppHeader'
+import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
 import PRCalculator from '@/components/PRCalculator'
@@ -142,9 +144,7 @@ function DashboardContent() {
 
   if (authLoading || loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-px h-10 bg-white animate-pulse" />
-      </main>
+      <AthletePageLoading />
     )
   }
 
@@ -237,7 +237,7 @@ function DashboardContent() {
 
           {wodLoading ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="w-px h-10 bg-white animate-pulse" />
+              <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
             </div>
           ) : isSunday(selectedDate) ? (
             <div className="flex-1 flex flex-col justify-center">
