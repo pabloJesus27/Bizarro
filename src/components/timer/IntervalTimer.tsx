@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { fmt, beep } from './timer-utils'
+import { useRouter } from 'next/navigation'
+import { fmt, beep, speak } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import type { TimerConfig } from '@/lib/types'
 
 export default function IntervalTimer({ config }: { config: Extract<TimerConfig, { type: 'interval' }> }) {
   const { totalSeconds, intervalSeconds, workLabel, restLabel, startWithRest } = config
 
+  const router = useRouter()
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
@@ -31,16 +33,17 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
     if (!audioRef.current) return
     if (elapsed >= totalSeconds && elapsed > 0) {
       setRunning(false); setFinished(true)
-      beep(audioRef.current, 440, 2.0, 0.8); return
+      beep(audioRef.current, 440, 2.0, 1.0); return
     }
     const rem = intervalSeconds - (elapsed % intervalSeconds)
+    if (rem === 10 && elapsed > 0) { speak('Diez segundos'); return }
     if (rem === 30 && elapsed > 0) {
-      beep(audioRef.current, 660, 0.15, 0.5)
-      setTimeout(() => beep(audioRef.current!, 660, 0.15, 0.5), 250)
+      beep(audioRef.current, 660, 0.15, 1.0)
+      setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
     } else if (elapsed > 0 && elapsed % intervalSeconds === 0) {
-      beep(audioRef.current, 880, 0.2, 0.8)
-      setTimeout(() => beep(audioRef.current!, 880, 0.2, 0.8), 300)
-      setTimeout(() => beep(audioRef.current!, 1100, 0.6, 0.8), 600)
+      beep(audioRef.current, 880, 0.2, 1.0)
+      setTimeout(() => beep(audioRef.current!, 880, 0.2, 1.0), 300)
+      setTimeout(() => beep(audioRef.current!, 1100, 0.6, 1.0), 600)
     }
   }, [elapsed, intervalSeconds, totalSeconds])
 
@@ -73,8 +76,9 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
       {finished && (
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
+          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center gap-6 text-center">

@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { fmt, beep } from './timer-utils'
+import { useRouter } from 'next/navigation'
+import { fmt, beep, speak } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   label: string; totalSeconds: number; intervalSeconds?: number
 }) {
+  const router = useRouter()
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
@@ -28,9 +30,10 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
 
   useEffect(() => {
     if (!audioRef.current || elapsed === 0) return
-    if (elapsed >= totalSeconds) { beep(audioRef.current, 440, 1.5, 0.8); return }
+    if (elapsed >= totalSeconds) { beep(audioRef.current, 440, 1.5, 1.0); return }
     if (intervalSeconds && elapsed % intervalSeconds === 0) beep(audioRef.current, 880, 0.3)
-    if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 0.15)
+    if (remaining === 10) { speak('Diez segundos'); return }
+    if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, totalSeconds, remaining, intervalSeconds])
 
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
@@ -41,8 +44,9 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
       {finished && (
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
+          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">

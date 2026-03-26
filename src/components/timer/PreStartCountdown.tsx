@@ -10,11 +10,11 @@ export default function PreStartCountdown({ audioCtx, onDone }: { audioCtx: Audi
   useEffect(() => {
     if (doneRef.current) return
     if (count > 0) {
-      beep(audioCtx, 660, 0.12, 0.4)
+      beep(audioCtx, 660, 0.12, 1.0)
       const id = setTimeout(() => setCount(p => p - 1), 1000)
       return () => clearTimeout(id)
     } else {
-      beep(audioCtx, 1100, 0.5, 0.8)
+      beep(audioCtx, 1100, 0.5, 1.0)
       doneRef.current = true
       const id = setTimeout(onDone, 700)
       return () => clearTimeout(id)

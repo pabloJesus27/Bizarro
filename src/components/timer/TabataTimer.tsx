@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { fmt, beep } from './timer-utils'
+import { useRouter } from 'next/navigation'
+import { fmt, beep, speak } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number; restSeconds: number; rounds: number }) {
+  const router = useRouter()
   const [phase, setPhase] = useState<'work' | 'rest'>('work')
   const [phaseElapsed, setPhaseElapsed] = useState(0)
   const [currentRound, setCurrentRound] = useState(1)
@@ -28,18 +30,18 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
             // switch to rest
             setPhase('rest')
             setPhaseElapsed(0)
-            if (audioRef.current) beep(audioRef.current, 660, 0.3, 0.6)
+            if (audioRef.current) beep(audioRef.current, 660, 0.3, 1.0)
           } else {
             // rest done, next round or finish
             if (currentRound >= rounds) {
               setRunning(false)
               setFinished(true)
-              if (audioRef.current) beep(audioRef.current, 440, 1.5, 0.8)
+              if (audioRef.current) beep(audioRef.current, 440, 1.5, 1.0)
             } else {
               setCurrentRound(r => r + 1)
               setPhase('work')
               setPhaseElapsed(0)
-              if (audioRef.current) beep(audioRef.current, 880, 0.2, 0.8)
+              if (audioRef.current) beep(audioRef.current, 880, 0.2, 1.0)
             }
           }
           return 0
@@ -50,6 +52,13 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     return () => clearInterval(id)
   }, [running, phase, workSeconds, restSeconds, currentRound, rounds])
 
+  useEffect(() => {
+    if (!running) return
+    const duration = phase === 'work' ? workSeconds : restSeconds
+    const remaining = duration - phaseElapsed
+    if (remaining === 10) speak('Diez segundos')
+  }, [phaseElapsed, phase, workSeconds, restSeconds, running])
+
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
 
   return (
@@ -58,8 +67,9 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
       {finished && (
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
+          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">

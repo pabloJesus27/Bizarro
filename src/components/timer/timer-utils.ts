@@ -4,7 +4,17 @@ export function fmt(s: number): string {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
-export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 0.5) {
+export function speak(text: string) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return
+  window.speechSynthesis.cancel()
+  const u = new SpeechSynthesisUtterance(text)
+  u.lang = 'es-ES'
+  u.rate = 0.95
+  u.volume = 1
+  window.speechSynthesis.speak(u)
+}
+
+export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 1.0) {
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
   osc.connect(gain)

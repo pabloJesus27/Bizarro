@@ -44,7 +44,12 @@
       "WebFetch(domain:myh4c.brooklynfitzone.com)",
       "Bash(xargs sed:*)",
       "Bash(DOTS_OLD='<main className=\"\"\"\"min-h-screen bg-black flex items-center justify-center\"\"\"\">\\\\n        <div className=\"\"\"\"flex gap-1\\\\.5\"\"\"\"><div className=\"\"\"\"w-1\\\\.5 h-1\\\\.5 bg-neutral-600 rounded-full animate-pulse\"\"\"\" /><div className=\"\"\"\"w-1\\\\.5 h-1\\\\.5 bg-neutral-600 rounded-full animate-pulse \\\\[animation-delay:150ms\\\\]\"\"\"\" /><div className=\"\"\"\"w-1\\\\.5 h-1\\\\.5 bg-neutral-600 rounded-full animate-pulse \\\\[animation-delay:300ms\\\\]\"\"\"\" /></div>\\\\n      </main>' __NEW_LINE_8bb5f57c66d2d975__ for file in /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/app/dashboard/page.tsx /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/app/maximos/page.tsx /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/app/libre/page.tsx /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/app/profile/page.tsx /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/app/programaciones/page.tsx)",
-      "Bash(do echo:*)"
+      "Bash(do echo:*)",
+      "Bash(for file:*)",
+      "Bash(do)",
+      "Read(//Users/pjesussuarez/Documents/MisProyectos/Bizarro/**)",
+      "Bash(done)",
+      "Bash(python3:*)"
     ]
   }
 }

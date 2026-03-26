@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { fmt, beep } from './timer-utils'
+import { fmt, beep, speak } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
@@ -19,8 +19,14 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [running, cappedOut])
 
   useEffect(() => {
-    if (cappedOut) { setRunning(false); if (audioRef.current) beep(audioRef.current, 440, 1.5, 0.8) }
+    if (cappedOut) { setRunning(false); if (audioRef.current) beep(audioRef.current, 440, 1.5, 1.0) }
   }, [cappedOut])
+
+  useEffect(() => {
+    if (!running || capSeconds === 0) return
+    const remaining = capSeconds - elapsed
+    if (remaining === 10) speak('Diez segundos')
+  }, [elapsed, running, capSeconds])
 
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
   function stop() { setRunning(false); setStopped(true); if (audioRef.current) beep(audioRef.current, 880, 0.3) }

@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { fmt, beep } from './timer-utils'
+import { useRouter } from 'next/navigation'
+import { fmt, beep, speak } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import type { MixBlock } from '@/lib/types'
 
 export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   const [blockIdx, setBlockIdx] = useState(0)
+  const router = useRouter()
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
@@ -46,13 +48,13 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     if (blockIdx + 1 >= blocks.length) {
       setRunning(false)
       setFinished(true)
-      if (audioRef.current) beep(audioRef.current, 440, 1.5, 0.8)
+      if (audioRef.current) beep(audioRef.current, 440, 1.5, 1.0)
     } else {
       setBlockIdx(i => i + 1)
       setElapsed(0)
       if (audioRef.current) {
-        beep(audioRef.current, 880, 0.2, 0.8)
-        setTimeout(() => beep(audioRef.current!, 1100, 0.5, 0.8), 350)
+        beep(audioRef.current, 880, 0.2, 1.0)
+        setTimeout(() => beep(audioRef.current!, 1100, 0.5, 1.0), 350)
       }
     }
   }, [elapsed, running, blockIdx, blocks.length, blockDuration])
@@ -61,11 +63,13 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   useEffect(() => {
     if (!isEmom || !audioRef.current || elapsed === 0 || !running) return
     if (elapsed % emomIntSecs === 0) {
-      beep(audioRef.current, 880, 0.2, 0.8)
-      setTimeout(() => beep(audioRef.current!, 880, 0.2, 0.8), 300)
-      setTimeout(() => beep(audioRef.current!, 1100, 0.6, 0.8), 600)
+      beep(audioRef.current, 880, 0.2, 1.0)
+      setTimeout(() => beep(audioRef.current!, 880, 0.2, 1.0), 300)
+      setTimeout(() => beep(audioRef.current!, 1100, 0.6, 1.0), 600)
+    } else if (emomIntervalRemaining === 10) {
+      speak('Diez segundos')
     } else if (emomIntervalRemaining <= 3 && emomIntervalRemaining > 0) {
-      beep(audioRef.current, emomIntervalRemaining === 1 ? 1100 : 880, 0.15)
+      beep(audioRef.current, emomIntervalRemaining === 1 ? 1100 : 880, 1.0)
     }
   }, [elapsed, isEmom, emomIntSecs, emomIntervalRemaining, running])
 
@@ -73,19 +77,22 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   useEffect(() => {
     if (!isTabata || !audioRef.current || elapsed === 0 || !running) return
     if (elapsed % tabCycle === 0 || elapsed % tabCycle === tabWork) {
-      beep(audioRef.current, 880, 0.2, 0.8)
-      setTimeout(() => beep(audioRef.current!, 1100, 0.5, 0.8), 350)
+      beep(audioRef.current, 880, 0.2, 1.0)
+      setTimeout(() => beep(audioRef.current!, 1100, 0.5, 1.0), 350)
+    } else if (tabPhaseRemaining === 10) {
+      speak('Diez segundos')
     } else if (tabPhaseRemaining <= 3 && tabPhaseRemaining > 0) {
-      beep(audioRef.current, tabPhaseRemaining === 1 ? 1100 : 880, 0.15)
+      beep(audioRef.current, tabPhaseRemaining === 1 ? 1100 : 880, 1.0)
     }
   }, [elapsed, isTabata, tabCycle, tabWork, tabPhaseRemaining, running])
 
-  // Aviso 30 segundos (solo bloques simples)
+  // Aviso 30 segundos y 10 segundos (bloques simples)
   useEffect(() => {
     if (!running || !audioRef.current || isEmom || isTabata) return
+    if (remaining === 10) { speak('Diez segundos'); return }
     if (remaining === 30 && blockDuration > 30) {
-      beep(audioRef.current, 660, 0.15, 0.5)
-      setTimeout(() => beep(audioRef.current!, 660, 0.15, 0.5), 250)
+      beep(audioRef.current, 660, 0.15, 1.0)
+      setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
     }
   }, [remaining, running, blockDuration, isEmom, isTabata])
 
@@ -110,8 +117,9 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
       {finished && (
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
+          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
