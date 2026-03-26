@@ -204,8 +204,8 @@ export default function LibrePage() {
         </div>
 
         {/* Day tabs */}
-        <div className="border-b border-neutral-900">
-          <div className="grid grid-cols-7">
+        <div className="border-b border-neutral-900 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-full">
             {weekDates.map((date) => {
               const d          = new Date(date + 'T00:00:00')
               const isToday    = date === today
@@ -215,7 +215,7 @@ export default function LibrePage() {
                 <button
                   key={date}
                   onClick={() => { setSelectedDate(date); setSelectedBlock(1); setPendingBlock(null) }}
-                  className={`flex flex-col items-center gap-1 px-5 py-4 border-b-2 transition-colors ${isSelected ? 'border-white' : 'border-transparent'}`}
+                  className={`flex-1 min-w-[3rem] flex flex-col items-center gap-1 px-1 sm:px-5 py-4 border-b-2 transition-colors ${isSelected ? 'border-white' : 'border-transparent'}`}
                 >
                   <span className={`text-xs uppercase tracking-widest font-mono ${isSelected ? 'text-neutral-400' : 'text-neutral-700'}`}>
                     {DAY_SHORT[d.getDay()]}
