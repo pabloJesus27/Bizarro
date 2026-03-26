@@ -138,7 +138,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
                 Rondas + reps
               </label>
               <input
-                type="text" placeholder="7+15" value={scoreRounds}
+                type="text" placeholder="7 rondas + 15 repeticiones" value={scoreRounds}
                 onChange={e => { setScoreRounds(e.target.value); markDirty() }}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />
