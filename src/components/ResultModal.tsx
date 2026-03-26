@@ -12,13 +12,21 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
   onClose:   () => void
   onSaved:   (result: Result, isNewPR: boolean) => void
 }) {
-  const [scoreTime,   setScoreTime]   = useState(existing?.score_time ?? '')
-  const [scoreRounds, setScoreRounds] = useState(existing?.score_rounds          ?? '')
-  const [scoreWeight, setScoreWeight] = useState(existing?.score_weight?.toString() ?? '')
-  const [notes,       setNotes]       = useState(existing?.score_notes           ?? '')
-  const [rx,          setRx]          = useState(existing?.rx ?? true)
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState('')
+  const [scoreTime,    setScoreTime]    = useState(existing?.score_time ?? '')
+  const [scoreRounds,  setScoreRounds]  = useState(existing?.score_rounds ?? '')
+  const [scoreWeight,  setScoreWeight]  = useState(existing?.score_weight?.toString() ?? '')
+  const [notes,        setNotes]        = useState(existing?.score_notes ?? '')
+  const [rx,           setRx]           = useState(existing?.rx ?? true)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState('')
+  const [confirmClose, setConfirmClose] = useState(false)
+  const [isDirty,      setIsDirty]      = useState(false)
+
+  function markDirty() { if (!isDirty) setIsDirty(true) }
+
+  function handleClose() {
+    if (isDirty) { setConfirmClose(true) } else { onClose() }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -61,6 +69,29 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
     }
   }
 
+  if (confirmClose) return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <p className="text-white font-black text-lg uppercase tracking-tight">¿Salir sin guardar?</p>
+        <p className="text-neutral-400 text-sm font-mono">Perderás los datos introducidos.</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 border border-neutral-700 text-neutral-400 font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-red-800 hover:text-red-500 transition text-sm"
+          >
+            Salir
+          </button>
+          <button
+            onClick={() => setConfirmClose(false)}
+            className="flex-1 bg-white text-black font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:bg-neutral-200 transition text-sm"
+          >
+            Volver
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
       <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-md p-6">
@@ -72,7 +103,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
             </p>
             <h2 className="text-white font-black text-xl tracking-tight uppercase">{wod.title}</h2>
           </div>
-          <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
+          <button onClick={handleClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
             &times;
           </button>
         </div>
@@ -85,7 +116,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
               </label>
               <input
                 type="text" placeholder="14:32" value={scoreTime}
-                onChange={e => setScoreTime(e.target.value)}
+                onChange={e => { setScoreTime(e.target.value); markDirty() }}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />
             </div>
@@ -97,7 +128,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
               </label>
               <input
                 type="text" placeholder="7+15" value={scoreRounds}
-                onChange={e => setScoreRounds(e.target.value)}
+                onChange={e => { setScoreRounds(e.target.value); markDirty() }}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />
             </div>
@@ -109,7 +140,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
               </label>
               <input
                 type="text" placeholder="47 cals / 32 reps" value={scoreRounds}
-                onChange={e => setScoreRounds(e.target.value)}
+                onChange={e => { setScoreRounds(e.target.value); markDirty() }}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />
             </div>
@@ -121,7 +152,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
               </label>
               <input
                 type="number" step="0.5" min="0" max="500" placeholder="102.5" value={scoreWeight}
-                onChange={e => setScoreWeight(e.target.value)}
+                onChange={e => { setScoreWeight(e.target.value); markDirty() }}
                 className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
               />
             </div>
@@ -132,12 +163,12 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
             </label>
             <textarea
               placeholder="Escalas usadas, sensaciones..." value={notes}
-              onChange={e => setNotes(e.target.value)} rows={2}
+              onChange={e => { setNotes(e.target.value); markDirty() }} rows={2}
               className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition resize-none"
             />
           </div>
 
-          <button type="button" onClick={() => setRx(!rx)} className="flex items-center gap-3 w-fit">
+          <button type="button" onClick={() => { setRx(!rx); markDirty() }} className="flex items-center gap-3 w-fit">
             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${rx ? 'bg-white border-white' : 'border-neutral-600'}`}>
               {rx && <span className="text-black text-xs font-black">✓</span>}
             </div>
