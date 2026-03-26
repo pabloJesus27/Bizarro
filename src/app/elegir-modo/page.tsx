@@ -72,7 +72,7 @@ export default function ElegirModoPage() {
         <h1 className="text-white font-black text-3xl uppercase tracking-tighter">Elige tu modo</h1>
       </div>
 
-      <div className="flex flex-col sm:flex-row flex-wrap gap-6 w-full max-w-2xl justify-center">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-6 w-full max-w-2xl justify-center items-center">
 
         {programs.map(ap => {
           const slug = ap.programs.slug
