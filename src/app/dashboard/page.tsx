@@ -278,7 +278,7 @@ function DashboardContent() {
                     {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
                   </span>
                 </div>
-                {activeWod.type !== 'Warmup' && (
+                {!['Warmup', 'Gymnastics', 'Core', 'Mobility', 'Other'].includes(activeWod.type) && (
                   <button
                     onClick={() => setActiveTab(t => t === 'ranking' ? 'wod' : 'ranking')}
                     className={`inline-flex items-center px-4 py-1 rounded-full text-xs uppercase tracking-widest font-mono transition border ${
