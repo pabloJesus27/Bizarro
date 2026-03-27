@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, unlockSilentMode } from './timer-utils'
+import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number; restSeconds: number; rounds: number }) {
@@ -59,7 +59,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     if (remaining === 10) speak('Diez segundos')
   }, [phaseElapsed, phase, workSeconds, restSeconds, running])
 
-  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; unlockSilentMode(ctx); setInPreCountdown(true) }
+  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
 
   return (
     <>

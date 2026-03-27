@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, unlockSilentMode } from './timer-utils'
+import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
@@ -36,7 +36,7 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, totalSeconds, remaining, intervalSeconds])
 
-  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; unlockSilentMode(ctx); setInPreCountdown(true) }
+  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
 
   return (
     <>

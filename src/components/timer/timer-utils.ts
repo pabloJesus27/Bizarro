@@ -1,13 +1,12 @@
-// En iOS, <audio> y AudioContext tienen sesiones separadas.
-// Conectar un MediaElementSource al AudioContext fuerza iOS a usar
-// el audio session "playback" para el ctx, bypaseando el silent switch.
-export function unlockSilentMode(ctx: AudioContext) {
-  const audio = new Audio('/beep.wav')
-  audio.volume = 0
-  const source = ctx.createMediaElementSource(audio)
+// iOS suspende el AudioContext cuando no hay audio activo.
+// Mantenerlo vivo con un buffer silencioso en loop evita la suspensión.
+export function keepAudioContextAlive(ctx: AudioContext) {
+  const buffer = ctx.createBuffer(1, 1, 22050)
+  const source = ctx.createBufferSource()
+  source.buffer = buffer
+  source.loop = true
   source.connect(ctx.destination)
-  audio.play().catch(() => {})
-  audio.onended = () => source.disconnect()
+  source.start()
 }
 
 export function fmt(s: number): string {
