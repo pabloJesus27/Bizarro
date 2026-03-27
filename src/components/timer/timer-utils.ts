@@ -1,10 +1,13 @@
-// En iOS, reproducir un <audio> en el tap del usuario cambia la sesión de audio
-// a modo "playback", lo que permite que WebAudio suene aunque el móvil esté en silencio.
-// Necesita ser audio audible (no silencio) para que iOS active el modo playback.
-export function unlockSilentMode() {
-  const a = new Audio('/beep.wav')
-  a.volume = 0.001
-  a.play().catch(() => {})
+// En iOS, <audio> y AudioContext tienen sesiones separadas.
+// Conectar un MediaElementSource al AudioContext fuerza iOS a usar
+// el audio session "playback" para el ctx, bypaseando el silent switch.
+export function unlockSilentMode(ctx: AudioContext) {
+  const audio = new Audio('/beep.wav')
+  audio.volume = 0
+  const source = ctx.createMediaElementSource(audio)
+  source.connect(ctx.destination)
+  audio.play().catch(() => {})
+  audio.onended = () => source.disconnect()
 }
 
 export function fmt(s: number): string {

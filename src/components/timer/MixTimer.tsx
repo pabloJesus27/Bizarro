@@ -97,7 +97,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     }
   }, [remaining, running, blockDuration, isEmom, isTabata, isCountUp])
 
-  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; unlockSilentMode(ctx); setInPreCountdown(true) }
 
   // Texto central del reloj
   const clockLabel = isEmom

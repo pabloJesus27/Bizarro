@@ -46,7 +46,7 @@ export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
     }
   }, [elapsed, totalSeconds, intervalSeconds, intervalRemaining])
 
-  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; unlockSilentMode(ctx); setInPreCountdown(true) }
 
   return (
     <>

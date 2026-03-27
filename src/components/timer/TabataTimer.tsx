@@ -59,7 +59,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     if (remaining === 10) speak('Diez segundos')
   }, [phaseElapsed, phase, workSeconds, restSeconds, running])
 
-  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; unlockSilentMode(ctx); setInPreCountdown(true) }
 
   return (
     <>

@@ -47,7 +47,7 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
     }
   }, [elapsed, intervalSeconds, totalSeconds])
 
-  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; unlockSilentMode(ctx); setInPreCountdown(true) }
 
   if (!running && !inPreCountdown && elapsed === 0) {
     return (
