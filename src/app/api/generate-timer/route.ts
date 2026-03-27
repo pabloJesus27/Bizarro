@@ -34,15 +34,16 @@ Tipo: ${type}
 Descripción: ${description}
 
 Tipos de timer disponibles:
+- fortime: { "type": "fortime", "capSeconds": 0 }  — SOLO cuando no hay time cap explícito
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N, "intervalSeconds"?: N }, ...] }
 
-Usa SIEMPRE mix. Reglas:
-- AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
-- For Time con time cap X min → [{"label":"For Time","seconds":X*60}]
-- For Time sin time cap → [{"label":"For Time","seconds":1200}] (usa 20 min por defecto)
-- EMOM N min → [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
-- For Max ventanas de X min durante Y min → (Y/X) bloques de X*60s con label descriptivo
-- WOD COMPLEJO (AMRAP+descanso+AMRAP, X on X off, etc.) → bloques separados con label descriptivo
+Reglas:
+- For Time SIN time cap → { "type": "fortime", "capSeconds": 0 } (cuenta arriba)
+- For Time CON time cap X min → mix: [{"label":"For Time","seconds":X*60}]
+- AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
+- EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
+- For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
+- WOD COMPLEJO (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
 
 Ejemplos de WODs complejos → mix:
 - "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
@@ -71,7 +72,14 @@ Solo JSON, sin explicación ni markdown.`,
     const clean = text.replace(/```json\n?|\n?```/g, '').trim()
     const cfg = JSON.parse(clean)
 
-    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number }) => !b.label || !(b.seconds > 0))) {
+    const validTypes = ['fortime', 'mix']
+    if (!cfg || !validTypes.includes(cfg.type)) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'fortime' && typeof cfg.capSeconds !== 'number') {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'mix' && (!Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number }) => !b.label || !(b.seconds > 0)))) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
     }
 
