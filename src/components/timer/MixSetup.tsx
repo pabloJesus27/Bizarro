@@ -269,7 +269,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
                 </span>
                 <div>
                   <p className="text-white text-sm font-mono">{b.label}</p>
-                  <p className="text-neutral-600 text-xs font-mono">{fmt(b.seconds)}</p>
+                  <p className="text-neutral-600 text-xs font-mono">{b.countUp && b.seconds === 0 ? 'Sin cap' : fmt(b.seconds)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

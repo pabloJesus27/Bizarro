@@ -38,7 +38,7 @@ Tipos de timer disponibles:
 
 Reglas:
 - For Time CON time cap X min → mix: [{"label":"For Time","seconds":X*60,"countUp":true}]
-- For Time SIN time cap → mix: [{"label":"For Time","seconds":1200,"countUp":true}] (20 min por defecto)
+- For Time SIN time cap → mix: [{"label":"For Time","seconds":0,"countUp":true}] (sin límite, el atleta para manualmente)
 - AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
@@ -71,7 +71,7 @@ Solo JSON, sin explicación ni markdown.`,
     const clean = text.replace(/```json\n?|\n?```/g, '').trim()
     const cfg = JSON.parse(clean)
 
-    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number }) => !b.label || !(b.seconds > 0))) {
+    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number; countUp?: boolean }) => !b.label || (!(b.seconds > 0) && !b.countUp))) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
     }
 

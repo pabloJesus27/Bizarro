@@ -16,9 +16,9 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   const audioRef = useRef<AudioContext | null>(null)
 
   const current = blocks[blockIdx]
-  const blockDuration = Math.max(1, current?.seconds ?? 1)
   const isCountUp = !!(current?.countUp)
-  const remaining = current ? blockDuration - elapsed : 0
+  const blockDuration = (isCountUp && (current?.seconds ?? 0) === 0) ? 0 : Math.max(1, current?.seconds ?? 1)
+  const remaining = current ? Math.max(0, blockDuration - elapsed) : 0
 
   // EMOM: interval-by-interval display
   const isEmom = !!(current?.intervalSeconds)
@@ -45,7 +45,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   }, [running, blockIdx])
 
   useEffect(() => {
-    if (!running || elapsed < blockDuration) return
+    if (!running || blockDuration === 0 || elapsed < blockDuration) return
     if (blockIdx + 1 >= blocks.length) {
       setRunning(false)
       setFinished(true)
