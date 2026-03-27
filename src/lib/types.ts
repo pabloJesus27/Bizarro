@@ -1,6 +1,6 @@
 export type WodType = 'For Time' | 'AMRAP' | 'EMOM' | 'Strength' | 'Gymnastics' | 'Core' | 'Mobility' | 'Warmup' | 'For Max' | 'Other'
 
-export type MixBlock = { label: string; seconds: number; intervalSeconds?: number; tabataWork?: number; tabataRest?: number }
+export type MixBlock = { label: string; seconds: number; intervalSeconds?: number; tabataWork?: number; tabataRest?: number; countUp?: boolean }
 
 export type TimerConfig =
   | { type: 'amrap';    totalSeconds: number }

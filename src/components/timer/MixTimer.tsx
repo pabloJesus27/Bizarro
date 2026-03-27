@@ -17,6 +17,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
 
   const current = blocks[blockIdx]
   const blockDuration = Math.max(1, current?.seconds ?? 1)
+  const isCountUp = !!(current?.countUp)
   const remaining = current ? blockDuration - elapsed : 0
 
   // EMOM: interval-by-interval display
@@ -86,15 +87,15 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     }
   }, [elapsed, isTabata, tabCycle, tabWork, tabPhaseRemaining, running])
 
-  // Aviso 30 segundos y 10 segundos (bloques simples)
+  // Aviso 30 segundos y 10 segundos (bloques simples, solo countdown)
   useEffect(() => {
-    if (!running || !audioRef.current || isEmom || isTabata) return
+    if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
     if (remaining === 10) { speak('Diez segundos'); return }
     if (remaining === 30 && blockDuration > 30) {
       beep(audioRef.current, 660, 0.15, 1.0)
       setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
     }
-  }, [remaining, running, blockDuration, isEmom, isTabata])
+  }, [remaining, running, blockDuration, isEmom, isTabata, isCountUp])
 
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
 
@@ -103,12 +104,16 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     ? `Intervalo ${emomCurrentInterval}/${emomTotalIntervals}`
     : isTabata
     ? `${tabIsWork ? 'Trabajo' : 'Descanso'} ${tabCurrentRound}/${tabTotalRounds}`
+    : isCountUp
+    ? 'Tiempo'
     : 'Restante'
 
   const clockTime = isEmom
     ? fmt(emomIntervalRemaining)
     : isTabata
     ? fmt(tabPhaseRemaining)
+    : isCountUp
+    ? fmt(elapsed)
     : fmt(remaining)
 
   return (

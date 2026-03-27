@@ -36,7 +36,8 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       block = { id: ++idCounter.current, label: 'Tabata', seconds: tabTotal, tabataWork: tabWork, tabataRest: tabRest }
     } else {
       const seconds = newMinutes * 60 + newSecs
-      block = { id: ++idCounter.current, label: newLabel.trim(), seconds }
+      const countUp = newLabel === 'For Time' ? true : undefined
+      block = { id: ++idCounter.current, label: newLabel.trim(), seconds, ...(countUp ? { countUp } : {}) }
     }
     setBlocks(prev => [...prev, block])
     setNewLabel('')
