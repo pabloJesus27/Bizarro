@@ -1,12 +1,21 @@
-// iOS suspende el AudioContext cuando no hay audio activo.
-// Mantenerlo vivo con un buffer silencioso en loop evita la suspensión.
-export function keepAudioContextAlive(ctx: AudioContext) {
-  const buffer = ctx.createBuffer(1, 1, 22050)
-  const source = ctx.createBufferSource()
-  source.buffer = buffer
-  source.loop = true
-  source.connect(ctx.destination)
-  source.start()
+// Pool de <audio> para beeps en iOS (HTMLAudioElement usa media category
+// y suena aunque el móvil esté en silencio, a diferencia de Web Audio API).
+const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+const POOL_SIZE = 6
+let pool: HTMLAudioElement[] = []
+let poolIdx = 0
+
+function getPoolAudio(): HTMLAudioElement {
+  if (pool.length === 0) {
+    pool = Array.from({ length: POOL_SIZE }, () => new Audio('/beep.wav'))
+  }
+  const a = pool[poolIdx % POOL_SIZE]
+  poolIdx++
+  return a
+}
+
+export function keepAudioContextAlive(_ctx: AudioContext) {
+  // No-op: en iOS usamos el pool de <audio> en su lugar
 }
 
 export function fmt(s: number): string {
@@ -28,6 +37,13 @@ export function speak(text: string) {
 }
 
 export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 1.0) {
+  if (isIOS) {
+    const a = getPoolAudio()
+    a.currentTime = 0
+    a.volume = Math.min(1, vol)
+    a.play().catch(() => {})
+    return
+  }
   const play = () => {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
