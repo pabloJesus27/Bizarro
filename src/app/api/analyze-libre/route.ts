@@ -71,7 +71,13 @@ ${WOD_FIELDS}
 
 ${TIMER_FORMAT}
 
-Reglas de tipo: igual que CrossFit estándar (Warmup, Strength, AMRAP, EMOM, For Time, etc.)
+Reglas de tipo (usa EXACTAMENTE estos valores):
+- Warm Up → "Warmup"
+- Sets/reps con barra o pesas → "Strength"
+- Handstand, muscle up, ring, gymnastics → "Gymnastics"
+- Ejercicios de core → "Core"
+- Estiramientos, movilidad → "Mobility"
+- AMRAP → "AMRAP", For time → "For Time", EMOM → "EMOM", Max cal/reps → "For Max", resto → "Other"
 Para Warmup, Strength, Gymnastics, Core, Mobility: timerConfig = null salvo que haya un timer explícito.
 Ignora notas de hidratación, nutrición, recordatorios o cualquier cosa que no sea un bloque de ejercicio.
 
@@ -88,6 +94,13 @@ ${WOD_FIELDS}
 
 ${TIMER_FORMAT}
 
+Reglas de tipo (usa EXACTAMENTE estos valores):
+- Warm Up → "Warmup"
+- Sets/reps con barra o pesas → "Strength"
+- Handstand, muscle up, ring, gymnastics → "Gymnastics"
+- Ejercicios de core → "Core"
+- Estiramientos, movilidad → "Mobility"
+- AMRAP → "AMRAP", For time → "For Time", EMOM → "EMOM", Max cal/reps → "For Max", resto → "Other"
 Si hay varios bloques visibles, extrae solo el bloque principal (el WOD metabólico o de mayor intensidad).
 Ignora notas de hidratación, nutrición, recordatorios o cualquier cosa que no sea un bloque de ejercicio.
 
@@ -113,9 +126,15 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
   const raw = (msg.content[0] as { type: string; text: string }).text.trim()
   const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 
+  const VALID_TYPES = new Set(['For Time','AMRAP','EMOM','Strength','Gymnastics','Core','Mobility','Warmup','For Max','Other'])
+
   try {
     const wods = JSON.parse(cleaned)
-    return NextResponse.json({ wods })
+    const normalized = wods.map((w: Record<string, unknown>) => ({
+      ...w,
+      type: VALID_TYPES.has(w.type as string) ? w.type : 'Other',
+    }))
+    return NextResponse.json({ wods: normalized })
   } catch {
     return NextResponse.json({ error: 'Error al interpretar la imagen' }, { status: 500 })
   }
