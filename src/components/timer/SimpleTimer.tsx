@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
@@ -30,9 +30,9 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
 
   useEffect(() => {
     if (!audioRef.current || elapsed === 0) return
-    if (elapsed >= totalSeconds) { beep(audioRef.current, 440, 1.5, 1.0); return }
-    if (intervalSeconds && elapsed % intervalSeconds === 0) beep(audioRef.current, 880, 0.3)
-    if (remaining === 10) { speak('Diez segundos'); return }
+    if (elapsed >= totalSeconds) { beepGo(audioRef.current); return }
+    if (intervalSeconds && elapsed % intervalSeconds === 0) beepGo(audioRef.current)
+    if (remaining === 10) { beepWarning(audioRef.current); return }
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, totalSeconds, remaining, intervalSeconds])
 

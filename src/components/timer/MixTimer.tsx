@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import type { MixBlock } from '@/lib/types'
 
@@ -49,14 +49,11 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     if (blockIdx + 1 >= blocks.length) {
       setRunning(false)
       setFinished(true)
-      if (audioRef.current) beep(audioRef.current, 440, 1.5, 1.0)
+      if (audioRef.current) beepGo(audioRef.current)
     } else {
       setBlockIdx(i => i + 1)
       setElapsed(0)
-      if (audioRef.current) {
-        beep(audioRef.current, 880, 0.2, 1.0)
-        setTimeout(() => beep(audioRef.current!, 1100, 0.5, 1.0), 350)
-      }
+      if (audioRef.current) beepGo(audioRef.current)
     }
   }, [elapsed, running, blockIdx, blocks.length, blockDuration])
 
@@ -64,11 +61,9 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   useEffect(() => {
     if (!isEmom || !audioRef.current || elapsed === 0 || !running) return
     if (elapsed % emomIntSecs === 0) {
-      beep(audioRef.current, 880, 0.2, 1.0)
-      setTimeout(() => beep(audioRef.current!, 880, 0.2, 1.0), 300)
-      setTimeout(() => beep(audioRef.current!, 1100, 0.6, 1.0), 600)
+      beepGo(audioRef.current)
     } else if (emomIntervalRemaining === 10) {
-      speak('Diez segundos')
+      beepWarning(audioRef.current)
     } else if (emomIntervalRemaining <= 3 && emomIntervalRemaining > 0) {
       beep(audioRef.current, emomIntervalRemaining === 1 ? 1100 : 880, 1.0)
     }
@@ -78,10 +73,9 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   useEffect(() => {
     if (!isTabata || !audioRef.current || elapsed === 0 || !running) return
     if (elapsed % tabCycle === 0 || elapsed % tabCycle === tabWork) {
-      beep(audioRef.current, 880, 0.2, 1.0)
-      setTimeout(() => beep(audioRef.current!, 1100, 0.5, 1.0), 350)
+      beepGo(audioRef.current)
     } else if (tabPhaseRemaining === 10) {
-      speak('Diez segundos')
+      beepWarning(audioRef.current)
     } else if (tabPhaseRemaining <= 3 && tabPhaseRemaining > 0) {
       beep(audioRef.current, tabPhaseRemaining === 1 ? 1100 : 880, 1.0)
     }
@@ -90,7 +84,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   // Aviso 30 segundos y 10 segundos (bloques simples, solo countdown)
   useEffect(() => {
     if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
-    if (remaining === 10) { speak('Diez segundos'); return }
+    if (remaining === 10) { beepWarning(audioRef.current); return }
     if (remaining === 30 && blockDuration > 30) {
       beep(audioRef.current, 660, 0.15, 1.0)
       setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)

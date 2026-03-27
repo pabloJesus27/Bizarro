@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number; restSeconds: number; rounds: number }) {
@@ -30,18 +30,18 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
             // switch to rest
             setPhase('rest')
             setPhaseElapsed(0)
-            if (audioRef.current) beep(audioRef.current, 660, 0.3, 1.0)
+            if (audioRef.current) beepGo(audioRef.current)
           } else {
             // rest done, next round or finish
             if (currentRound >= rounds) {
               setRunning(false)
               setFinished(true)
-              if (audioRef.current) beep(audioRef.current, 440, 1.5, 1.0)
+              if (audioRef.current) beepGo(audioRef.current)
             } else {
               setCurrentRound(r => r + 1)
               setPhase('work')
               setPhaseElapsed(0)
-              if (audioRef.current) beep(audioRef.current, 880, 0.2, 1.0)
+              if (audioRef.current) beepGo(audioRef.current)
             }
           }
           return 0
@@ -56,7 +56,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     if (!running) return
     const duration = phase === 'work' ? workSeconds : restSeconds
     const remaining = duration - phaseElapsed
-    if (remaining === 10) speak('Diez segundos')
+    if (remaining === 10 && audioRef.current) beepWarning(audioRef.current)
   }, [phaseElapsed, phase, workSeconds, restSeconds, running])
 
   function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
@@ -34,13 +34,11 @@ export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
 
   useEffect(() => {
     if (!audioRef.current || elapsed === 0) return
-    if (elapsed >= totalSeconds) { beep(audioRef.current, 440, 1.5, 1.0); return }
+    if (elapsed >= totalSeconds) { beepGo(audioRef.current); return }
     if (elapsed % intervalSeconds === 0) {
-      beep(audioRef.current, 880, 0.2, 1.0)
-      setTimeout(() => beep(audioRef.current!, 880, 0.2, 1.0), 300)
-      setTimeout(() => beep(audioRef.current!, 1100, 0.6, 1.0), 600)
+      beepGo(audioRef.current)
     } else if (intervalRemaining === 10) {
-      speak('Diez segundos')
+      beepWarning(audioRef.current)
     } else if (intervalRemaining <= 3 && intervalRemaining > 0) {
       beep(audioRef.current, intervalRemaining === 1 ? 1100 : 880, 1.0)
     }

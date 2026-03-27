@@ -24,6 +24,38 @@ export function keepAudioContextAlive(_ctx: AudioContext) {
   // No-op: en iOS usamos el pool de <audio> en su lugar
 }
 
+export function beepWarning(ctx: AudioContext) {
+  // 3 beeps cortos rápidos para aviso de 10 segundos (reemplaza voz en iOS)
+  if (isIOS) {
+    [0, 180, 360].forEach(delay => {
+      setTimeout(() => {
+        const a = getPoolAudio()
+        a.currentTime = 0
+        a.play().catch(() => {})
+      }, delay)
+    })
+    return
+  }
+  // Desktop: 3 pitidos
+  const play = () => {
+    [0, 200, 400].forEach(delay => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.value = 880
+        osc.type = 'sine'
+        gain.gain.setValueAtTime(0.8, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+        osc.start()
+        osc.stop(ctx.currentTime + 0.1)
+      }, delay)
+    })
+  }
+  if (ctx.state === 'suspended') { ctx.resume().then(play).catch(() => {}) } else { play() }
+}
+
 export function beepGo(ctx: AudioContext) {
   if (isIOS) {
     const a = getGoAudio()

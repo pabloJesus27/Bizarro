@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
@@ -20,13 +20,13 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [running, cappedOut])
 
   useEffect(() => {
-    if (cappedOut) { setRunning(false); if (audioRef.current) beep(audioRef.current, 440, 1.5, 1.0) }
+    if (cappedOut) { setRunning(false); if (audioRef.current) beepGo(audioRef.current) }
   }, [cappedOut])
 
   useEffect(() => {
     if (!running || capSeconds === 0) return
     const remaining = capSeconds - elapsed
-    if (remaining === 10) speak('Diez segundos')
+    if (remaining === 10 && audioRef.current) beepWarning(audioRef.current)
   }, [elapsed, running, capSeconds])
 
   const router = useRouter()
