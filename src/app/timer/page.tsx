@@ -83,9 +83,9 @@ function TimerContent() {
         onClick={() => {
           if (config) {
             setConfig(null)
-            if (!manualType && !generatedMixBlocks) router.push('/dashboard')
+            if (!manualType && !generatedMixBlocks) router.back()
           } else if (generatedMixBlocks) {
-            router.push('/dashboard')
+            router.back()
           } else {
             router.back()
           }
