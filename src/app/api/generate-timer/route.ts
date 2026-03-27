@@ -34,12 +34,11 @@ Tipo: ${type}
 Descripción: ${description}
 
 Tipos de timer disponibles:
-- fortime: { "type": "fortime", "capSeconds": 0 }  — SOLO cuando no hay time cap explícito
+- fortime: { "type": "fortime", "capSeconds": N }  — para todos los For Time (capSeconds=0 si no hay cap, capSeconds=X*60 si hay time cap)
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N, "intervalSeconds"?: N }, ...] }
 
 Reglas:
-- For Time SIN time cap → { "type": "fortime", "capSeconds": 0 } (cuenta arriba)
-- For Time CON time cap X min → mix: [{"label":"For Time","seconds":X*60}]
+- For Time (con o sin time cap) → { "type": "fortime", "capSeconds": X*60 } (0 si no hay cap)
 - AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo

@@ -8,8 +8,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const TIMER_FORMAT = `timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"label":"...","seconds":N}.
 - Warmup, Strength, Gymnastics, Core, Mobility → null
 - For Time sin time cap → null
+- For Time con time cap X min → {"type":"fortime","capSeconds":X*60}
 - AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
-- For Time con time cap X min → [{"label":"For Time","seconds":X*60}]
 - EMOM N min con intervalos de X seg → 1 bloque [{"label":"EMOM","seconds":N*60,"intervalSeconds":X}] (EMOM estándar = intervalSeconds:60, E2MOM = intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → (Y/X) bloques {"label":"Ronda 1","seconds":X*60}... (cada bloque es un esfuerzo máximo distinto)
 - Tabata work W seg / rest R seg × N rondas → N pares alternando {"label":"Trabajo","seconds":W} y {"label":"Descanso","seconds":R}
