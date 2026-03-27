@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import type { WodType } from '@/lib/types'
+import type { TimerConfig, WodType } from '@/lib/types'
 import { DAY_SHORT } from '@/lib/week-utils'
 import { supabase } from '@/lib/supabase'
 import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
@@ -12,21 +12,25 @@ interface ParsedWod {
   title: string
   type: WodType
   description: string
+  timerConfig?: TimerConfig | null
 }
 
 interface Props {
   weekDates: string[]
+  selectedDate?: string
   programSlug?: string
+  variant?: 'coach' | 'libre'
   onConfirm: (wods: ParsedWod[]) => Promise<void>
   onClose: () => void
 }
 
-export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClose }: Props) {
+export default function LoadWeekModal({ weekDates, selectedDate, programSlug, variant = 'coach', onConfirm, onClose }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageBase64,  setImageBase64]  = useState<string>('')
   const [mediaType,    setMediaType]    = useState<string>('image/jpeg')
-  const [step,         setStep]         = useState<'upload' | 'preview' | 'message'>('upload')
+  const [step,         setStep]         = useState<'mode' | 'upload' | 'preview' | 'message'>(variant === 'libre' ? 'mode' : 'upload')
+  const [loadMode,     setLoadMode]     = useState<'week' | 'day' | 'wod'>('week')
   const [loading,      setLoading]      = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [savingMsg,    setSavingMsg]    = useState(false)
@@ -54,11 +58,20 @@ export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClo
     setError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/analyze-week', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ imageBase64, mediaType, weekDates }),
-      })
+      let res: Response
+      if (variant === 'libre') {
+        res = await fetch('/api/analyze-libre', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ imageBase64, mediaType, mode: loadMode, date: selectedDate, weekDates }),
+        })
+      } else {
+        res = await fetch('/api/analyze-week', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ imageBase64, mediaType, weekDates }),
+        })
+      }
       const { wods: parsed, error: apiError } = await res.json()
       if (apiError) { setError(apiError); return }
       setWods(parsed)
@@ -74,7 +87,7 @@ export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClo
     setSaving(true)
     try {
       await onConfirm(wods)
-      if (programSlug) {
+      if (variant === 'coach' && programSlug) {
         setStep('message')
       } else {
         onClose()
@@ -121,10 +134,10 @@ export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClo
         <div className="flex items-start justify-between p-6 border-b border-neutral-900">
           <div>
             <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-              {step === 'upload' ? 'Subir imagen' : step === 'preview' ? `${wods.length} WODs detectados` : 'Opcional'}
+              {step === 'mode' ? 'Seleccionar' : step === 'upload' ? 'Subir imagen' : step === 'preview' ? `${wods.length} WODs detectados` : 'Opcional'}
             </p>
             <h2 className="text-white font-black text-xl tracking-tight uppercase">
-              {step === 'message' ? 'Indicaciones de la semana' : 'Cargar semana'}
+              {step === 'message' ? 'Indicaciones de la semana' : step === 'mode' ? 'Cargar entrenamiento' : 'Cargar semana'}
             </h2>
           </div>
           <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
@@ -134,6 +147,32 @@ export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClo
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+
+          {step === 'mode' && (
+            <div className="flex flex-col gap-3">
+              <p className="text-neutral-500 text-sm font-mono">
+                ¿Qué quieres cargar?
+              </p>
+              {([
+                { key: 'week', label: 'Semana', desc: 'Programación completa lunes–sábado' },
+                { key: 'day',  label: 'Día',    desc: 'Todos los bloques de hoy' },
+                { key: 'wod',  label: 'WOD',    desc: 'Un solo bloque o ejercicio' },
+              ] as const).map(({ key, label, desc }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => { setLoadMode(key); setStep('upload') }}
+                  className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
+                >
+                  <div>
+                    <p className="text-white font-bold uppercase tracking-widest text-sm">{label}</p>
+                    <p className="text-neutral-600 text-xs font-mono mt-0.5">{desc}</p>
+                  </div>
+                  <span className="text-neutral-600 text-lg">→</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {step === 'upload' && (
             <div className="flex flex-col gap-4">
@@ -226,14 +265,24 @@ export default function LoadWeekModal({ weekDates, programSlug, onConfirm, onClo
 
         {/* Footer */}
         <div className="p-6 border-t border-neutral-900 flex gap-3">
-          {step === 'upload' ? (
-            <button
-              onClick={handleAnalyze}
-              disabled={!imageBase64 || loading}
-              className="flex-1 bg-white text-black font-black uppercase tracking-widest rounded-xl px-4 py-4 hover:bg-neutral-200 disabled:opacity-50 active:scale-95 transition-all"
-            >
-              {loading ? 'Analizando...' : 'Analizar imagen'}
-            </button>
+          {step === 'mode' ? null : step === 'upload' ? (
+            <>
+              {variant === 'libre' && (
+                <button
+                  onClick={() => { setStep('mode'); setImagePreview(null); setImageBase64(''); setError('') }}
+                  className="flex-1 border border-neutral-700 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-white transition text-sm"
+                >
+                  Volver
+                </button>
+              )}
+              <button
+                onClick={handleAnalyze}
+                disabled={!imageBase64 || loading}
+                className="flex-1 bg-white text-black font-black uppercase tracking-widest rounded-xl px-4 py-4 hover:bg-neutral-200 disabled:opacity-50 active:scale-95 transition-all"
+              >
+                {loading ? 'Analizando...' : 'Analizar imagen'}
+              </button>
+            </>
           ) : step === 'preview' ? (
             <>
               <button

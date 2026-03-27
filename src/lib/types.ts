@@ -22,6 +22,7 @@ export interface Wod {
   program: Program
   owner_id: string | null
   created_at: string
+  timer_config?: TimerConfig | null
 }
 
 export interface Result {

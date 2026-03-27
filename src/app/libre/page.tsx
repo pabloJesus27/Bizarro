@@ -124,16 +124,27 @@ export default function LibrePage() {
     setSelectedBlock(firstBlock?.block ?? 1)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
     if (!user) return
-    for (const wod of parsed) {
-      await createLibreWod(wod, user.id)
+    for (const { date, block, title, type, description, timerConfig } of parsed) {
+      const extra = timerConfig != null ? { timer_config: timerConfig } : {}
+      try {
+        await createLibreWod({ date, block, title, type, description, ...extra }, user.id)
+      } catch (err: unknown) {
+        if ((err as { code?: string })?.code === '23505') continue
+        throw err
+      }
     }
     const updated = await getWodsForWeekLibre(user.id, weekDates[0], weekDates[6])
     setWods(updated)
   }
 
-  async function handleGenerateTimer(wod: { title: string; description: string; type: string }) {
+  async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+    if (wod.timer_config) {
+      sessionStorage.setItem('generated_timer_config', JSON.stringify(wod.timer_config))
+      router.push('/timer')
+      return
+    }
     setGeneratingTimer(true)
     setTimerError(false)
     try {
@@ -413,6 +424,8 @@ export default function LibrePage() {
       {loadWeekOpen && (
         <LoadWeekModal
           weekDates={weekDates}
+          selectedDate={selectedDate}
+          variant="libre"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
         />
