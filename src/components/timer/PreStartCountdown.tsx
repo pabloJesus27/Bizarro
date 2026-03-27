@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { beep } from './timer-utils'
+import { beep, beepGo } from './timer-utils'
 
 export default function PreStartCountdown({ audioCtx, onDone }: { audioCtx: AudioContext; onDone: () => void }) {
   const [count, setCount] = useState(10)
@@ -14,7 +14,7 @@ export default function PreStartCountdown({ audioCtx, onDone }: { audioCtx: Audi
       const id = setTimeout(() => setCount(p => p - 1), 1000)
       return () => clearTimeout(id)
     } else {
-      beep(audioCtx, 1100, 0.5, 1.0)
+      beepGo(audioCtx)
       doneRef.current = true
       const id = setTimeout(onDone, 700)
       return () => clearTimeout(id)

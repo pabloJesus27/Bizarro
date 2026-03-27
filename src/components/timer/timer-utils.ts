@@ -14,8 +14,41 @@ function getPoolAudio(): HTMLAudioElement {
   return a
 }
 
+let goAudio: HTMLAudioElement | null = null
+function getGoAudio(): HTMLAudioElement {
+  if (!goAudio) goAudio = new Audio('/go.wav')
+  return goAudio
+}
+
 export function keepAudioContextAlive(_ctx: AudioContext) {
   // No-op: en iOS usamos el pool de <audio> en su lugar
+}
+
+export function beepGo(ctx: AudioContext) {
+  if (isIOS) {
+    const a = getGoAudio()
+    a.currentTime = 0
+    a.play().catch(() => {})
+    return
+  }
+  // Desktop: dos tonos ascendentes
+  const play = () => {
+    [880, 1100].forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.value = freq
+        osc.type = 'sine'
+        gain.gain.setValueAtTime(1.0, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+        osc.start()
+        osc.stop(ctx.currentTime + 0.5)
+      }, i * 200)
+    })
+  }
+  if (ctx.state === 'suspended') { ctx.resume().then(play).catch(() => {}) } else { play() }
 }
 
 export function fmt(s: number): string {
