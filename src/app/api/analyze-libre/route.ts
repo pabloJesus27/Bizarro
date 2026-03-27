@@ -5,15 +5,17 @@ import { checkAiRateLimit } from '@/lib/ai-rate-limit'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const TIMER_FORMAT = `Tipos de timer disponibles:
-- amrap: { "type": "amrap", "totalSeconds": N }
-- emom: { "type": "emom", "totalSeconds": N, "intervalSeconds": N }
-- fortime: { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap)
-- tabata: { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }
-- mix: { "type": "mix", "blocks": [{ "label": "...", "seconds": N }, ...] }
-
-Para For Max con "ventanas de X min", "cada X min" o estructura de intervalos: usa emom con intervalSeconds=X*60 y totalSeconds=Y*60. Si es simplemente "max reps/cal en X min" sin intervalos: usa amrap.
-Usa null si el bloque es Warmup, Strength, Gymnastics, Core o Mobility sin timer claro.`
+const TIMER_FORMAT = `timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"label":"...","seconds":N}.
+- Warmup, Strength, Gymnastics, Core, Mobility → null
+- For Time sin time cap → null
+- AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
+- For Time con time cap X min → [{"label":"For Time","seconds":X*60}]
+- EMOM N rondas de X min → N bloques {"label":"Ronda 1","seconds":X*60}...
+- Ventanas de X min durante Y min / cada X min durante Y min → (Y/X) bloques {"label":"Ronda 1","seconds":X*60}...
+- Tabata work W seg / rest R seg × N rondas → N pares alternando {"label":"Trabajo","seconds":W} y {"label":"Descanso","seconds":R}
+- For Max con ventanas → igual que ventanas; label del ejercicio max (ej: "Max Cal Row")
+- Estructura compleja (AMRAP + descanso + AMRAP, etc.) → tantos bloques como partes con label descriptivo y seconds correcto
+- Nunca uses seconds: 0 en un bloque`
 
 const WOD_FIELDS = `Para cada bloque:
 - date: fecha en formato YYYY-MM-DD

@@ -66,14 +66,17 @@ Reglas para el tipo:
 - Max cal / max reps → "For Max"
 - Resto → "Other"
 
-Reglas para timerConfig:
-- Warmup, Strength, Gymnastics, Core, Mobility → timerConfig = null
-- AMRAP → { "type": "amrap", "totalSeconds": N }
-- EMOM → { "type": "emom", "totalSeconds": N, "intervalSeconds": N }  (intervalSeconds: EMOM=60, E2MOM=120, E3MOM=180...)
-- For Time → { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap)
-- For Max → si tiene "ventanas de X min", "cada X min" o estructura de intervalos: { "type": "emom", "totalSeconds": Y*60, "intervalSeconds": X*60 }. Si es simplemente "max reps/cal en X min" sin intervalos: { "type": "amrap", "totalSeconds": N }
-- Tabata → { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }  (clásico: work=20, rest=10, rounds=8)
-- Other con timer claro → aplica el tipo correspondiente; sin timer claro → null
+Reglas para timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"label":"...","seconds":N}.
+- Warmup, Strength, Gymnastics, Core, Mobility → null
+- For Time sin time cap → null
+- AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
+- For Time con time cap X min → [{"label":"For Time","seconds":X*60}]
+- EMOM N rondas de X min → N bloques {"label":"Ronda 1","seconds":X*60}, {"label":"Ronda 2","seconds":X*60}...
+- Ventanas de X min durante Y min / cada X min durante Y min → (Y/X) bloques {"label":"Ronda 1","seconds":X*60}...
+- Tabata work W seg / rest R seg × N rondas → N pares alternando {"label":"Trabajo","seconds":W} y {"label":"Descanso","seconds":R}
+- For Max con ventanas → igual que ventanas; label descriptivo del ejercicio max (ej: "Max Cal Row")
+- Estructura compleja (AMRAP + descanso + AMRAP, etc.) → tantos bloques como partes haya con label descriptivo y seconds correcto
+- Nunca uses seconds: 0 en un bloque
 
 Ignora las celdas vacías y las filas de separación (DESCANSO, etc).
 
