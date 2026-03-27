@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak } from './timer-utils'
+import { fmt, beep, speak, unlockSilentMode } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import type { MixBlock } from '@/lib/types'
 
@@ -97,7 +97,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     }
   }, [remaining, running, blockDuration, isEmom, isTabata, isCountUp])
 
-  function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
 
   // Texto central del reloj
   const clockLabel = isEmom

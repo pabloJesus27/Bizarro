@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak } from './timer-utils'
+import { fmt, beep, speak, unlockSilentMode } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
@@ -46,7 +46,7 @@ export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
     }
   }, [elapsed, totalSeconds, intervalSeconds, intervalRemaining])
 
-  function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
 
   return (
     <>

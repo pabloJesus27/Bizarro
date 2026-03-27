@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak } from './timer-utils'
+import { fmt, beep, speak, unlockSilentMode } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import type { TimerConfig } from '@/lib/types'
 
@@ -47,7 +47,7 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
     }
   }, [elapsed, intervalSeconds, totalSeconds])
 
-  function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
 
   if (!running && !inPreCountdown && elapsed === 0) {
     return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, speak } from './timer-utils'
+import { fmt, beep, speak, unlockSilentMode } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
 export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
@@ -30,7 +30,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [elapsed, running, capSeconds])
 
   const router = useRouter()
-  function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
+  function handleStart() { unlockSilentMode(); audioRef.current = new AudioContext(); setInPreCountdown(true) }
   function stop() { setRunning(false); setStopped(true); if (audioRef.current) beep(audioRef.current, 880, 0.3) }
 
   return (
