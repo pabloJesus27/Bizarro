@@ -15,14 +15,21 @@ export function speak(text: string) {
 }
 
 export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 1.0) {
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
-  osc.connect(gain)
-  gain.connect(ctx.destination)
-  osc.frequency.value = freq
-  osc.type = 'sine'
-  gain.gain.setValueAtTime(vol, ctx.currentTime)
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
-  osc.start()
-  osc.stop(ctx.currentTime + dur)
+  const play = () => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = freq
+    osc.type = 'sine'
+    gain.gain.setValueAtTime(vol, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
+    osc.start()
+    osc.stop(ctx.currentTime + dur)
+  }
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(play).catch(() => {})
+  } else {
+    play()
+  }
 }
