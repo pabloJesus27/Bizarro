@@ -1,8 +1,9 @@
 // En iOS, reproducir un <audio> en el tap del usuario cambia la sesión de audio
 // a modo "playback", lo que permite que WebAudio suene aunque el móvil esté en silencio.
-const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=='
+// Necesita ser audio audible (no silencio) para que iOS active el modo playback.
 export function unlockSilentMode() {
-  const a = new Audio(SILENT_WAV)
+  const a = new Audio('/beep.wav')
+  a.volume = 0.001
   a.play().catch(() => {})
 }
 
