@@ -6,6 +6,8 @@ export function fmt(s: number): string {
 
 export function speak(text: string) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
+  // iOS Safari: speechSynthesis interfiere con WebAudio y suspende el AudioContext
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return
   window.speechSynthesis.cancel()
   const u = new SpeechSynthesisUtterance(text)
   u.lang = 'es-ES'
