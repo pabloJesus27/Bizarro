@@ -34,11 +34,12 @@ function TimerContent() {
   const manualType = searchParams.get('type')
 
   const [config, setConfig] = useState<TimerConfig | null>(null)
+  const [pendingConfig, setPendingConfig] = useState<TimerConfig | null>(null)
   const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
   const loadedRef = useRef(false)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
-  const timerActive = !!(config || generatedMixBlocks || manualType)
+  const timerActive = !!(config || generatedMixBlocks || pendingConfig || manualType)
 
   useEffect(() => {
     if (!timerActive) return
@@ -66,12 +67,12 @@ function TimerContent() {
         if (!Array.isArray(parsed.blocks) || parsed.blocks.length === 0) { router.push('/dashboard'); return }
         setGeneratedMixBlocks(parsed.blocks)
       } else {
-        setConfig(parsed)
+        setPendingConfig(parsed)
       }
     } catch { router.push('/dashboard') }
   }, [router, manualType])
 
-  if (!manualType && !config && !generatedMixBlocks) return (
+  if (!manualType && !config && !pendingConfig && !generatedMixBlocks) return (
     <main className="min-h-screen bg-black flex items-center justify-center">
       <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
     </main>
@@ -83,9 +84,6 @@ function TimerContent() {
         onClick={() => {
           if (config) {
             setConfig(null)
-            if (!manualType && !generatedMixBlocks) router.back()
-          } else if (generatedMixBlocks) {
-            router.back()
           } else {
             router.back()
           }
@@ -103,6 +101,14 @@ function TimerContent() {
           <div className="w-full max-w-md">
             {generatedMixBlocks && (
               <MixSetup onStart={setConfig} initialBlocks={generatedMixBlocks} />
+            )}
+            {pendingConfig && !config && (
+              <>
+                {pendingConfig.type === 'amrap'   && <AMRAPSetup   onStart={setConfig} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'emom'    && <EMOMSetup    onStart={setConfig} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'fortime' && <ForTimeSetup onStart={setConfig} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'tabata'  && <TabataSetup  onStart={setConfig} initialConfig={pendingConfig} />}
+              </>
             )}
             {manualType && (
               <>

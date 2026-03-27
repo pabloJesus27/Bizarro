@@ -5,10 +5,10 @@ import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
 import type { TimerConfig } from '@/lib/types'
 
-export default function TabataSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [work, setWork] = useState(20)
-  const [rest, setRest] = useState(10)
-  const [rounds, setRounds] = useState(8)
+export default function TabataSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { workSeconds: number; restSeconds: number; rounds: number } }) {
+  const [work, setWork] = useState(initialConfig ? initialConfig.workSeconds : 20)
+  const [rest, setRest] = useState(initialConfig ? initialConfig.restSeconds : 10)
+  const [rounds, setRounds] = useState(initialConfig ? initialConfig.rounds : 8)
   const isDisabled = work === 0 || rounds === 0
   return (
     <div className="flex flex-col items-center gap-4">

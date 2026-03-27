@@ -5,10 +5,10 @@ import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
 import type { TimerConfig } from '@/lib/types'
 
-export default function EMOMSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [intMin, setIntMin] = useState(1)
-  const [intSec, setIntSec] = useState(0)
-  const [rounds, setRounds] = useState(10)
+export default function EMOMSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { totalSeconds: number; intervalSeconds: number } }) {
+  const [intMin, setIntMin] = useState(initialConfig ? Math.floor(initialConfig.intervalSeconds / 60) : 1)
+  const [intSec, setIntSec] = useState(initialConfig ? initialConfig.intervalSeconds % 60 : 0)
+  const [rounds, setRounds] = useState(initialConfig ? Math.round(initialConfig.totalSeconds / initialConfig.intervalSeconds) : 10)
   const intervalSeconds = intMin * 60 + intSec
   const totalSeconds = intervalSeconds * rounds
   return (

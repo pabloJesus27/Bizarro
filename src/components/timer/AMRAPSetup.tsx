@@ -5,8 +5,8 @@ import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
 import type { TimerConfig } from '@/lib/types'
 
-export default function AMRAPSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [minutes, setMinutes] = useState(20)
+export default function AMRAPSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { totalSeconds: number } }) {
+  const [minutes, setMinutes] = useState(initialConfig ? Math.round(initialConfig.totalSeconds / 60) : 20)
   return (
     <div className="flex flex-col items-center gap-4">
       <p className="text-white font-black text-5xl uppercase tracking-tighter">AMRAP</p>

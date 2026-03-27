@@ -5,9 +5,9 @@ import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
 import type { TimerConfig } from '@/lib/types'
 
-export default function ForTimeSetup({ onStart }: { onStart: (c: TimerConfig) => void }) {
-  const [hasCap, setHasCap] = useState(false)
-  const [capMinutes, setCapMinutes] = useState(20)
+export default function ForTimeSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { capSeconds: number } }) {
+  const [hasCap, setHasCap] = useState(initialConfig ? initialConfig.capSeconds > 0 : false)
+  const [capMinutes, setCapMinutes] = useState(initialConfig && initialConfig.capSeconds > 0 ? Math.round(initialConfig.capSeconds / 60) : 20)
   return (
     <div className="flex flex-col items-center gap-4">
       <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
