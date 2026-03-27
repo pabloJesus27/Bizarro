@@ -71,10 +71,10 @@ Reglas para timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"lab
 - For Time sin time cap → null
 - AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
 - For Time con time cap X min → [{"label":"For Time","seconds":X*60}]
-- EMOM N rondas de X min → N bloques {"label":"Ronda 1","seconds":X*60}, {"label":"Ronda 2","seconds":X*60}...
-- Ventanas de X min durante Y min / cada X min durante Y min → (Y/X) bloques {"label":"Ronda 1","seconds":X*60}...
+- EMOM N min → 1 bloque [{"label":"EMOM","seconds":N*60}] (el descanso es implícito, no crear un bloque por ronda)
+- For Max ventanas de X min durante Y min → (Y/X) bloques {"label":"Ronda 1","seconds":X*60}... (cada bloque es un esfuerzo máximo distinto)
 - Tabata work W seg / rest R seg × N rondas → N pares alternando {"label":"Trabajo","seconds":W} y {"label":"Descanso","seconds":R}
-- For Max con ventanas → igual que ventanas; label descriptivo del ejercicio max (ej: "Max Cal Row")
+- Estructura compleja (AMRAP + descanso + AMRAP, etc.) → bloques separados con label descriptivo
 - Estructura compleja (AMRAP + descanso + AMRAP, etc.) → tantos bloques como partes haya con label descriptivo y seconds correcto
 - Nunca uses seconds: 0 en un bloque
 

@@ -35,14 +35,16 @@ Descripción: ${description}
 
 Tipos de timer disponibles:
 - amrap: { "type": "amrap", "totalSeconds": N }
-- emom: { "type": "emom", "totalSeconds": N, "intervalSeconds": N }  (intervalSeconds = duración de cada intervalo en segundos, ej: EMOM=60, E2MOM=120, E3MOM=180)
+- emom: NO usar — usar mix con 1 bloque [{"label":"EMOM","seconds":N}]
 - fortime: { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap explícito)
 - tabata: { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N }, ...] }
 
 Reglas de selección:
-- WOD con UN SOLO bloque simple → usa amrap / emom / fortime / tabata según corresponda
-- WOD COMPLEJO (varios bloques, fases, intervalos, AMRAP+descanso+AMRAP, X on X off, cada X min durante Y min, etc.) → usa MIX con todos los bloques detallados
+- EMOM → siempre mix con 1 bloque total (ej: EMOM 10 min → [{"label":"EMOM","seconds":600}])
+- For Max con ventanas de X min durante Y min → mix con (Y/X) bloques de X*60s
+- AMRAP simple → mix con 1 bloque
+- WOD COMPLEJO (AMRAP+descanso+AMRAP, X on X off, etc.) → mix con todos los bloques detallados
 
 Ejemplos de WODs complejos → mix:
 - "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
