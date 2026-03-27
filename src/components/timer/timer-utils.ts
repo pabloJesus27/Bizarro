@@ -25,7 +25,8 @@ export function keepAudioContextAlive(_ctx: AudioContext) {
 }
 
 export function beepWarning(ctx: AudioContext) {
-  // 3 beeps cortos rápidos para aviso de 10 segundos (reemplaza voz en iOS)
+  // 3 beeps cortos rápidos para aviso de 10 segundos + voz en desktop
+  speak('Diez segundos')
   if (isIOS) {
     [0, 180, 360].forEach(delay => {
       setTimeout(() => {
