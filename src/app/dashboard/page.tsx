@@ -120,7 +120,12 @@ function DashboardContent() {
     }
   }
 
-  async function handleGenerateTimer(wod: { title: string; description: string; type: string }) {
+  async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+    if (wod.timer_config) {
+      sessionStorage.setItem('generated_timer_config', JSON.stringify(wod.timer_config))
+      router.push('/timer')
+      return
+    }
     setGeneratingTimer(true)
     setTimerError(false)
     try {

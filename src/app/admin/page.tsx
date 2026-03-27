@@ -91,9 +91,10 @@ function AdminContent() {
     setDeletingId(null)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
-    for (const wod of parsed) {
-      await createWod({ ...wod, program: programSlug as import('@/lib/types').Program })
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+    for (const { date, block, title, type, description, timerConfig } of parsed) {
+      const extra = timerConfig != null ? { timer_config: timerConfig } : {}
+      await createWod({ date, block, title, type, description, program: programSlug as import('@/lib/types').Program, ...extra })
     }
     const updated = await getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
     setWods(updated)

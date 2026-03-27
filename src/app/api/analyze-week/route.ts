@@ -51,6 +51,7 @@ Para cada celda con contenido, devuelve un WOD con:
 - title: identifica la parte PRINCIPAL del bloque (no el calentamiento ni los ejercicios técnicos previos). Para bloques de fuerza/halterofilia usa solo el nombre del ejercicio principal (ej: "Cluster", "Clean & Jerk", "Back Squat"). Si hay una progresión técnica antes del ejercicio principal (muscle clean, tall clean, drills), ignórala y pon solo el ejercicio final. Para WODs metabólicos usa un título corto descriptivo. Máximo 4 palabras.
 - type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
 - description: texto completo exacto del WOD tal como aparece en la imagen
+- timerConfig: configuración del timer (ver reglas abajo), o null si no aplica
 
 Reglas para el tipo:
 - Warm Up → siempre "Warmup"
@@ -65,10 +66,18 @@ Reglas para el tipo:
 - Max cal / max reps → "For Max"
 - Resto → "Other"
 
+Reglas para timerConfig:
+- Warmup, Strength, Gymnastics, Core, Mobility → timerConfig = null
+- AMRAP → { "type": "amrap", "totalSeconds": N }
+- EMOM → { "type": "emom", "totalSeconds": N, "intervalSeconds": N }  (intervalSeconds: EMOM=60, E2MOM=120, E3MOM=180...)
+- For Time → { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap)
+- For Max → { "type": "amrap", "totalSeconds": N }  (usa amrap con el tiempo indicado)
+- Other con timer claro → aplica el tipo correspondiente; sin timer claro → null
+
 Ignora las celdas vacías y las filas de separación (DESCANSO, etc).
 
 Devuelve SOLO un array JSON sin markdown ni explicaciones:
-[{"date":"...","block":1,"title":"...","type":"...","description":"..."}]`,
+[{"date":"...","block":1,"title":"...","type":"...","description":"...","timerConfig":...}]`,
         },
       ],
     }],
@@ -79,9 +88,15 @@ Devuelve SOLO un array JSON sin markdown ni explicaciones:
   // Limpiar posible markdown
   const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 
+  const VALID_TYPES = new Set(['For Time','AMRAP','EMOM','Strength','Gymnastics','Core','Mobility','Warmup','For Max','Other'])
+
   try {
     const wods = JSON.parse(cleaned)
-    return NextResponse.json({ wods })
+    const normalized = wods.map((w: Record<string, unknown>) => ({
+      ...w,
+      type: VALID_TYPES.has(w.type as string) ? w.type : 'Other',
+    }))
+    return NextResponse.json({ wods: normalized })
   } catch {
     return NextResponse.json({ error: 'Error al interpretar la imagen' }, { status: 500 })
   }
