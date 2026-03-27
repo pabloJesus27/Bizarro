@@ -12,6 +12,7 @@ const TIMER_FORMAT = `Tipos de timer disponibles:
 - tabata: { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }
 - mix: { "type": "mix", "blocks": [{ "label": "...", "seconds": N }, ...] }
 
+Para For Max con "ventanas de X min", "cada X min" o estructura de intervalos: usa emom con intervalSeconds=X*60 y totalSeconds=Y*60. Si es simplemente "max reps/cal en X min" sin intervalos: usa amrap.
 Usa null si el bloque es Warmup, Strength, Gymnastics, Core o Mobility sin timer claro.`
 
 const WOD_FIELDS = `Para cada bloque:

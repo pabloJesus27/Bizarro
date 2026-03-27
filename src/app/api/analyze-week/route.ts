@@ -71,7 +71,7 @@ Reglas para timerConfig:
 - AMRAP → { "type": "amrap", "totalSeconds": N }
 - EMOM → { "type": "emom", "totalSeconds": N, "intervalSeconds": N }  (intervalSeconds: EMOM=60, E2MOM=120, E3MOM=180...)
 - For Time → { "type": "fortime", "capSeconds": N }  (capSeconds=0 si no hay time cap)
-- For Max → { "type": "amrap", "totalSeconds": N }  (usa amrap con el tiempo indicado)
+- For Max → si tiene "ventanas de X min", "cada X min" o estructura de intervalos: { "type": "emom", "totalSeconds": Y*60, "intervalSeconds": X*60 }. Si es simplemente "max reps/cal en X min" sin intervalos: { "type": "amrap", "totalSeconds": N }
 - Tabata → { "type": "tabata", "workSeconds": N, "restSeconds": N, "rounds": N }  (clásico: work=20, rest=10, rounds=8)
 - Other con timer claro → aplica el tipo correspondiente; sin timer claro → null
 
