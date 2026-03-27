@@ -34,11 +34,11 @@ Tipo: ${type}
 Descripción: ${description}
 
 Tipos de timer disponibles:
+- fortime: { "type": "fortime", "capSeconds": N }  — para todos los For Time (capSeconds=0 si no hay cap, capSeconds=X*60 si hay time cap)
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N, "intervalSeconds"?: N }, ...] }
 
 Reglas:
-- For Time CON time cap X min → mix: [{"label":"For Time","seconds":X*60}]
-- For Time SIN time cap → mix: [{"label":"For Time","seconds":1200}] (20 min por defecto, el usuario lo ajusta)
+- For Time (con o sin time cap) → { "type": "fortime", "capSeconds": X*60 } (0 si no hay cap)
 - AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
@@ -71,7 +71,14 @@ Solo JSON, sin explicación ni markdown.`,
     const clean = text.replace(/```json\n?|\n?```/g, '').trim()
     const cfg = JSON.parse(clean)
 
-    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number }) => !b.label || !(b.seconds > 0))) {
+    const validTypes = ['fortime', 'mix']
+    if (!cfg || !validTypes.includes(cfg.type)) {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'fortime' && typeof cfg.capSeconds !== 'number') {
+      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+    if (cfg.type === 'mix' && (!Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number }) => !b.label || !(b.seconds > 0)))) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
     }
 
