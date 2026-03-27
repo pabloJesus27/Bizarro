@@ -91,7 +91,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
             )}
             {running && (
               <button onClick={stop} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
-                Stop
+                Pausar
               </button>
             )}
           </div>
