@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { fmt, beep, speak } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 
@@ -28,6 +29,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
     if (remaining === 10) speak('Diez segundos')
   }, [elapsed, running, capSeconds])
 
+  const router = useRouter()
   function handleStart() { audioRef.current = new AudioContext(); setInPreCountdown(true) }
   function stop() { setRunning(false); setStopped(true); if (audioRef.current) beep(audioRef.current, 880, 0.3) }
 
@@ -37,8 +39,9 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
       {cappedOut && (
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME CAP</p>
+          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
@@ -76,7 +79,10 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
               {fmt(elapsed)}
             </p>
             {stopped && (
-              <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest">Listo</p>
+              <>
+                <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest">Listo</p>
+                <button onClick={() => router.push('/dashboard')} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs hover:border-white transition">Terminar</button>
+              </>
             )}
             {!running && !stopped && !cappedOut && !inPreCountdown && (
               <button onClick={handleStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
