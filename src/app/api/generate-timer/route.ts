@@ -42,7 +42,8 @@ Reglas:
 - AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
-- WOD COMPLEJO (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
+- WOD COMPLEJO con fases distintas y descanso explícito entre ellas (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
+- "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
 
 Ejemplos de WODs complejos → mix:
 - "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
