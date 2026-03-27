@@ -41,7 +41,7 @@ Tipos de timer disponibles:
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N }, ...] }
 
 Reglas de selección:
-- EMOM → siempre mix con 1 bloque total (ej: EMOM 10 min → [{"label":"EMOM","seconds":600}])
+- EMOM → mix con 1 bloque total + intervalSeconds (ej: EMOM 10 min → [{"label":"EMOM","seconds":600,"intervalSeconds":60}], E2MOM 10 min → [{"label":"EMOM","seconds":600,"intervalSeconds":120}])
 - For Max con ventanas de X min durante Y min → mix con (Y/X) bloques de X*60s
 - AMRAP simple → mix con 1 bloque
 - WOD COMPLEJO (AMRAP+descanso+AMRAP, X on X off, etc.) → mix con todos los bloques detallados
