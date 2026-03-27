@@ -122,7 +122,11 @@ function DashboardContent() {
 
   async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
     if (wod.timer_config) {
-      sessionStorage.setItem('generated_timer_config', JSON.stringify(wod.timer_config))
+      // timer_config may be stored as raw blocks array — wrap in mix format if needed
+      const cfg = Array.isArray(wod.timer_config)
+        ? { type: 'mix' as const, blocks: wod.timer_config }
+        : wod.timer_config
+      sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
       router.push('/timer')
       return
     }

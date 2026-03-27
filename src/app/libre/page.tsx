@@ -127,7 +127,8 @@ export default function LibrePage() {
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
     if (!user) return
     for (const { date, block, title, type, description, timerConfig } of parsed) {
-      const extra = timerConfig != null ? { timer_config: timerConfig } : {}
+      const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
+      const extra = tc != null ? { timer_config: tc } : {}
       try {
         await createLibreWod({ date, block, title, type, description, ...extra }, user.id)
       } catch (err: unknown) {
@@ -141,7 +142,10 @@ export default function LibrePage() {
 
   async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
     if (wod.timer_config) {
-      sessionStorage.setItem('generated_timer_config', JSON.stringify(wod.timer_config))
+      const cfg = Array.isArray(wod.timer_config)
+        ? { type: 'mix' as const, blocks: wod.timer_config }
+        : wod.timer_config
+      sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
       router.push('/timer')
       return
     }
