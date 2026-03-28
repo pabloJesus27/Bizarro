@@ -53,10 +53,10 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
   }, [running, phase, workSeconds, restSeconds, currentRound, rounds])
 
   useEffect(() => {
-    if (!running) return
+    if (!running || !audioRef.current) return
     const duration = phase === 'work' ? workSeconds : restSeconds
     const remaining = duration - phaseElapsed
-    if (remaining === 10 && audioRef.current) beepWarning(audioRef.current)
+    if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [phaseElapsed, phase, workSeconds, restSeconds, running])
 
   function handleStart() {
