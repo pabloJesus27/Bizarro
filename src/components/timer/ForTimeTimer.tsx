@@ -20,6 +20,14 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [running, cappedOut])
 
   useEffect(() => {
+    if (!running || !('wakeLock' in navigator)) return
+    let wl: { release: () => void } | null = null
+    ;(navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => void }> } })
+      .wakeLock.request('screen').then(w => { wl = w }).catch(() => {})
+    return () => { wl?.release() }
+  }, [running])
+
+  useEffect(() => {
     if (cappedOut) { setRunning(false); if (audioRef.current) beepGo(audioRef.current) }
   }, [cappedOut])
 

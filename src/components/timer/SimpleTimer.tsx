@@ -29,6 +29,14 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   }, [running, totalSeconds])
 
   useEffect(() => {
+    if (!running || !('wakeLock' in navigator)) return
+    let wl: { release: () => void } | null = null
+    ;(navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => void }> } })
+      .wakeLock.request('screen').then(w => { wl = w }).catch(() => {})
+    return () => { wl?.release() }
+  }, [running])
+
+  useEffect(() => {
     if (!audioRef.current || elapsed === 0) return
     if (elapsed >= totalSeconds) { beepGo(audioRef.current); return }
     if (intervalSeconds && elapsed % intervalSeconds === 0) beepGo(audioRef.current)

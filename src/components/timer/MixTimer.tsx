@@ -45,6 +45,14 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   }, [running, blockIdx])
 
   useEffect(() => {
+    if (!running || !('wakeLock' in navigator)) return
+    let wl: { release: () => void } | null = null
+    ;(navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => void }> } })
+      .wakeLock.request('screen').then(w => { wl = w }).catch(() => {})
+    return () => { wl?.release() }
+  }, [running])
+
+  useEffect(() => {
     if (!running || blockDuration === 0 || elapsed < blockDuration) return
     if (blockIdx + 1 >= blocks.length) {
       setRunning(false)

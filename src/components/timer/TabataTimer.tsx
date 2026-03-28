@@ -19,6 +19,14 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
   const phaseRemaining = phaseDuration - phaseElapsed
 
   useEffect(() => {
+    if (!running || !('wakeLock' in navigator)) return
+    let wl: { release: () => void } | null = null
+    ;(navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => void }> } })
+      .wakeLock.request('screen').then(w => { wl = w }).catch(() => {})
+    return () => { wl?.release() }
+  }, [running])
+
+  useEffect(() => {
     if (!running) return
     const id = setInterval(() => {
       setPhaseElapsed(prev => {
