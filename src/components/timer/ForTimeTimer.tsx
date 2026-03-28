@@ -39,9 +39,10 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [cappedOut])
 
   useEffect(() => {
-    if (!running || capSeconds === 0) return
+    if (!running || capSeconds === 0 || !audioRef.current) return
     const remaining = capSeconds - elapsed
-    if (remaining === 10 && audioRef.current) beepWarning(audioRef.current)
+    if (remaining === 10) { beepWarning(audioRef.current); return }
+    if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, running, capSeconds])
 
   const router = useRouter()
