@@ -95,6 +95,14 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     }
   }, [elapsed, isTabata, tabCycle, tabWork, tabPhaseRemaining, running])
 
+  // Avisos For Time con cap (countUp)
+  useEffect(() => {
+    if (!running || !audioRef.current || !isCountUp || blockDuration === 0) return
+    const remaining = blockDuration - elapsed
+    if (remaining === 10) { beepWarning(audioRef.current); return }
+    if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
+  }, [elapsed, running, isCountUp, blockDuration])
+
   // Aviso 30 segundos y 10 segundos (bloques simples, solo countdown)
   useEffect(() => {
     if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
