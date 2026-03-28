@@ -25,6 +25,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
   const [tabRounds, setTabRounds] = useState(8)
   const tabTotal = (tabWork + tabRest) * tabRounds
   const dragIdx = useRef<number | null>(null)
+  const touchDrag = useRef<{ from: number; over: number } | null>(null)
 
   function addBlock() {
     if (!newLabel.trim()) return
@@ -243,6 +244,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
           {blocks.map((b, i) => (
             <div
               key={b.id}
+              data-idx={i}
               draggable
               onDragStart={() => { dragIdx.current = i }}
               onDragOver={e => { e.preventDefault() }}
@@ -260,7 +262,30 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
               className="flex items-center justify-between border border-neutral-800 rounded-xl px-3 py-2"
             >
               <div className="flex items-center gap-3">
-                <span className="text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing">
+                <span
+                  style={{ touchAction: 'none' }}
+                  className="text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing"
+                  onTouchStart={() => { touchDrag.current = { from: i, over: i } }}
+                  onTouchMove={e => {
+                    if (!touchDrag.current) return
+                    const touch = e.touches[0]
+                    const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                    const blockEl = el?.closest('[data-idx]')
+                    if (blockEl) touchDrag.current.over = Number(blockEl.getAttribute('data-idx'))
+                  }}
+                  onTouchEnd={() => {
+                    if (!touchDrag.current) return
+                    const { from, over } = touchDrag.current
+                    touchDrag.current = null
+                    if (from === over) return
+                    setBlocks(prev => {
+                      const next = [...prev]
+                      const [moved] = next.splice(from, 1)
+                      next.splice(over, 0, moved)
+                      return next
+                    })
+                  }}
+                >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <line x1="2" y1="3" x2="12" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
