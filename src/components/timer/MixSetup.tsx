@@ -26,6 +26,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
   const tabTotal = (tabWork + tabRest) * tabRounds
   const dragIdx = useRef<number | null>(null)
   const touchDrag = useRef<{ from: number; over: number } | null>(null)
+  const [touchVisual, setTouchVisual] = useState<{ from: number; over: number } | null>(null)
 
   function addBlock() {
     if (!newLabel.trim()) return
@@ -259,24 +260,29 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
                 })
                 dragIdx.current = null
               }}
-              className="flex items-center justify-between border border-neutral-800 rounded-xl px-3 py-2"
+              className={`flex items-center justify-between border rounded-xl px-3 py-2 transition ${touchVisual?.from === i ? 'opacity-40 border-neutral-800' : touchVisual?.over === i ? 'border-white' : 'border-neutral-800'}`}
             >
               <div className="flex items-center gap-3">
                 <span
                   style={{ touchAction: 'none' }}
                   className="text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing"
-                  onTouchStart={() => { touchDrag.current = { from: i, over: i } }}
+                  onTouchStart={() => { touchDrag.current = { from: i, over: i }; setTouchVisual({ from: i, over: i }) }}
                   onTouchMove={e => {
                     if (!touchDrag.current) return
                     const touch = e.touches[0]
                     const el = document.elementFromPoint(touch.clientX, touch.clientY)
                     const blockEl = el?.closest('[data-idx]')
-                    if (blockEl) touchDrag.current.over = Number(blockEl.getAttribute('data-idx'))
+                    if (blockEl) {
+                      const over = Number(blockEl.getAttribute('data-idx'))
+                      touchDrag.current.over = over
+                      setTouchVisual({ from: touchDrag.current.from, over })
+                    }
                   }}
                   onTouchEnd={() => {
                     if (!touchDrag.current) return
                     const { from, over } = touchDrag.current
                     touchDrag.current = null
+                    setTouchVisual(null)
                     if (from === over) return
                     setBlocks(prev => {
                       const next = [...prev]
