@@ -17,6 +17,12 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   const remaining = totalSeconds - elapsed
 
   useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
+  }, [])
+
+  useEffect(() => {
     if (!running) return
     const id = setInterval(() => {
       setElapsed(p => {

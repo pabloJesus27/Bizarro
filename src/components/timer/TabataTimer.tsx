@@ -15,6 +15,12 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
 
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
+  }, [])
+
   const phaseDuration = phase === 'work' ? workSeconds : restSeconds
   const phaseRemaining = phaseDuration - phaseElapsed
 

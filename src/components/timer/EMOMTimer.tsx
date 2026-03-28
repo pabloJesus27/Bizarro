@@ -15,6 +15,12 @@ export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
 
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
+  }, [])
+
   const totalIntervals = Math.floor(totalSeconds / intervalSeconds)
   const currentInterval = Math.min(Math.floor(elapsed / intervalSeconds) + 1, totalIntervals)
   const intervalElapsed = elapsed % intervalSeconds

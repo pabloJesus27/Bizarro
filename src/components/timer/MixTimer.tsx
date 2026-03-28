@@ -15,6 +15,12 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
 
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
+  }, [])
+
   const current = blocks[blockIdx]
   const isCountUp = !!(current?.countUp)
   const blockDuration = (isCountUp && (current?.seconds ?? 0) === 0) ? 0 : Math.max(1, current?.seconds ?? 1)

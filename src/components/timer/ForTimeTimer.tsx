@@ -11,6 +11,13 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   const [stopped, setStopped] = useState(false)
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
+  }, [])
+
   const cappedOut = capSeconds > 0 && elapsed >= capSeconds
 
   useEffect(() => {
