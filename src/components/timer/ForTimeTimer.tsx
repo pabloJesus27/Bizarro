@@ -30,7 +30,10 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [elapsed, running, capSeconds])
 
   const router = useRouter()
-  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
+  function handleStart() {
+    if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx) }
+    if (elapsed === 0) { setInPreCountdown(true) } else { setRunning(true) }
+  }
   function stop() { setRunning(false); setStopped(true); if (audioRef.current) beep(audioRef.current, 880, 0.3) }
 
   return (

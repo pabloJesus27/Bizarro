@@ -36,7 +36,10 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, totalSeconds, remaining, intervalSeconds])
 
-  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
+  function handleStart() {
+    if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx) }
+    if (elapsed === 0) { setInPreCountdown(true) } else { setRunning(true) }
+  }
 
   return (
     <>

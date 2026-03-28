@@ -59,7 +59,10 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     if (remaining === 10 && audioRef.current) beepWarning(audioRef.current)
   }, [phaseElapsed, phase, workSeconds, restSeconds, running])
 
-  function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
+  function handleStart() {
+    if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx) }
+    if (phaseElapsed === 0 && currentRound === 1) { setInPreCountdown(true) } else { setRunning(true) }
+  }
 
   return (
     <>
