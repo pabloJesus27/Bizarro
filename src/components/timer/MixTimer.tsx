@@ -117,7 +117,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     : isTabata
     ? `${tabIsWork ? 'Trabajo' : 'Descanso'} ${tabCurrentRound}/${tabTotalRounds}`
     : isCountUp
-    ? 'Tiempo'
+    ? (current?.seconds ? `Cap ${fmt(current.seconds)}` : 'Tiempo')
     : 'Restante'
 
   const clockTime = isEmom
