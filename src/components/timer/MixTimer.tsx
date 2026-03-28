@@ -85,6 +85,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
   useEffect(() => {
     if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
     if (remaining === 10) { beepWarning(audioRef.current); return }
+    if (remaining <= 3 && remaining > 0) { beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0); return }
     if (remaining === 30 && blockDuration > 30) {
       beep(audioRef.current, 660, 0.15, 1.0)
       setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
