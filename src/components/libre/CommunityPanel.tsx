@@ -177,9 +177,9 @@ export default function CommunityPanel({ communitySlug, onClose }: {
                 <button
                   onClick={handleInvite}
                   disabled={inviteLoading || !inviteEmail.trim()}
-                  className="px-4 py-2 bg-white text-black text-xs font-black uppercase tracking-widest rounded-lg disabled:opacity-50 transition hover:bg-neutral-200"
+                  className="flex-shrink-0 px-3 py-2 bg-white text-black text-sm font-black rounded-lg disabled:opacity-50 transition hover:bg-neutral-200"
                 >
-                  {inviteLoading ? '...' : 'Generar'}
+                  {inviteLoading ? '…' : '→'}
                 </button>
               </div>
               {inviteError && <p className="text-red-400 text-xs font-mono mt-2">{inviteError}</p>}
