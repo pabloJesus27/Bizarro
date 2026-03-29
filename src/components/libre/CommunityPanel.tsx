@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getCommunityInfo, getCommunityMembers } from '@/lib/db'
+import { getCommunityInfo } from '@/lib/db'
 import type { CommunityMember } from '@/lib/db'
 import type { Community } from '@/lib/types'
 
@@ -29,11 +29,19 @@ export default function CommunityPanel({ communitySlug, onClose }: {
 
   useEffect(() => {
     if (!communitySlug) { setLoading(false); return }
-    getCommunityInfo(communitySlug).then(c => {
+    getCommunityInfo(communitySlug).then(async c => {
       setCommunity(c)
-      if (c) getCommunityMembers(c.id).then(setMembers)
+      if (c && session) {
+        const res = await fetch(`/api/community-members?communityId=${c.id}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setMembers(data.members)
+        }
+      }
     }).finally(() => setLoading(false))
-  }, [communitySlug])
+  }, [communitySlug, session])
 
   const isOwner = !!user && community?.owner_id === user.id
 
