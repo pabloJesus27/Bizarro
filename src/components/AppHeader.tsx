@@ -53,6 +53,8 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
 
   // communitySlug efectivo: prop explícito o derivado del programa activo
   const effectiveCommunitySlug = communitySlug ?? (program?.startsWith('c-') ? program : undefined)
+  // Mostrar tab Mi comunidad si: tiene comunidad, está en libre, o se fuerza con showCommunityTab
+  const showCommunity = showCommunityTab || !!effectiveCommunitySlug || program === 'libre'
 
   return (
     <>
@@ -115,7 +117,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
           >
             Programaciones
           </button>
-          {(showCommunityTab || effectiveCommunitySlug) && (
+          {showCommunity && (
             <button
               onClick={() => setCommunityOpen(v => !v)}
               className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition ${communityOpen ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
@@ -165,7 +167,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
         </div>
       </header>
       {timerOpen && <TimerModal onClose={() => setTimerOpen(false)} />}
-      {communityOpen && (showCommunityTab || effectiveCommunitySlug) && (
+      {communityOpen && showCommunity && (
         <CommunityPanel communitySlug={effectiveCommunitySlug} onClose={() => setCommunityOpen(false)} />
       )}
 
@@ -227,7 +229,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
               >
                 Programaciones
               </button>
-              {(showCommunityTab || effectiveCommunitySlug) && (
+              {showCommunity && (
                 <button
                   onClick={() => { setDrawerOpen(false); setCommunityOpen(true) }}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
