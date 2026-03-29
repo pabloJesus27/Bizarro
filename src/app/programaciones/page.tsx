@@ -66,7 +66,7 @@ export default function ProgramacionesPage() {
       getMyJoinRequests(user.id),
       getMyAcceptedJoinRequests(user.id),
     ]).then(([mine, disc, reqs, accepted]) => {
-      setMyPrograms(mine)
+      setMyPrograms(mine.filter(ap => ap.programs.type !== 'community'))
       setDiscover(disc)
       setJoinRequests(reqs)
       const unseen = accepted.filter(r => r.id && !isSeen(r.id))
