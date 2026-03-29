@@ -186,7 +186,7 @@ export default function LibrePage() {
     <>
       <main className="min-h-screen bg-black flex flex-col">
 
-        <AppHeader homeRoute="/libre" communitySlug={communitySlug} />
+        <AppHeader homeRoute="/libre" communitySlug={communitySlug} showCommunityTab={true} />
 
         {/* Banner nuevo PR */}
         {newPR && (

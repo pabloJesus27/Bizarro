@@ -9,10 +9,11 @@ import { getProfile, getProgramBySlug } from '@/lib/db'
 import TimerModal from './Timer'
 import CommunityPanel from './libre/CommunityPanel'
 
-export default function AppHeader({ homeRoute, showChangeProgram = true, communitySlug }: {
+export default function AppHeader({ homeRoute, showChangeProgram = true, communitySlug, showCommunityTab = false }: {
   homeRoute?: string
   showChangeProgram?: boolean
   communitySlug?: string
+  showCommunityTab?: boolean
 } = {}) {
   const router = useRouter()
   const { user } = useAuth()
@@ -105,7 +106,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
           >
             Programaciones
           </button>
-          {communitySlug && (
+          {(showCommunityTab || communitySlug) && (
             <button
               onClick={() => setCommunityOpen(v => !v)}
               className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition ${communityOpen ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
@@ -155,7 +156,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
         </div>
       </header>
       {timerOpen && <TimerModal onClose={() => setTimerOpen(false)} />}
-      {communityOpen && communitySlug && (
+      {communityOpen && (showCommunityTab || communitySlug) && (
         <CommunityPanel communitySlug={communitySlug} onClose={() => setCommunityOpen(false)} />
       )}
 
@@ -217,7 +218,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
               >
                 Programaciones
               </button>
-              {communitySlug && (
+              {(showCommunityTab || communitySlug) && (
                 <button
                   onClick={() => { setDrawerOpen(false); setCommunityOpen(true) }}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
