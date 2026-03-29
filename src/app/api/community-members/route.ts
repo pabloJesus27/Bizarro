@@ -26,30 +26,19 @@ export async function GET(req: NextRequest) {
 
   const communityId = community.id
 
-  // Verificar que el usuario es miembro
-  const { data: membership } = await supabase
-    .from('athlete_programs')
-    .select('id')
-    .eq('program_id', communityId)
-    .eq('athlete_id', user.id)
-    .single()
+  // Verificar membresía y obtener miembros en paralelo
+  const [{ data: membership }, { data: rows, error: rowsError }] = await Promise.all([
+    supabase.from('athlete_programs').select('id').eq('program_id', communityId).eq('athlete_id', user.id).single(),
+    supabase.from('athlete_programs').select('athlete_id, joined_at').eq('program_id', communityId).order('joined_at', { ascending: true }),
+  ])
 
   if (!membership) return NextResponse.json({ error: 'No eres miembro de esta comunidad' }, { status: 403 })
-
-  const { data: rows, error: rowsError } = await supabase
-    .from('athlete_programs')
-    .select('athlete_id, joined_at')
-    .eq('program_id', communityId)
-    .order('joined_at', { ascending: true })
-
   if (rowsError) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
 
   const athleteIds = rows.map(r => r.athlete_id)
 
   const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, full_name, avatar_url')
-    .in('id', athleteIds)
+    .from('profiles').select('id, full_name, avatar_url').in('id', athleteIds)
 
   if (profilesError) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
 

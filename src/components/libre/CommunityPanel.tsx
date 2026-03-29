@@ -100,8 +100,6 @@ export default function CommunityPanel({ communitySlug, onClose }: {
     if (res.ok) { onClose(); router.push('/elegir-modo') }
   }
 
-  if (loading) return null
-
   return (
     <>
       <div className="fixed inset-0 bg-black/70 z-50" onClick={onClose} />
@@ -116,8 +114,16 @@ export default function CommunityPanel({ communitySlug, onClose }: {
 
         <div className="flex flex-col gap-6 p-6 flex-1 overflow-y-auto">
 
+          {loading && (
+            <div className="flex gap-1.5 justify-center py-8">
+              <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" />
+              <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" />
+              <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" />
+            </div>
+          )}
+
           {/* Sin comunidad: formulario de creación */}
-          {!community && (
+          {!loading && !community && (
             <div>
               <p className="text-neutral-400 text-xs font-mono mb-4">
                 Crea una comunidad para compartir tus WODs con hasta 10 amigos.
@@ -144,7 +150,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
           )}
 
           {/* Con comunidad: miembros */}
-          {community && (
+          {!loading && community && (
             <div>
               <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-3">
                 Miembros ({members.length}/10)
@@ -173,7 +179,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
           )}
 
           {/* Invitar (solo owner con comunidad) */}
-          {community && isOwner && (
+          {!loading && community && isOwner && (
             <div>
               <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-3">Invitar</p>
               <div className="flex gap-2">
@@ -210,7 +216,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
           )}
 
           {/* Eliminar comunidad (solo owner) */}
-          {community && isOwner && (
+          {!loading && community && isOwner && (
             <div className="mt-auto pt-4 border-t border-neutral-900">
               {deleteConfirm ? (
                 <div className="flex flex-col gap-2">
