@@ -23,6 +23,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [loading,       setLoading]       = useState(true)
   const [membersError,  setMembersError]  = useState<string | null>(null)
+  const [removing,      setRemoving]      = useState<string | null>(null)
   const [createName,    setCreateName]    = useState('')
   const [createError,   setCreateError]   = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
@@ -87,6 +88,21 @@ export default function CommunityPanel({ communitySlug, onClose }: {
       setInviteError('Error al generar la invitación')
     } finally {
       setInviteLoading(false)
+    }
+  }
+
+  async function handleRemoveMember(athleteId: string) {
+    if (!session || !community) return
+    setRemoving(athleteId)
+    try {
+      const res = await fetch('/api/remove-community-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ communityId: community.id, athleteId }),
+      })
+      if (res.ok) setMembers(prev => prev.filter(m => m.athlete_id !== athleteId))
+    } finally {
+      setRemoving(null)
     }
   }
 
@@ -166,12 +182,21 @@ export default function CommunityPanel({ communitySlug, onClose }: {
                         <span className="text-white text-xs font-black">{m.profiles.full_name?.[0]?.toUpperCase() ?? '?'}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       <span className="text-white text-sm font-mono truncate">{m.profiles.full_name ?? 'Sin nombre'}</span>
                       {community.owner_id === m.athlete_id && (
                         <span className="text-neutral-600 text-xs font-mono flex-shrink-0">creador</span>
                       )}
                     </div>
+                    {isOwner && community.owner_id !== m.athlete_id && (
+                      <button
+                        onClick={() => handleRemoveMember(m.athlete_id)}
+                        disabled={removing === m.athlete_id}
+                        className="flex-shrink-0 text-neutral-700 hover:text-red-400 text-xs font-mono transition disabled:opacity-50"
+                      >
+                        {removing === m.athlete_id ? '...' : '×'}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
