@@ -23,6 +23,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
   const [inviteLoading, setInviteLoading] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [loading,       setLoading]       = useState(true)
+  const [membersError,  setMembersError]  = useState<string | null>(null)
   const [createName,    setCreateName]    = useState('')
   const [createError,   setCreateError]   = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
@@ -35,10 +36,14 @@ export default function CommunityPanel({ communitySlug, onClose }: {
         const res = await fetch(`/api/community-members?communityId=${c.id}`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` },
         })
+        const data = await res.json()
         if (res.ok) {
-          const data = await res.json()
           setMembers(data.members)
+        } else {
+          setMembersError(`Error ${res.status}: ${data.error}`)
         }
+      } else if (!session) {
+        setMembersError('Sin sesión')
       }
     }).finally(() => setLoading(false))
   }, [communitySlug, session])
@@ -147,6 +152,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
               <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-3">
                 Miembros ({members.length}/10)
               </p>
+              {membersError && <p className="text-red-400 text-xs font-mono mb-2">{membersError}</p>}
               <div className="flex flex-col gap-2">
                 {members.map(m => (
                   <div key={m.athlete_id} className="flex items-center gap-3">
