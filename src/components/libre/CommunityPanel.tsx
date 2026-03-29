@@ -192,7 +192,7 @@ export default function CommunityPanel({ communitySlug, onClose }: {
                       <button
                         onClick={() => handleRemoveMember(m.athlete_id)}
                         disabled={removing === m.athlete_id}
-                        className="flex-shrink-0 text-neutral-700 hover:text-red-400 text-xs font-mono transition disabled:opacity-50"
+                        className="flex-shrink-0 text-neutral-500 hover:text-red-400 text-base leading-none transition disabled:opacity-50"
                       >
                         {removing === m.athlete_id ? '...' : '×'}
                       </button>
