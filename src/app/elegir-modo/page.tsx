@@ -16,10 +16,11 @@ export default function ElegirModoPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const [programs,     setPrograms]     = useState<AthleteProgramEntry[]>([])
-  const [ready,        setReady]        = useState(false)
-  const [error,        setError]        = useState<string | null>(null)
-  const [isNavigating, setIsNavigating] = useState(false)
+  const [coachPrograms, setCoachPrograms] = useState<AthleteProgramEntry[]>([])
+  const [community,     setCommunity]     = useState<AthleteProgramEntry | null>(null)
+  const [ready,         setReady]         = useState(false)
+  const [error,         setError]         = useState<string | null>(null)
+  const [isNavigating,  setIsNavigating]  = useState(false)
 
   const loadData = useCallback(async () => {
     if (!user) { router.push('/login'); return }
@@ -33,7 +34,8 @@ export default function ElegirModoPage() {
       if (profile.role === 'coach') { router.push('/select-program'); return }
 
       const myPrograms = await getMyAthletePrograms(user.id)
-      setPrograms(myPrograms)
+      setCoachPrograms(myPrograms.filter(ap => ap.programs.type !== 'community'))
+      setCommunity(myPrograms.find(ap => ap.programs.type === 'community') ?? null)
       setReady(true)
     } catch {
       setError('No se pudieron cargar tus programas. Inténtalo de nuevo.')
@@ -74,7 +76,7 @@ export default function ElegirModoPage() {
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-6 w-full max-w-2xl justify-center items-center">
 
-        {programs.map(ap => {
+        {coachPrograms.map(ap => {
           const slug = ap.programs.slug
           const name = ap.programs.name
           const img  = slugImages[slug]
@@ -111,6 +113,29 @@ export default function ElegirModoPage() {
             </button>
           )
         })}
+
+        {/* Mi comunidad */}
+        {community && (
+          <button
+            disabled={isNavigating}
+            onClick={() => {
+              setIsNavigating(true)
+              router.push(`/comunidad/${community.programs.slug}`)
+            }}
+            className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors disabled:opacity-50"
+          >
+            <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center">
+              <span className="text-white font-black text-2xl">⬡</span>
+            </div>
+            <div className="text-center">
+              <p className="text-white font-black text-sm uppercase tracking-tight">{community.programs.name}</p>
+              <p className="text-neutral-600 text-xs font-mono mt-1">Mi comunidad</p>
+            </div>
+            <span className="text-neutral-600 text-xs uppercase tracking-widest font-mono group-hover:text-white transition-colors">
+              Entrar →
+            </span>
+          </button>
+        )}
 
         {/* Por libre */}
         <button

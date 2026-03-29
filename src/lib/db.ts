@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { NewResult, NewWod, Wod, Result, Profile, Program } from './types'
+import type { NewResult, NewWod, Wod, Result, Profile, Program, Community } from './types'
 
 export interface PersonalRecord {
   id: string
@@ -302,16 +302,88 @@ export interface AthleteProgramEntry {
   athlete_id: string
   program_id: string
   joined_at: string
-  programs: { name: string; slug: string }
+  programs: { name: string; slug: string; type: string; owner_id: string }
 }
 
 export async function getMyAthletePrograms(userId: string): Promise<AthleteProgramEntry[]> {
   const { data, error } = await supabase
     .from('athlete_programs')
-    .select('*, programs(name, slug)')
+    .select('*, programs(name, slug, type, owner_id)')
     .eq('athlete_id', userId)
   if (error) throw error
   return data
+}
+
+// ── Communities ───────────────────────────────────────
+
+export interface CommunityMembership {
+  id: string
+  athlete_id: string
+  program_id: string
+  joined_at: string
+}
+
+export interface CommunityMember {
+  athlete_id: string
+  joined_at: string
+  profiles: { full_name: string | null; avatar_url: string | null }
+}
+
+export async function getMyOwnedCommunity(userId: string): Promise<Community | null> {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('owner_id', userId)
+    .eq('type', 'community')
+    .single()
+  if (error && error.code !== 'PGRST116') throw error
+  return data
+}
+
+export async function getCommunityInfo(slug: string): Promise<Community | null> {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('slug', slug)
+    .eq('type', 'community')
+    .single()
+  if (error && error.code !== 'PGRST116') throw error
+  return data
+}
+
+export async function getMyCommunityMembership(communityId: string, userId: string): Promise<CommunityMembership | null> {
+  const { data, error } = await supabase
+    .from('athlete_programs')
+    .select('*')
+    .eq('program_id', communityId)
+    .eq('athlete_id', userId)
+    .single()
+  if (error && error.code !== 'PGRST116') throw error
+  return data
+}
+
+export async function getWodsForCommunity(slug: string, from: string, to: string, joinedAt?: string): Promise<Wod[]> {
+  const effectiveFrom = joinedAt && joinedAt > from ? joinedAt : from
+  const { data, error } = await supabase
+    .from('wods')
+    .select('*')
+    .gte('date', effectiveFrom)
+    .lte('date', to)
+    .eq('program', slug)
+    .order('date', { ascending: true })
+    .order('block', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function getCommunityMembers(communityId: string): Promise<CommunityMember[]> {
+  const { data, error } = await supabase
+    .from('athlete_programs')
+    .select('athlete_id, joined_at, profiles(full_name, avatar_url)')
+    .eq('program_id', communityId)
+    .order('joined_at', { ascending: true })
+  if (error) throw error
+  return (data as unknown as CommunityMember[])
 }
 
 export async function getDiscoverPrograms(userId: string): Promise<ProgramEntry[]> {

@@ -10,7 +10,17 @@ export type TimerConfig =
   | { type: 'mix';      blocks: MixBlock[] }
   | { type: 'interval'; totalSeconds: number; intervalSeconds: number; workLabel: string; restLabel: string; startWithRest: boolean }
   | { type: 'countdown'; totalSeconds: number }
-export type Program  = 'bizarro' | 'entrenemos' | 'libre'
+// known values: 'bizarro' | 'entrenemos' | 'libre' | 'c-{community-slug}'
+export type Program = string
+
+export interface Community {
+  id: string
+  name: string
+  slug: string      // always prefixed with 'c-'
+  owner_id: string
+  type: 'community'
+  created_at: string
+}
 
 export interface Wod {
   id: string

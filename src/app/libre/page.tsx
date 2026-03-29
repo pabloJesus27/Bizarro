@@ -10,7 +10,7 @@ import ResultModal from '@/components/ResultModal'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import {
   getProfile, getWodsForWeekLibre, createLibreWod, deleteWod,
-  getResultsForWods, getMyPRs,
+  getResultsForWods, getMyPRs, getMyOwnedCommunity,
 } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
@@ -43,6 +43,7 @@ export default function LibrePage() {
   const [wodError,       setWodError]       = useState<string | null>(null)
   const [loadWeekOpen,   setLoadWeekOpen]   = useState(false)
   const [prs,            setPrs]            = useState<PersonalRecord[]>([])
+  const [communitySlug,  setCommunitySlug]  = useState<string | undefined>(undefined)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -50,9 +51,14 @@ export default function LibrePage() {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
 
-    Promise.all([getProfile(user.id), getMyPRs().catch(() => [])]).then(([profile, userPRs]) => {
+    Promise.all([
+      getProfile(user.id),
+      getMyPRs().catch(() => []),
+      getMyOwnedCommunity(user.id).catch(() => null),
+    ]).then(([profile, userPRs, community]) => {
       if (profile?.role === 'coach') { router.push('/select-program'); return }
       setPrs(userPRs)
+      if (community) setCommunitySlug(community.slug)
       setLoading(false)
     })
   }, [authLoading, user, router])
@@ -180,7 +186,7 @@ export default function LibrePage() {
     <>
       <main className="min-h-screen bg-black flex flex-col">
 
-        <AppHeader homeRoute="/libre" />
+        <AppHeader homeRoute="/libre" communitySlug={communitySlug} />
 
         {/* Banner nuevo PR */}
         {newPR && (

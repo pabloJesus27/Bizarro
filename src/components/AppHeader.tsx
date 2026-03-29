@@ -7,18 +7,21 @@ import { useAuth } from '@/context/AuthContext'
 import { signOut } from '@/lib/auth'
 import { getProfile, getProgramBySlug } from '@/lib/db'
 import TimerModal from './Timer'
+import CommunityPanel from './libre/CommunityPanel'
 
-export default function AppHeader({ homeRoute, showChangeProgram = true }: {
+export default function AppHeader({ homeRoute, showChangeProgram = true, communitySlug }: {
   homeRoute?: string
   showChangeProgram?: boolean
+  communitySlug?: string
 } = {}) {
   const router = useRouter()
   const { user } = useAuth()
 
-  const [timerOpen,   setTimerOpen]   = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
+  const [timerOpen,      setTimerOpen]      = useState(false)
+  const [profileOpen,    setProfileOpen]    = useState(false)
   const [drawerOpen,     setDrawerOpen]     = useState(false)
   const [timerExpanded,  setTimerExpanded]  = useState(false)
+  const [communityOpen,  setCommunityOpen]  = useState(false)
   const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null)
   const [program,     setProgram]     = useState<string | null>(null)
   const [profileName, setProfileName] = useState('')
@@ -102,6 +105,14 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
           >
             Programaciones
           </button>
+          {communitySlug && (
+            <button
+              onClick={() => setCommunityOpen(v => !v)}
+              className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition ${communityOpen ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+            >
+              Mi comunidad
+            </button>
+          )}
         </div>
         <div className="relative flex items-center">
           <button
@@ -144,6 +155,9 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
         </div>
       </header>
       {timerOpen && <TimerModal onClose={() => setTimerOpen(false)} />}
+      {communityOpen && communitySlug && (
+        <CommunityPanel communitySlug={communitySlug} onClose={() => setCommunityOpen(false)} />
+      )}
 
       {/* Drawer móvil */}
       {drawerOpen && (
@@ -203,6 +217,14 @@ export default function AppHeader({ homeRoute, showChangeProgram = true }: {
               >
                 Programaciones
               </button>
+              {communitySlug && (
+                <button
+                  onClick={() => { setDrawerOpen(false); setCommunityOpen(true) }}
+                  className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
+                >
+                  Mi comunidad
+                </button>
+              )}
             </nav>
           </div>
         </>
