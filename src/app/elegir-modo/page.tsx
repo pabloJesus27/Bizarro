@@ -118,8 +118,11 @@ export default function ElegirModoPage() {
         {community && (
           <button
             disabled={isNavigating}
-            onClick={() => {
+            onClick={async () => {
               setIsNavigating(true)
+              try {
+                if (user) await updateProfileProgram(user.id, community.programs.slug)
+              } catch { /* no bloqueamos la navegación */ }
               router.push(`/comunidad/${community.programs.slug}`)
             }}
             className="group flex-1 min-w-[160px] max-w-[200px] border border-neutral-800 hover:border-white rounded-2xl p-8 flex flex-col items-center gap-5 transition-colors disabled:opacity-50"
