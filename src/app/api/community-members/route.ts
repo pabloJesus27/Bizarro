@@ -24,13 +24,28 @@ export async function GET(req: NextRequest) {
 
   if (!membership) return NextResponse.json({ error: 'No eres miembro de esta comunidad' }, { status: 403 })
 
-  const { data, error } = await supabase
+  const { data: rows, error: rowsError } = await supabase
     .from('athlete_programs')
-    .select('athlete_id, joined_at, profiles(full_name, avatar_url)')
+    .select('athlete_id, joined_at')
     .eq('program_id', communityId)
     .order('joined_at', { ascending: true })
 
-  if (error) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  if (rowsError) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
 
-  return NextResponse.json({ members: data })
+  const athleteIds = rows.map(r => r.athlete_id)
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', athleteIds)
+
+  if (profilesError) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+
+  const members = rows.map(r => ({
+    athlete_id: r.athlete_id,
+    joined_at: r.joined_at,
+    profiles: profiles.find(p => p.id === r.athlete_id) ?? { full_name: null, avatar_url: null },
+  }))
+
+  return NextResponse.json({ members })
 }
