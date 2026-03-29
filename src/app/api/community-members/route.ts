@@ -11,10 +11,22 @@ export async function GET(req: NextRequest) {
   const user = await getAuthenticatedUser(req)
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const communityId = req.nextUrl.searchParams.get('communityId')
-  if (!communityId) return NextResponse.json({ error: 'communityId requerido' }, { status: 400 })
+  const slug = req.nextUrl.searchParams.get('slug')
+  if (!slug) return NextResponse.json({ error: 'slug requerido' }, { status: 400 })
 
-  // Verificar que el usuario es miembro de esta comunidad
+  // Obtener comunidad por slug
+  const { data: community } = await supabase
+    .from('programs')
+    .select('id, name, slug, owner_id, type, created_at')
+    .eq('slug', slug)
+    .eq('type', 'community')
+    .single()
+
+  if (!community) return NextResponse.json({ error: 'Comunidad no encontrada' }, { status: 404 })
+
+  const communityId = community.id
+
+  // Verificar que el usuario es miembro
   const { data: membership } = await supabase
     .from('athlete_programs')
     .select('id')
@@ -47,5 +59,5 @@ export async function GET(req: NextRequest) {
     profiles: profiles.find(p => p.id === r.athlete_id) ?? { full_name: null, avatar_url: null },
   }))
 
-  return NextResponse.json({ members })
+  return NextResponse.json({ community, members })
 }

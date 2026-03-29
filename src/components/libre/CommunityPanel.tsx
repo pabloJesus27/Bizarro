@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getCommunityInfo } from '@/lib/db'
 import type { CommunityMember } from '@/lib/db'
 import type { Community } from '@/lib/types'
 
@@ -29,23 +28,21 @@ export default function CommunityPanel({ communitySlug, onClose }: {
   const [createLoading, setCreateLoading] = useState(false)
 
   useEffect(() => {
-    if (!communitySlug) { setLoading(false); return }
-    getCommunityInfo(communitySlug).then(async c => {
-      setCommunity(c)
-      if (c && session) {
-        const res = await fetch(`/api/community-members?communityId=${c.id}`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` },
-        })
+    if (!communitySlug || !session) { setLoading(false); return }
+    setMembersError(null)
+    fetch(`/api/community-members?slug=${communitySlug}`, {
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    })
+      .then(async res => {
         const data = await res.json()
         if (res.ok) {
+          setCommunity(data.community)
           setMembers(data.members)
         } else {
           setMembersError(`Error ${res.status}: ${data.error}`)
         }
-      } else if (!session) {
-        setMembersError('Sin sesión')
-      }
-    }).finally(() => setLoading(false))
+      })
+      .finally(() => setLoading(false))
   }, [communitySlug, session])
 
   const isOwner = !!user && community?.owner_id === user.id
