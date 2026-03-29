@@ -168,7 +168,8 @@ export default function ComunidadPage() {
         </div>
 
         {/* Días de la semana */}
-        <div className="flex gap-1 px-6 pt-2 pb-4 border-b border-neutral-900 overflow-x-auto">
+        <div className="border-b border-neutral-900 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-full gap-1 px-6 pt-2 pb-4">
           {weekDates.map(d => {
             if (isSunday(d)) return null
             const hasWods = wods.some(w => w.date === d)
@@ -177,7 +178,7 @@ export default function ComunidadPage() {
               <button
                 key={d}
                 onClick={() => { setSelectedDate(d); setSelectedBlock(1); setActiveTab('wod') }}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition min-w-[44px] ${
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition min-w-[44px] flex-1 ${
                   isSelected ? 'bg-white' : 'hover:bg-neutral-900'
                 }`}
               >
@@ -191,6 +192,7 @@ export default function ComunidadPage() {
               </button>
             )
           })}
+          </div>
         </div>
 
         {wodError && (
