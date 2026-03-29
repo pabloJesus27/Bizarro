@@ -9,11 +9,12 @@ import { getProfile, getProgramBySlug } from '@/lib/db'
 import TimerModal from './Timer'
 import CommunityPanel from './libre/CommunityPanel'
 
-export default function AppHeader({ homeRoute, showChangeProgram = true, communitySlug, showCommunityTab = false }: {
+export default function AppHeader({ homeRoute, showChangeProgram = true, communitySlug, showCommunityTab = false, leftTitle }: {
   homeRoute?: string
   showChangeProgram?: boolean
   communitySlug?: string
   showCommunityTab?: boolean
+  leftTitle?: string
 } = {}) {
   const router = useRouter()
   const { user } = useAuth()
@@ -63,7 +64,9 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
               <rect y="17" width="22" height="2" rx="1" fill="currentColor"/>
             </svg>
           </button>
-          {program && program !== 'libre' && (() => {
+          {leftTitle ? (
+            <span className="text-white font-black text-xl tracking-tighter">{leftTitle}</span>
+          ) : (program && program !== 'libre' && (() => {
             const img = slugImages[program]
             const displayName = img ? program : (programName ?? null)
             if (!displayName) return null
@@ -79,7 +82,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
                 <span className="text-white font-black text-xl tracking-tighter">{displayName}</span>
               </>
             )
-          })()}
+          })())}
         </div>
         <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-1 bg-neutral-900 rounded-full p-1">
           <button
