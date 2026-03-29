@@ -130,7 +130,7 @@ export default function ComunidadPage() {
     <>
       <main className="min-h-screen bg-black flex flex-col">
 
-        <AppHeader homeRoute={`/comunidad/${slug}`} />
+        <AppHeader homeRoute={`/comunidad/${slug}`} communitySlug={slug} />
 
         {/* Navegación de semana */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-900">
