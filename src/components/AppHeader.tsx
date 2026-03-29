@@ -48,6 +48,9 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
     })
   }, [user])
 
+  // communitySlug efectivo: prop explícito o derivado del programa activo
+  const effectiveCommunitySlug = communitySlug ?? (program?.startsWith('c-') ? program : undefined)
+
   return (
     <>
       <header className="relative flex items-center justify-between px-6 py-5 border-b border-neutral-900">
@@ -109,7 +112,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
           >
             Programaciones
           </button>
-          {(showCommunityTab || communitySlug) && (
+          {(showCommunityTab || effectiveCommunitySlug) && (
             <button
               onClick={() => setCommunityOpen(v => !v)}
               className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-widest font-mono transition ${communityOpen ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
@@ -159,8 +162,8 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
         </div>
       </header>
       {timerOpen && <TimerModal onClose={() => setTimerOpen(false)} />}
-      {communityOpen && (showCommunityTab || communitySlug) && (
-        <CommunityPanel communitySlug={communitySlug} onClose={() => setCommunityOpen(false)} />
+      {communityOpen && (showCommunityTab || effectiveCommunitySlug) && (
+        <CommunityPanel communitySlug={effectiveCommunitySlug} onClose={() => setCommunityOpen(false)} />
       )}
 
       {/* Drawer móvil */}
@@ -221,7 +224,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
               >
                 Programaciones
               </button>
-              {(showCommunityTab || communitySlug) && (
+              {(showCommunityTab || effectiveCommunitySlug) && (
                 <button
                   onClick={() => { setDrawerOpen(false); setCommunityOpen(true) }}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition"
