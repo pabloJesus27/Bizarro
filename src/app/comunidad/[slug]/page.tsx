@@ -305,7 +305,7 @@ export default function ComunidadPage() {
           weekDates={weekDates}
           selectedDate={selectedDate}
           programSlug={slug}
-          variant="coach"
+          variant="libre"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
         />
