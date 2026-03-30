@@ -25,15 +25,15 @@ export async function POST(req: NextRequest) {
   const { name } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 })
 
-  // Verificar que no tiene ya una comunidad
-  const { data: existing } = await supabase
-    .from('programs')
-    .select('id')
-    .eq('owner_id', user.id)
-    .eq('type', 'community')
-    .single()
+  // Verificar que no pertenece ya a ninguna comunidad (ni como owner ni como miembro)
+  const { data: existingMembership } = await supabase
+    .from('athlete_programs')
+    .select('id, programs!inner(type)')
+    .eq('athlete_id', user.id)
+    .eq('programs.type', 'community')
+    .maybeSingle()
 
-  if (existing) return NextResponse.json({ error: 'Ya tienes una comunidad' }, { status: 409 })
+  if (existingMembership) return NextResponse.json({ error: 'Ya perteneces a una comunidad' }, { status: 409 })
 
   const slug = toSlug(name.trim())
   if (slug === 'c-') return NextResponse.json({ error: 'Nombre inválido' }, { status: 400 })
