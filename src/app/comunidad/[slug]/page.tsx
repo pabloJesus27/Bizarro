@@ -330,7 +330,7 @@ export default function ComunidadPage() {
                         <button
                           onClick={() => handleGenerateTimer(activeWod)}
                           disabled={generatingTimer}
-                          className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
+                          className="border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
                         >
                           {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
                         </button>
