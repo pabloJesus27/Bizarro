@@ -9,6 +9,7 @@ import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import PRCalculator from '@/components/PRCalculator'
+import PesosTab from '@/components/comunidad/PesosTab'
 import {
   getCommunityInfo, getMyCommunityMembership,
   getWodsForCommunity, getResultsForWods, createWod,
@@ -19,7 +20,7 @@ import type { CommunityMembership, PersonalRecord } from '@/lib/db'
 import type { Community } from '@/lib/types'
 import type { Wod, Result } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
-import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
+import { WOD_TYPE_LABEL, getScoreDisplay, detectPRExercise } from '@/lib/wod-utils'
 
 export default function ComunidadPage() {
   const { user, session, loading: authLoading } = useAuth()
@@ -40,7 +41,7 @@ export default function ComunidadPage() {
   const [modalWod,      setModalWod]      = useState<Wod | null>(null)
   const [rankingKey,    setRankingKey]    = useState(0)
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
-  const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking'>('wod')
+  const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking' | 'pesos'>('wod')
   const [wodError,      setWodError]      = useState<string | null>(null)
   const [prs,              setPrs]              = useState<PersonalRecord[]>([])
   const [deletingId,       setDeletingId]       = useState<string | null>(null)
@@ -313,12 +314,22 @@ export default function ComunidadPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('ranking')}
-                    className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                    className={`py-3 mr-6 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
                       activeTab === 'ranking' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
                     }`}
                   >
                     Ranking
                   </button>
+                  {detectPRExercise(`${activeWod.title} ${activeWod.description ?? ''}`) && (
+                    <button
+                      onClick={() => setActiveTab('pesos')}
+                      className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                        activeTab === 'pesos' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                      }`}
+                    >
+                      Pesos
+                    </button>
+                  )}
                 </div>
 
                 {activeTab === 'wod' && (
@@ -394,6 +405,14 @@ export default function ComunidadPage() {
                   <div className="flex-1 p-6">
                     <RankingSection wod={activeWod} refreshKey={rankingKey} />
                   </div>
+                )}
+
+                {activeTab === 'pesos' && (
+                  <PesosTab
+                    wodText={`${activeWod.title} ${activeWod.description ?? ''}`}
+                    communitySlug={slug}
+                    session={session}
+                  />
                 )}
               </div>
             )}
