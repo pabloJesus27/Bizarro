@@ -54,9 +54,10 @@ Las fechas de esta semana son:
 ${WOD_FIELDS}
 
 IMPORTANTE — estructura de la imagen:
-- La imagen es una tabla donde cada COLUMNA es un día de la semana: primera columna = Lunes, segunda = Martes, y así sucesivamente.
+- La imagen es una tabla donde cada COLUMNA es un día de la semana. Usa los encabezados de la imagen (LUNES, MARTES, etc.) para identificar cada columna y asigna la fecha correspondiente de la lista de arriba.
 - Cada FILA es un bloque de entrenamiento. Recorre cada columna completa de arriba a abajo y extrae todo el contenido que encuentres.
 - Las filas de separación (DESCANSO, HIDRATACION, descanso activo, etc.) ocupan toda la fila y NO son bloques. Ignóralas por completo y sigue leyendo las filas que hay debajo — siguen siendo bloques de ese mismo día.
+- Si una columna entera está vacía o solo contiene DESCANSO, ese día no tiene WODs — no extraigas nada para ese día.
 - Una celda vacía significa que ese día no tiene bloque en esa posición. No interrumpe la lectura del resto de filas.
 - Asigna block = 1 al primer contenido de ejercicio de cada día, block = 2 al segundo, etc. (numeración independiente por día, ignorando las filas de separación al contar).
 
