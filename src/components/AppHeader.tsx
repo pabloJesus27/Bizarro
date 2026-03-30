@@ -25,9 +25,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
   const [timerExpanded,  setTimerExpanded]  = useState(false)
   const [communityOpen,  setCommunityOpen]  = useState(false)
   const [avatarUrl,   setAvatarUrl]   = useState<string | null>(null)
-  const [program,     setProgram]     = useState<string | null>(() =>
-    typeof window !== 'undefined' ? localStorage.getItem('bizarro_active_program') : null
-  )
+  const [program,     setProgram]     = useState<string | null>(null)
   const [profileName, setProfileName] = useState('')
   const [programName, setProgramName] = useState<string | null>(null)
 
@@ -35,6 +33,10 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
     bizarro: '/logoBizarro.png',
     entrenemos: '/entrenemos.png',
   }
+
+  useEffect(() => {
+    setProgram(localStorage.getItem('bizarro_active_program'))
+  }, [])
 
   useEffect(() => {
     if (!user) return
