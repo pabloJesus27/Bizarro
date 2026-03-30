@@ -2,20 +2,8 @@ export function keepAudioContextAlive(_ctx: AudioContext) {
   // No-op
 }
 
-export function flash(color = 'rgba(255,255,255,0.5)') {
-  if (typeof document === 'undefined') return
-  const div = document.createElement('div')
-  div.style.cssText = `position:fixed;inset:0;background:${color};z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.35s`
-  document.body.appendChild(div)
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    div.style.opacity = '0'
-    setTimeout(() => div.remove(), 400)
-  }))
-}
-
 export function beepWarning(ctx: AudioContext) {
   speak('Diez segundos')
-  flash('rgba(255,140,0,0.55)')
   const play = () => {
     [0, 200, 400].forEach(delay => {
       setTimeout(() => {
@@ -36,7 +24,6 @@ export function beepWarning(ctx: AudioContext) {
 }
 
 export function beepGo(ctx: AudioContext) {
-  flash('rgba(0,220,100,0.55)')
   const play = () => {
     [880, 1100].forEach((freq, i) => {
       setTimeout(() => {
@@ -74,7 +61,6 @@ export function speak(text: string) {
 }
 
 export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 1.0) {
-  flash('rgba(255,255,255,0.4)')
   const play = () => {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
