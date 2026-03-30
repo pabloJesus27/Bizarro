@@ -30,6 +30,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <link rel="manifest" href="/manifest.json" />
         <script dangerouslySetInnerHTML={{ __html: `if('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0,0);` }} />
       </head>
       <body
