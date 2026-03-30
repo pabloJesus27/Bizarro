@@ -7,7 +7,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const TIMER_FORMAT = `timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"label":"...","seconds":N}.
 - Warmup, Strength, Gymnastics, Core, Mobility → null
-- For Time sin time cap → null
+- For Time sin time cap → [{"label":"For Time","seconds":0,"countUp":true}] (cuenta arriba, el atleta para manualmente)
 - For Time con time cap X min → [{"label":"For Time","seconds":X*60,"countUp":true}]
 - AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min con intervalos de X seg → 1 bloque [{"label":"EMOM","seconds":N*60,"intervalSeconds":X}] (EMOM estándar = intervalSeconds:60, E2MOM = intervalSeconds:120, etc.)
@@ -15,7 +15,11 @@ const TIMER_FORMAT = `timerConfig: usa SIEMPRE formato mix con bloques. Cada blo
 - Tabata work W seg / rest R seg × N rondas → N pares alternando {"label":"Trabajo","seconds":W} y {"label":"Descanso","seconds":R}
 - Estructura compleja (AMRAP + descanso + AMRAP, etc.) → bloques separados con label descriptivo
 - N sets con M ejercicios en formato "X" on X" off" y descanso Y" entre sets → expande completamente: por cada set crea [Ejercicio1(Xs), Descanso(Xs), Ejercicio2(Xs), Descanso(Xs), ...] y añade Descanso(Ys) al final de cada set excepto el último. Ej: "3 sets, 30" on 30" off, DU / Thrusters / Burpees, rest 90" entre sets" → 17 bloques: [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s),Desc(90s)] × 2 + [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s)]
-- Nunca uses seconds: 0 en un bloque`
+- El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
+- En notación CrossFit: X" = X segundos, X' = X minutos. Ej: 30" = 30 seg, 3' = 180 seg
+- Los bloques de descanso (off, rest) SIEMPRE deben tener su duración en segundos correcta
+- "X sets / X rondas" SIN descanso explícito entre sets → For Time simple (1 solo bloque)
+- Nunca uses seconds: 0 salvo en For Time sin time cap con countUp: true`
 
 const WOD_FIELDS = `Para cada bloque:
 - date: fecha en formato YYYY-MM-DD
