@@ -40,9 +40,11 @@ export default function ComunidadPage() {
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
   const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking'>('wod')
   const [wodError,      setWodError]      = useState<string | null>(null)
-  const [deletingId,    setDeletingId]    = useState<string | null>(null)
-  const [deletingDay,   setDeletingDay]   = useState(false)
-  const [deletingWeek,  setDeletingWeek]  = useState(false)
+  const [deletingId,       setDeletingId]       = useState<string | null>(null)
+  const [deletingDay,      setDeletingDay]      = useState(false)
+  const [deletingWeek,     setDeletingWeek]     = useState(false)
+  const [generatingTimer,  setGeneratingTimer]  = useState(false)
+  const [timerError,       setTimerError]       = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -97,6 +99,32 @@ export default function ComunidadPage() {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
     setSelectedBlock(firstBlock?.block ?? 1)
   }, [selectedDate, wods])
+
+  async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+    if (wod.timer_config) {
+      const cfg = Array.isArray(wod.timer_config)
+        ? { type: 'mix' as const, blocks: wod.timer_config }
+        : wod.timer_config
+      sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
+      router.push('/timer')
+      return
+    }
+    setGeneratingTimer(true)
+    setTimerError(false)
+    try {
+      const res = await fetch('/api/generate-timer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify(wod),
+      })
+      const cfg = await res.json()
+      if (cfg.error) { setTimerError(true); return }
+      sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
+      router.push('/timer')
+    } catch { setTimerError(true) } finally {
+      setGeneratingTimer(false)
+    }
+  }
 
   async function handleDelete(id: string) {
     await deleteWod(id)
@@ -296,6 +324,20 @@ export default function ComunidadPage() {
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
                     {activeWod.description && (
                       <p className="text-neutral-300 text-sm font-mono whitespace-pre-wrap mb-6">{activeWod.description}</p>
+                    )}
+                    {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
+                      <div className="mb-4">
+                        <button
+                          onClick={() => handleGenerateTimer(activeWod)}
+                          disabled={generatingTimer}
+                          className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
+                        >
+                          {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
+                        </button>
+                        {timerError && (
+                          <p className="text-red-500 text-xs font-mono mt-2 text-center">Error al generar el timer.</p>
+                        )}
+                      </div>
                     )}
                     <button
                       onClick={() => setModalWod(activeWod)}
