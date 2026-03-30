@@ -63,7 +63,7 @@ Reglas para el tipo:
 - For time / tiempo límite / completar X trabajo lo antes posible → "For Time"
 - Circuitos de sets con ejercicios metabólicos (assault bike, remo, ski erg, toes to bar, burpees, wall balls, box jumps, double unders, sandbag, kettlebell, thrusters...) aunque no diga explícitamente "for time" → "For Time"
 - EMOM → "EMOM"
-- Max cal / max reps / ventanas de X min con ejercicio a máximo esfuerzo → "For Max"
+- Max cal / max reps / "max [ejercicio]" en ventanas de tiempo (aunque sea X" on X" off con varios ejercicios) → "For Max"
 - Resto → "Other"
 
 Reglas para timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"label":"...","seconds":N}.

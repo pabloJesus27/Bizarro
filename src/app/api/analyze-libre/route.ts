@@ -69,7 +69,7 @@ Reglas de tipo:
 - AMRAP → "AMRAP"
 - For time / tiempo límite / completar X trabajo lo antes posible → "For Time"
 - Circuitos con ejercicios metabólicos (assault bike, remo, ski erg, burpees, wall balls, box jumps, double unders, kettlebell, thrusters...) aunque no diga explícitamente "for time" → "For Time"
-- EMOM/E2MOM → "EMOM", Max cal/reps / ventanas de X min a máximo esfuerzo → "For Max", resto → "Other"
+- EMOM/E2MOM → "EMOM", Max cal/reps / "max [ejercicio]" en ventanas de tiempo (aunque sea X" on X" off con varios ejercicios) → "For Max", resto → "Other"
 
 Reglas de título: identifica la parte PRINCIPAL del bloque. Para fuerza/halterofilia usa solo el ejercicio final (ej: "Cluster", "Clean & Jerk", "Back Squat"). Para WODs metabólicos usa los ejercicios principales (ej: "Assault Bike + Burpees", "Thrusters + Pull Ups"). Máximo 4 palabras.
 
