@@ -416,7 +416,7 @@ export default function LibrePage() {
                         ) : (
                           <button
                             onClick={() => setModalWod(activeWod)}
-                            className="px-6 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition"
+                            className="px-6 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition self-start"
                           >
                             Registrar resultado
                           </button>
