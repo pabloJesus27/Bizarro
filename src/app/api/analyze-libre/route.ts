@@ -51,15 +51,21 @@ Las fechas de esta semana son:
 
 ${WOD_FIELDS}
 
-Reglas de tipo:
-- Warm Up → "Warmup"
-- Sets/reps con barra o pesas → "Strength"
-- Handstand, muscle up, ring, gymnastics → "Gymnastics"
-- Ejercicios de core → "Core"
-- Estiramientos, movilidad → "Mobility"
-- AMRAP → "AMRAP", For time → "For Time", EMOM → "EMOM", Max cal/reps → "For Max", resto → "Other"
+IMPORTANTE sobre la estructura de la imagen:
+- Los números que puedas ver a la izquierda son números de fila del spreadsheet, NO números de bloque. Ignóralos para numerar los bloques.
+- Si hay filas de separación (DESCANSO, HIDRATACION, descanso activo, etc.) que ocupan toda la fila, ignóralas completamente pero SIGUE extrayendo los bloques que aparecen debajo — pertenecen a los mismos días de la semana.
+- Numera los bloques de cada día de forma secuencial (1, 2, 3...) en orden de arriba a abajo, ignorando las filas de separación.
+- Una celda vacía significa que ese día no tiene bloque en esa posición, no que la semana haya terminado.
 
-Ignora celdas vacías, filas de separación (DESCANSO, etc), notas de hidratación, nutrición y recordatorios que no sean ejercicios.
+Reglas de tipo:
+- Calentamiento, activación, warm up → "Warmup"
+- Sets/reps con barra o pesas, halterofilia, powerlifting → "Strength"
+- Handstand, muscle up, ring, dominadas, gymnastics → "Gymnastics"
+- Ejercicios de core → "Core"
+- Estiramientos, movilidad, foam roller → "Mobility"
+- AMRAP → "AMRAP", For time → "For Time", EMOM/E2MOM → "EMOM", Max cal/reps → "For Max", resto → "Other"
+
+Ignora solo: celdas completamente vacías, filas de DESCANSO/separación, notas de nutrición e hidratación sin ejercicio.
 Devuelve SOLO un array JSON sin markdown:
 [{"date":"...","block":1,"title":"...","type":"...","description":"..."}]`
 
