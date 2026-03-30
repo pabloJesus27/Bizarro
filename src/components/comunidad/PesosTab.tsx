@@ -79,7 +79,11 @@ function calcWeight(rm: number, pct: number): string {
   return String(Math.round(rm * pct / 100 * 2) / 2)
 }
 
-const PERCENTAGES = [50, 60, 70, 75, 80, 85, 90, 95, 100]
+function extractPercentages(text: string): number[] {
+  const matches = [...text.matchAll(/(\d+)\s*%/g)]
+  const pcts = [...new Set(matches.map(m => parseInt(m[1])))].filter(p => p > 0 && p <= 100)
+  return pcts.sort((a, b) => a - b)
+}
 
 // ── Types ────────────────────────────────────────────────
 
@@ -99,7 +103,8 @@ interface Props {
 // ── Component ────────────────────────────────────────────
 
 export default function PesosTab({ wodText, communitySlug, session }: Props) {
-  const entries = extractEntries(wodText)
+  const entries     = extractEntries(wodText)
+  const percentages = extractPercentages(wodText)
 
   const [selectedEntry,  setSelectedEntry]  = useState<Entry | null>(entries[0] ?? null)
   const [members,        setMembers]        = useState<Member[]>([])
@@ -130,7 +135,7 @@ export default function PesosTab({ wodText, communitySlug, session }: Props) {
       .finally(() => setLoading(false))
   }, [selectedEntry, communitySlug, session])
 
-  if (entries.length === 0) return (
+  if (entries.length === 0 || percentages.length === 0) return (
     <div className="flex-1 flex items-center justify-center p-6">
       <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Este WOD no tiene ejercicios de fuerza</p>
     </div>
@@ -223,7 +228,7 @@ export default function PesosTab({ wodText, communitySlug, session }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {PERCENTAGES.map(pct => (
+                {percentages.map(pct => (
                   <tr key={pct} className="border-t border-neutral-900">
                     <td className="text-neutral-500 py-2 pr-6">{pct}%</td>
                     {selected.map(m => (
