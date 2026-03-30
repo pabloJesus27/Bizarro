@@ -21,7 +21,8 @@ const WOD_FIELDS = `Para cada bloque:
 - block: número de bloque (1=Warm Up, 2=Bloque #1, 3=Bloque #2, etc.)
 - title: nombre corto del ejercicio principal (máx 4 palabras)
 - type: "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
-- description: texto completo del bloque tal como aparece`
+- description: texto completo del bloque tal como aparece
+- timerConfig: configuración del timer (ver reglas abajo), o null si no aplica`
 
 export async function POST(req: NextRequest) {
   const user = await getAuthenticatedUser(req)
@@ -66,8 +67,12 @@ Reglas de tipo:
 - AMRAP → "AMRAP", For time → "For Time", EMOM/E2MOM → "EMOM", Max cal/reps → "For Max", resto → "Other"
 
 Ignora solo: celdas completamente vacías, filas de DESCANSO/separación, notas de nutrición e hidratación sin ejercicio.
+
+${TIMER_FORMAT}
+
+Para Warmup, Strength, Gymnastics, Core, Mobility: timerConfig = null salvo que haya un timer explícito.
 Devuelve SOLO un array JSON sin markdown:
-[{"date":"...","block":1,"title":"...","type":"...","description":"..."}]`
+[{"date":"...","block":1,"title":"...","type":"...","description":"...","timerConfig":...}]`
 
   } else if (mode === 'day') {
     promptText = `Analiza esta imagen con el entrenamiento del día y extrae todos los bloques.
