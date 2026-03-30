@@ -175,16 +175,6 @@ export default function ComunidadPage() {
                 ↓ Cargar semana
               </button>
             )}
-            {isOwner && wods.length > 0 && (deletingWeek ? (
-              <div className="flex gap-2 mt-1">
-                <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
-                <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
-              </div>
-            ) : (
-              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
-                × Borrar semana
-              </button>
-            ))}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}
@@ -195,8 +185,18 @@ export default function ComunidadPage() {
         </div>
 
         {/* Cabecera de comunidad */}
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-6 pt-4 pb-2 flex items-center justify-between">
           <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest">{community?.name}</p>
+          {isOwner && wods.length > 0 && (deletingWeek ? (
+            <div className="flex gap-2">
+              <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
+              <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+            </div>
+          ) : (
+            <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+              × Borrar semana
+            </button>
+          ))}
         </div>
 
         {/* Días de la semana */}
