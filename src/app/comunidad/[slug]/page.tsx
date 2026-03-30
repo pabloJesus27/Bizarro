@@ -151,15 +151,14 @@ export default function ComunidadPage() {
   }
 
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+    if (parsed.length > 0) {
+      const dates = parsed.map(w => w.date).sort()
+      await deleteWodsForWeek(dates[0], dates[dates.length - 1], slug)
+    }
     for (const { date, block, title, type, description, timerConfig } of parsed) {
       const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
       const extra = tc != null ? { timer_config: tc } : {}
-      try {
-        await createWod({ date, block, title, type, description, program: slug, ...extra })
-      } catch (err: unknown) {
-        if ((err as { code?: string })?.code === '23505') continue
-        throw err
-      }
+      await createWod({ date, block, title, type, description, program: slug, ...extra })
     }
     const joinedAt = isOwner ? undefined : membership?.joined_at
     const updated = await getWodsForCommunity(slug, weekDates[0], weekDates[6], joinedAt)

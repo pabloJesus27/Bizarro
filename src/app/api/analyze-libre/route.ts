@@ -52,19 +52,25 @@ Las fechas de esta semana son:
 
 ${WOD_FIELDS}
 
-IMPORTANTE sobre la estructura de la imagen:
-- Los números que puedas ver a la izquierda son números de fila del spreadsheet, NO números de bloque. Ignóralos para numerar los bloques.
-- Si hay filas de separación (DESCANSO, HIDRATACION, descanso activo, etc.) que ocupan toda la fila, ignóralas completamente pero SIGUE extrayendo los bloques que aparecen debajo — pertenecen a los mismos días de la semana.
-- Numera los bloques de cada día de forma secuencial (1, 2, 3...) en orden de arriba a abajo, ignorando las filas de separación.
-- Una celda vacía significa que ese día no tiene bloque en esa posición, no que la semana haya terminado.
+IMPORTANTE — estructura de la imagen:
+- La imagen es una tabla donde cada COLUMNA es un día de la semana: primera columna = Lunes, segunda = Martes, y así sucesivamente.
+- Cada FILA es un bloque de entrenamiento. Recorre cada columna completa de arriba a abajo y extrae todo el contenido que encuentres.
+- Las filas de separación (DESCANSO, HIDRATACION, descanso activo, etc.) ocupan toda la fila y NO son bloques. Ignóralas por completo y sigue leyendo las filas que hay debajo — siguen siendo bloques de ese mismo día.
+- Una celda vacía significa que ese día no tiene bloque en esa posición. No interrumpe la lectura del resto de filas.
+- Asigna block = 1 al primer contenido de ejercicio de cada día, block = 2 al segundo, etc. (numeración independiente por día, ignorando las filas de separación al contar).
 
 Reglas de tipo:
 - Calentamiento, activación, warm up → "Warmup"
 - Sets/reps con barra o pesas, halterofilia, powerlifting → "Strength"
 - Handstand, muscle up, ring, dominadas, gymnastics → "Gymnastics"
-- Ejercicios de core → "Core"
-- Estiramientos, movilidad, foam roller → "Mobility"
-- AMRAP → "AMRAP", For time → "For Time", EMOM/E2MOM → "EMOM", Max cal/reps → "For Max", resto → "Other"
+- Ejercicios de core, abdominales, plancha, GHD → "Core"
+- Estiramientos, movilidad, foam roller, recuperación activa → "Mobility"
+- AMRAP → "AMRAP"
+- For time / tiempo límite / completar X trabajo lo antes posible → "For Time"
+- Circuitos con ejercicios metabólicos (assault bike, remo, ski erg, burpees, wall balls, box jumps, double unders, kettlebell, thrusters...) aunque no diga explícitamente "for time" → "For Time"
+- EMOM/E2MOM → "EMOM", Max cal/reps / ventanas de X min a máximo esfuerzo → "For Max", resto → "Other"
+
+Reglas de título: identifica la parte PRINCIPAL del bloque. Para fuerza/halterofilia usa solo el ejercicio final (ej: "Cluster", "Clean & Jerk", "Back Squat"). Para WODs metabólicos usa los ejercicios principales (ej: "Assault Bike + Burpees", "Thrusters + Pull Ups"). Máximo 4 palabras.
 
 Ignora solo: celdas completamente vacías, filas de DESCANSO/separación, notas de nutrición e hidratación sin ejercicio.
 

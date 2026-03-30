@@ -48,7 +48,7 @@ Las fechas de esta semana son:
 Para cada celda con contenido, devuelve un WOD con:
 - date: fecha YYYY-MM-DD del día correspondiente
 - block: número de bloque (1 para Warm Up, 2 para Bloque #1, 3 para Bloque #2, 4 para Warm Up 2, 5 para Bloque #3, 6 para Bloque #4)
-- title: identifica la parte PRINCIPAL del bloque (no el calentamiento ni los ejercicios técnicos previos). Para bloques de fuerza/halterofilia usa solo el nombre del ejercicio principal (ej: "Cluster", "Clean & Jerk", "Back Squat"). Si hay una progresión técnica antes del ejercicio principal (muscle clean, tall clean, drills), ignórala y pon solo el ejercicio final. Para WODs metabólicos usa un título corto descriptivo. Máximo 4 palabras.
+- title: identifica la parte PRINCIPAL del bloque (no el calentamiento ni los ejercicios técnicos previos). Para bloques de fuerza/halterofilia usa solo el nombre del ejercicio principal (ej: "Cluster", "Clean & Jerk", "Back Squat"). Si hay una progresión técnica antes del ejercicio principal (muscle clean, tall clean, drills), ignórala y pon solo el ejercicio final. Para WODs metabólicos usa los ejercicios principales separados por '+' (ej: "Assault Bike + Burpees", "Thrusters + Pull Ups"). Máximo 4 palabras.
 - type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
 - description: texto completo exacto del WOD tal como aparece en la imagen
 - timerConfig: configuración del timer (ver reglas abajo), o null si no aplica
@@ -78,7 +78,7 @@ Reglas para timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"lab
 - Estructura compleja (AMRAP + descanso + AMRAP, etc.) → tantos bloques como partes haya con label descriptivo y seconds correcto
 - Nunca uses seconds: 0 en un bloque
 
-Ignora las celdas vacías y las filas de separación (DESCANSO, etc).
+Ignora las celdas vacías y las filas de separación (DESCANSO, etc), pero SIGUE extrayendo los bloques que aparecen debajo del separador — pertenecen a los mismos días. Los bloques tras el separador corresponden al Warm Up 2 (bloque 4) y siguientes.
 
 Devuelve SOLO un array JSON sin markdown ni explicaciones:
 [{"date":"...","block":1,"title":"...","type":"...","description":"...","timerConfig":...}]`,

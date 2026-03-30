@@ -106,6 +106,10 @@ function AdminContent() {
   }
 
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+    if (parsed.length > 0) {
+      const dates = parsed.map(w => w.date).sort()
+      await deleteWodsForWeek(dates[0], dates[dates.length - 1], programSlug as import('@/lib/types').Program)
+    }
     for (const { date, block, title, type, description, timerConfig } of parsed) {
       const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
       const extra = tc != null ? { timer_config: tc } : {}
