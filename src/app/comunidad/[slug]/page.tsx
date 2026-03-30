@@ -8,12 +8,14 @@ import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
 import LoadWeekModal from '@/components/LoadWeekModal'
+import PRCalculator from '@/components/PRCalculator'
 import {
   getCommunityInfo, getMyCommunityMembership,
   getWodsForCommunity, getResultsForWods, createWod,
   deleteWod, deleteWodsForDay, deleteWodsForWeek,
+  getMyPRs,
 } from '@/lib/db'
-import type { CommunityMembership } from '@/lib/db'
+import type { CommunityMembership, PersonalRecord } from '@/lib/db'
 import type { Community } from '@/lib/types'
 import type { Wod, Result } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
@@ -40,6 +42,7 @@ export default function ComunidadPage() {
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
   const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking'>('wod')
   const [wodError,      setWodError]      = useState<string | null>(null)
+  const [prs,              setPrs]              = useState<PersonalRecord[]>([])
   const [deletingId,       setDeletingId]       = useState<string | null>(null)
   const [deletingDay,      setDeletingDay]      = useState(false)
   const [deletingWeek,     setDeletingWeek]     = useState(false)
@@ -54,6 +57,8 @@ export default function ComunidadPage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
+
+    getMyPRs().catch(() => []).then(setPrs)
 
     getCommunityInfo(slug).then(async c => {
       if (!c) { router.push('/elegir-modo'); return }
@@ -322,6 +327,8 @@ export default function ComunidadPage() {
                       {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
+                    <div className="flex gap-6 items-start">
+                    <div className="flex-1 min-w-0">
                     {activeWod.description && (
                       <p className="text-neutral-300 text-sm font-mono whitespace-pre-wrap mb-6">{activeWod.description}</p>
                     )}
@@ -377,6 +384,9 @@ export default function ComunidadPage() {
                         )}
                       </div>
                     )}
+                    </div>{/* end flex-1 */}
+                    <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                    </div>{/* end flex gap-6 */}
                   </div>
                 )}
 
