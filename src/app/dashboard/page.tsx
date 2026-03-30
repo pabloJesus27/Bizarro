@@ -341,7 +341,7 @@ function DashboardContent() {
                           ) : (
                             <button
                               onClick={() => setModalWod(activeWod)}
-                              className="w-full bg-white text-black font-black text-lg uppercase tracking-widest rounded-xl px-6 py-5 hover:bg-neutral-100 active:scale-[0.98] transition-all"
+                              className="bg-white text-black font-black text-lg uppercase tracking-widest rounded-xl px-6 py-5 hover:bg-neutral-100 active:scale-[0.98] transition-all"
                             >
                               Registrar resultado
                             </button>
