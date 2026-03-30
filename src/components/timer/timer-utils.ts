@@ -1,43 +1,21 @@
-// Pool de <audio> para beeps en iOS (HTMLAudioElement usa media category
-// y suena aunque el móvil esté en silencio, a diferencia de Web Audio API).
-const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
-const POOL_SIZE = 6
-let pool: HTMLAudioElement[] = []
-let poolIdx = 0
-
-function getPoolAudio(): HTMLAudioElement {
-  if (pool.length === 0) {
-    pool = Array.from({ length: POOL_SIZE }, () => new Audio('/beep.wav'))
-  }
-  const a = pool[poolIdx % POOL_SIZE]
-  poolIdx++
-  return a
-}
-
-let goAudio: HTMLAudioElement | null = null
-function getGoAudio(): HTMLAudioElement {
-  if (!goAudio) goAudio = new Audio('/go.wav')
-  return goAudio
-}
-
 export function keepAudioContextAlive(_ctx: AudioContext) {
-  // No-op: en iOS usamos el pool de <audio> en su lugar
+  // No-op
+}
+
+export function flash(color = 'rgba(255,255,255,0.5)') {
+  if (typeof document === 'undefined') return
+  const div = document.createElement('div')
+  div.style.cssText = `position:fixed;inset:0;background:${color};z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.35s`
+  document.body.appendChild(div)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    div.style.opacity = '0'
+    setTimeout(() => div.remove(), 400)
+  }))
 }
 
 export function beepWarning(ctx: AudioContext) {
-  // 3 beeps cortos rápidos para aviso de 10 segundos + voz en desktop
   speak('Diez segundos')
-  if (isIOS) {
-    [0, 180, 360].forEach(delay => {
-      setTimeout(() => {
-        const a = getPoolAudio()
-        a.currentTime = 0
-        a.play().catch(() => {})
-      }, delay)
-    })
-    return
-  }
-  // Desktop: 3 pitidos
+  flash('rgba(255,140,0,0.55)')
   const play = () => {
     [0, 200, 400].forEach(delay => {
       setTimeout(() => {
@@ -58,13 +36,7 @@ export function beepWarning(ctx: AudioContext) {
 }
 
 export function beepGo(ctx: AudioContext) {
-  if (isIOS) {
-    const a = getGoAudio()
-    a.currentTime = 0
-    a.play().catch(() => {})
-    return
-  }
-  // Desktop: dos tonos ascendentes
+  flash('rgba(0,220,100,0.55)')
   const play = () => {
     [880, 1100].forEach((freq, i) => {
       setTimeout(() => {
@@ -92,7 +64,6 @@ export function fmt(s: number): string {
 
 export function speak(text: string) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return
-  // iOS Safari: speechSynthesis interfiere con WebAudio y suspende el AudioContext
   if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return
   window.speechSynthesis.cancel()
   const u = new SpeechSynthesisUtterance(text)
@@ -103,13 +74,7 @@ export function speak(text: string) {
 }
 
 export function beep(ctx: AudioContext, freq = 880, dur = 0.3, vol = 1.0) {
-  if (isIOS) {
-    const a = getPoolAudio()
-    a.currentTime = 0
-    a.volume = Math.min(1, vol)
-    a.play().catch(() => {})
-    return
-  }
+  flash('rgba(255,255,255,0.4)')
   const play = () => {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
