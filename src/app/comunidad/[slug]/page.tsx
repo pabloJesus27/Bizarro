@@ -11,6 +11,7 @@ import LoadWeekModal from '@/components/LoadWeekModal'
 import {
   getCommunityInfo, getMyCommunityMembership,
   getWodsForCommunity, getResultsForWods, createWod,
+  deleteWod, deleteWodsForDay, deleteWodsForWeek,
 } from '@/lib/db'
 import type { CommunityMembership } from '@/lib/db'
 import type { Community } from '@/lib/types'
@@ -39,6 +40,9 @@ export default function ComunidadPage() {
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
   const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking'>('wod')
   const [wodError,      setWodError]      = useState<string | null>(null)
+  const [deletingId,    setDeletingId]    = useState<string | null>(null)
+  const [deletingDay,   setDeletingDay]   = useState(false)
+  const [deletingWeek,  setDeletingWeek]  = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -93,6 +97,24 @@ export default function ComunidadPage() {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
     setSelectedBlock(firstBlock?.block ?? 1)
   }, [selectedDate, wods])
+
+  async function handleDelete(id: string) {
+    await deleteWod(id)
+    setWods(prev => prev.filter(w => w.id !== id))
+    setDeletingId(null)
+  }
+
+  async function handleDeleteDay() {
+    await deleteWodsForDay(selectedDate, slug)
+    setWods(prev => prev.filter(w => w.date !== selectedDate))
+    setDeletingDay(false)
+  }
+
+  async function handleDeleteWeek() {
+    await deleteWodsForWeek(weekDates[0], weekDates[6], slug)
+    setWods([])
+    setDeletingWeek(false)
+  }
 
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
     for (const { date, block, title, type, description, timerConfig } of parsed) {
@@ -153,6 +175,16 @@ export default function ComunidadPage() {
                 ↓ Cargar semana
               </button>
             )}
+            {isOwner && wods.length > 0 && (deletingWeek ? (
+              <div className="flex gap-2 mt-1">
+                <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
+                <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+              </div>
+            ) : (
+              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                × Borrar semana
+              </button>
+            ))}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}
@@ -276,6 +308,32 @@ export default function ComunidadPage() {
                         Tu resultado: {getScoreDisplay(activeWod, activeResult)}
                         {activeResult.rx && ' · RX'}
                       </p>
+                    )}
+
+                    {/* Borrar WOD + día (solo owner) */}
+                    {isOwner && (
+                      <div className="mt-6 flex flex-col gap-3 pt-4 border-t border-neutral-900">
+                        {deletingId === activeWod.id ? (
+                          <div className="flex gap-2">
+                            <button onClick={() => handleDelete(activeWod.id)} className="flex-1 bg-red-600 text-white text-xs font-black uppercase tracking-widest rounded-xl px-4 py-2.5 hover:bg-red-500 transition">Confirmar</button>
+                            <button onClick={() => setDeletingId(null)} className="flex-1 border border-neutral-700 text-neutral-400 text-xs font-mono uppercase tracking-widest rounded-xl px-4 py-2.5 transition">Cancelar</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setDeletingId(activeWod.id)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition text-left">
+                            × Eliminar este WOD
+                          </button>
+                        )}
+                        {deletingDay ? (
+                          <div className="flex gap-3">
+                            <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono uppercase tracking-widest">Confirmar borrar día</button>
+                            <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Cancelar</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition text-left">
+                            × Borrar todos los WODs de este día
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

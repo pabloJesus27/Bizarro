@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getProfile, getWodsForWeek, createWod, deleteWod, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
+import { getProfile, getWodsForWeek, createWod, deleteWod, deleteWodsForDay, deleteWodsForWeek, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import CoachHeader from '@/components/CoachHeader'
 import { CoachPageLoading } from '@/components/PageLoading'
@@ -31,6 +31,8 @@ function AdminContent() {
   const [modalOpen,     setModalOpen]     = useState(false)
   const [editingWod,    setEditingWod]    = useState<Wod | undefined>()
   const [deletingId,    setDeletingId]    = useState<string | null>(null)
+  const [deletingDay,   setDeletingDay]   = useState(false)
+  const [deletingWeek,  setDeletingWeek]  = useState(false)
   const [pendingBlock,  setPendingBlock]  = useState<number | null>(null)
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
   const [profileName,   setProfileName]   = useState('')
@@ -91,6 +93,18 @@ function AdminContent() {
     setDeletingId(null)
   }
 
+  async function handleDeleteDay() {
+    await deleteWodsForDay(selectedDate, programSlug)
+    setWods(prev => prev.filter(w => w.date !== selectedDate))
+    setDeletingDay(false)
+  }
+
+  async function handleDeleteWeek() {
+    await deleteWodsForWeek(weekDates[0], weekDates[6], programSlug)
+    setWods([])
+    setDeletingWeek(false)
+  }
+
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
     for (const { date, block, title, type, description, timerConfig } of parsed) {
       const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
@@ -142,6 +156,16 @@ function AdminContent() {
             >
               ↓ Cargar semana
             </button>
+            {wods.length > 0 && (deletingWeek ? (
+              <div className="flex gap-2 mt-1">
+                <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
+                <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+              </div>
+            ) : (
+              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                × Borrar semana
+              </button>
+            ))}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}
@@ -291,6 +315,20 @@ function AdminContent() {
               </div>
 
               {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
+
+              {/* Borrar día */}
+              <div className="pt-2 border-t border-neutral-900">
+                {deletingDay ? (
+                  <div className="flex gap-3">
+                    <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono uppercase tracking-widest">Confirmar borrar día</button>
+                    <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Cancelar</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition">
+                    × Borrar todos los WODs de este día
+                  </button>
+                )}
+              </div>
             </div>
           ) : (dayWods.length === 0 || pendingBlock !== null) ? (
             <WodModal

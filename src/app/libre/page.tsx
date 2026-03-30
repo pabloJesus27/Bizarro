@@ -10,6 +10,7 @@ import ResultModal from '@/components/ResultModal'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import {
   getProfile, getWodsForWeekLibre, createLibreWod, deleteWod,
+  deleteWodsForDay, deleteWodsForWeek,
   getResultsForWods, getMyPRs, getMyOwnedCommunity,
 } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
@@ -36,6 +37,8 @@ export default function LibrePage() {
   const [loading,        setLoading]        = useState(true)
   const [editingWod,     setEditingWod]     = useState<Wod | undefined>()
   const [deletingId,     setDeletingId]     = useState<string | null>(null)
+  const [deletingDay,    setDeletingDay]    = useState(false)
+  const [deletingWeek,   setDeletingWeek]   = useState(false)
   const [modalWod,       setModalWod]       = useState<Wod | null>(null)
   const [newPR,          setNewPR]          = useState<string | null>(null)
   const [generatingTimer, setGeneratingTimer] = useState(false)
@@ -130,6 +133,20 @@ export default function LibrePage() {
     setSelectedBlock(firstBlock?.block ?? 1)
   }
 
+  async function handleDeleteDay() {
+    if (!user) return
+    await deleteWodsForDay(selectedDate, 'libre', user.id)
+    setWods(prev => prev.filter(w => w.date !== selectedDate))
+    setDeletingDay(false)
+  }
+
+  async function handleDeleteWeek() {
+    if (!user) return
+    await deleteWodsForWeek(weekDates[0], weekDates[6], 'libre', user.id)
+    setWods([])
+    setDeletingWeek(false)
+  }
+
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
     if (!user) return
     for (const { date, block, title, type, description, timerConfig } of parsed) {
@@ -215,6 +232,16 @@ export default function LibrePage() {
             >
               ↓ Cargar semana
             </button>
+            {wods.length > 0 && (deletingWeek ? (
+              <div className="flex gap-2 mt-1">
+                <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
+                <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+              </div>
+            ) : (
+              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                × Borrar semana
+              </button>
+            ))}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}
@@ -411,6 +438,19 @@ export default function LibrePage() {
                     </button>
                   )}
                 </div>
+              {/* Borrar día */}
+              <div className="pt-2 border-t border-neutral-900">
+                {deletingDay ? (
+                  <div className="flex gap-3">
+                    <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono uppercase tracking-widest">Confirmar borrar día</button>
+                    <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Cancelar</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition">
+                    × Borrar todos los WODs de este día
+                  </button>
+                )}
+              </div>
               </div>
               <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
               </div>

@@ -75,6 +75,20 @@ export async function deleteWod(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function deleteWodsForDay(date: string, program: string, ownerId?: string): Promise<void> {
+  let q = supabase.from('wods').delete().eq('date', date).eq('program', program)
+  if (ownerId) q = q.eq('owner_id', ownerId)
+  const { error } = await q
+  if (error) throw error
+}
+
+export async function deleteWodsForWeek(from: string, to: string, program: string, ownerId?: string): Promise<void> {
+  let q = supabase.from('wods').delete().gte('date', from).lte('date', to).eq('program', program)
+  if (ownerId) q = q.eq('owner_id', ownerId)
+  const { error } = await q
+  if (error) throw error
+}
+
 export interface RankingEntry {
   id: string
   user_id: string
