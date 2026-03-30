@@ -44,6 +44,7 @@ Reglas:
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
 - WOD COMPLEJO con fases distintas y descanso explícito entre ellas (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
 - "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
+- "X sets" CON descanso explícito entre sets O con intervalos on/off por ejercicio → mix con todos los bloques expandidos
 
 Ejemplos de WODs complejos → mix:
 - "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
@@ -52,6 +53,7 @@ Ejemplos de WODs complejos → mix:
 - "Cada 3 min x 5 series: …" → 5 blocks de 180s con label descriptivo
 - "Durante 20 min, cada 2'30'': ejercicio A + ejercicio B, resto del tiempo ejercicio C" → (20*60)/(2*60+30) = 8 bloques de 150s con label que combine los ejercicios (ej: "BikeErg + Sandbag")
 - "Durante X min, cada Y min: …" → (X*60 / Y*60) bloques de Y*60s con label descriptivo
+- "3 sets: 30" on 30" off — max DU / max thrusters / max burpees, rest 90" entre sets" → 17 bloques: por cada set expande cada ejercicio como [Ejercicio(30s), Descanso(30s)], añade Descanso(90s) al final de cada set excepto el último. Resultado: [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s),Desc(90s)] × 2 + [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s)]
 
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
