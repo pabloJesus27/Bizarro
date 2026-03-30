@@ -1,7 +1,10 @@
 'use client'
 
+const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+
 export function ClockFace({ display, label, onStart, disabled }: { display: string; label: string; onStart: () => void; disabled?: boolean }) {
   return (
+    <div className="flex flex-col items-center gap-3">
     <div className="relative w-72 h-72">
       <svg viewBox="0 0 200 200" className="w-full h-full">
         <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
@@ -34,6 +37,10 @@ export function ClockFace({ display, label, onStart, disabled }: { display: stri
           Listo
         </button>
       </div>
+    </div>
+    {isIOS && (
+      <p className="text-neutral-600 text-xs font-mono text-center">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
+    )}
     </div>
   )
 }

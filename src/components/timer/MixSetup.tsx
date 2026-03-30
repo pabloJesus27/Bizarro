@@ -326,6 +326,9 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       >
         Listo
       </button>
+      {/iPad|iPhone|iPod/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '') && (
+        <p className="text-neutral-600 text-xs font-mono text-center">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
+      )}
     </div>
   )
 }
