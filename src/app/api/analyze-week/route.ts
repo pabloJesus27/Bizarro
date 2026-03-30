@@ -45,9 +45,16 @@ Las fechas de esta semana son:
 - VIERNES = ${viernes}
 - SÁBADO = ${sabado}
 
+IMPORTANTE — estructura de la imagen:
+- La imagen es una tabla donde cada COLUMNA es un día de la semana: primera columna = Lunes, segunda = Martes, y así sucesivamente.
+- Cada FILA es un bloque de entrenamiento. Recorre cada columna completa de arriba a abajo y extrae todo el contenido que encuentres.
+- Las filas de separación (DESCANSO, HIDRATACION, descanso activo, etc.) ocupan toda la fila y NO son bloques. Ignóralas por completo y sigue leyendo las filas que hay debajo — siguen siendo bloques de ese mismo día.
+- Una celda vacía significa que ese día no tiene bloque en esa posición. No interrumpe la lectura del resto de filas.
+- Asigna block = 1 al primer contenido de ejercicio de cada día, block = 2 al segundo, etc. (numeración independiente por día, ignorando las filas de separación al contar).
+
 Para cada celda con contenido, devuelve un WOD con:
 - date: fecha YYYY-MM-DD del día correspondiente
-- block: número de bloque (1 para Warm Up, 2 para Bloque #1, 3 para Bloque #2, 4 para Warm Up 2, 5 para Bloque #3, 6 para Bloque #4)
+- block: número de bloque según la regla de arriba
 - title: identifica la parte PRINCIPAL del bloque (no el calentamiento ni los ejercicios técnicos previos). Para bloques de fuerza/halterofilia usa solo el nombre del ejercicio principal (ej: "Cluster", "Clean & Jerk", "Back Squat"). Si hay una progresión técnica antes del ejercicio principal (muscle clean, tall clean, drills), ignórala y pon solo el ejercicio final. Para WODs metabólicos usa los ejercicios principales separados por '+' (ej: "Assault Bike + Burpees", "Thrusters + Pull Ups"). Máximo 4 palabras.
 - type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
 - description: texto completo exacto del WOD tal como aparece en la imagen
@@ -78,7 +85,7 @@ Reglas para timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"lab
 - N sets con M ejercicios en formato "X" on X" off" y descanso Y" entre sets → expande completamente: por cada set crea [Ejercicio1(Xs), Descanso(Xs), Ejercicio2(Xs), Descanso(Xs), ...] y añade Descanso(Ys) al final de cada set excepto el último. Ej: "3 sets, 30" on 30" off, DU / Thrusters / Burpees, rest 90" entre sets" → 17 bloques: [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s),Desc(90s)] × 2 + [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s)]
 - Nunca uses seconds: 0 en un bloque
 
-Ignora las celdas vacías y las filas de separación (DESCANSO, etc), pero SIGUE extrayendo los bloques que aparecen debajo del separador — pertenecen a los mismos días. Los bloques tras el separador corresponden al Warm Up 2 (bloque 4) y siguientes.
+Devuelve SOLO un array JSON sin markdown ni explicaciones:
 
 Devuelve SOLO un array JSON sin markdown ni explicaciones:
 [{"date":"...","block":1,"title":"...","type":"...","description":"...","timerConfig":...}]`,
