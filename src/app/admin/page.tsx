@@ -115,14 +115,10 @@ function AdminContent() {
     setWods(updated)
   }
 
-  const dayWods   = wods.filter(w => w.date === selectedDate)
-  const activeWod = dayWods.find(w => w.block === selectedBlock)
+  const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
+  const activeWod = pendingBlock === null ? dayWods.find(w => w.block === selectedBlock) : undefined
 
-  if (authLoading || loading) {
-    return (
-      <CoachPageLoading />
-    )
-  }
+  if (authLoading || loading) return <CoachPageLoading />
 
   return (
     <>
@@ -175,173 +171,191 @@ function AdminContent() {
           </button>
         </div>
 
-        {/* Day tabs */}
+        {/* Day selector */}
         <div className="border-b border-neutral-900 overflow-x-auto [&::-webkit-scrollbar]:hidden">
-          <div className="flex min-w-full">
-            {weekDates.map((date) => {
-              const d          = new Date(date + 'T00:00:00')
-              const isToday    = date === today
-              const isSelected = date === selectedDate
-              const hasWod     = wods.some(w => w.date === date)
-
+          <div className="flex min-w-full gap-1 px-6 pt-2 pb-4">
+            {weekDates.map(d => {
+              if (isSunday(d)) return null
+              const hasWods    = wods.some(w => w.date === d)
+              const isSelected = d === selectedDate
+              const isToday    = d === today
               return (
                 <button
-                  key={date}
-                  onClick={() => { setSelectedDate(date); setSelectedBlock(1); setPendingBlock(null) }}
-                  className={`flex-1 min-w-[3rem] flex flex-col items-center gap-1 px-1 sm:px-5 py-4 border-b-2 transition-colors ${
-                    isSelected ? 'border-white' : 'border-transparent'
+                  key={d}
+                  onClick={() => { setSelectedDate(d); setSelectedBlock(1); setPendingBlock(null) }}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition min-w-[44px] flex-1 ${
+                    isSelected ? 'bg-white' : 'hover:bg-neutral-900'
                   }`}
                 >
-                  <span className={`text-xs uppercase tracking-widest font-mono ${
-                    isSelected ? 'text-neutral-400' : 'text-neutral-700'
-                  }`}>
-                    {DAY_SHORT[d.getDay()]}
+                  <span className={`text-xs font-mono uppercase tracking-widest ${isSelected ? 'text-black' : 'text-neutral-500'}`}>
+                    {DAY_SHORT[new Date(d + 'T12:00:00').getDay()]}
                   </span>
-                  <span className={`text-lg font-black leading-none ${
-                    isSelected ? 'text-white' : isToday ? 'text-neutral-400' : 'text-neutral-600'
-                  }`}>
-                    {d.getDate()}
+                  <span className={`text-sm font-black ${isSelected ? 'text-black' : isToday ? 'text-white' : 'text-neutral-500'}`}>
+                    {new Date(d + 'T12:00:00').getDate()}
                   </span>
-                  <div className={`w-1 h-1 rounded-full ${
-                    hasWod ? (isSelected ? 'bg-white' : 'bg-neutral-600') : 'bg-transparent'
-                  }`} />
+                  {hasWods && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-black' : 'bg-neutral-600'}`} />}
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col px-6 py-8 max-w-2xl mx-auto w-full">
+        {/* Contenido principal */}
+        <div className="flex flex-col flex-1 lg:flex-row">
 
-          {isSunday(selectedDate) ? (
-            <div className="flex-1 flex flex-col justify-center">
-              <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-4">Domingo</p>
-              <h2 className="text-neutral-800 font-black text-6xl sm:text-7xl uppercase tracking-tighter leading-none">
-                Descanso
-              </h2>
-            </div>
-          ) : (<>
-
-          {/* Block tabs — solo bloques con contenido + tab pendiente + botón añadir */}
-          <div className="flex gap-2 mb-8 flex-wrap">
-            {dayWods.map((wod) => (
+          {/* Panel izquierdo: lista de bloques + botón añadir */}
+          <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden">
+            {isSunday(selectedDate) ? (
+              <div className="px-6 py-4">
+                <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Descanso</p>
+              </div>
+            ) : (<>
+              {dayWods.map(wod => {
+                const isActive = wod.block === selectedBlock && pendingBlock === null
+                return (
+                  <button
+                    key={wod.id}
+                    onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null) }}
+                    className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                      isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                    }`}
+                  >
+                    <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                      {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+                    </p>
+                    <p className="text-white font-black text-sm">{wod.title}</p>
+                  </button>
+                )
+              })}
+              {/* Botón nuevo bloque */}
               <button
-                key={wod.block}
-                onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null) }}
-                className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition ${
-                  selectedBlock === wod.block && pendingBlock === null
-                    ? 'bg-white text-black'
-                    : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
+                onClick={() => {
+                  const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
+                  setPendingBlock(next)
+                  setSelectedBlock(next)
+                }}
+                className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                  pendingBlock !== null ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                 }`}
               >
-                {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+                <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">+ Añadir bloque</p>
               </button>
-            ))}
-            {pendingBlock !== null && (
-              <div className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono bg-white text-black">
-                Bloque {pendingBlock}
-              </div>
-            )}
-            {dayWods.length === 0 && pendingBlock === null && (
-              <div className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono bg-white text-black">
-                Bloque 1
-              </div>
-            )}
-            <button
-              onClick={() => {
-                const nextBlock = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
-                setPendingBlock(nextBlock)
-                setSelectedBlock(nextBlock)
-              }}
-              className="px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition border border-dashed border-neutral-700 text-neutral-600 hover:border-neutral-500 hover:text-neutral-400"
-            >
-              + Bloque
-            </button>
+            </>)}
           </div>
 
-          {/* Block content */}
-          {activeWod ? (
-            <div className="flex flex-col gap-6">
-              {/* Type badge */}
-              <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1 w-fit">
-                <span className="text-neutral-400 text-xs uppercase tracking-widest font-mono">
-                  {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
-                </span>
+          {/* Panel derecho */}
+          <div className="flex-1 flex flex-col min-w-0">
+
+            {isSunday(selectedDate) ? (
+              <div className="flex-1 flex flex-col justify-center px-8 py-8">
+                <h2 className="text-neutral-800 font-black text-6xl sm:text-7xl uppercase tracking-tighter leading-none">Descanso</h2>
               </div>
+            ) : (<>
 
-              {/* Title */}
-              <h1 className="text-white font-black text-5xl sm:text-6xl leading-none tracking-tighter uppercase">
-                {activeWod.title}
-              </h1>
+              {/* Formulario nuevo bloque (inline) */}
+              {pendingBlock !== null && (
+                <div className="p-6">
+                  <WodModal
+                    inline
+                    date={selectedDate}
+                    block={pendingBlock}
+                    program={programSlug}
+                    onClose={() => setPendingBlock(null)}
+                    onSaved={handleSaved}
+                  />
+                </div>
+              )}
 
-              {/* Description */}
-              <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
-                {activeWod.description}
-              </pre>
-
-              {/* Actions */}
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => { setEditingWod(activeWod); setModalOpen(true) }}
-                  className="flex-1 border border-neutral-700 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-white transition text-sm"
-                >
-                  Editar
-                </button>
-
-                {deletingId === activeWod.id ? (
-                  <div className="flex-1 flex gap-2">
-                    <button
-                      onClick={() => handleDelete(activeWod.id)}
-                      className="flex-1 bg-red-600 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:bg-red-500 transition text-sm"
-                    >
-                      Confirmar
-                    </button>
-                    <button
-                      onClick={() => setDeletingId(null)}
-                      className="flex-1 border border-neutral-700 text-neutral-400 font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-neutral-500 transition text-sm"
-                    >
-                      Cancelar
+              {/* Detalle WOD */}
+              {activeWod && pendingBlock === null && (
+                <div className="flex-1 flex flex-col">
+                  {/* Tabs */}
+                  <div className="flex border-b border-neutral-900 px-6">
+                    <button className="py-3 mr-6 text-xs font-mono uppercase tracking-widest border-b-2 border-white text-white">
+                      WOD
                     </button>
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setDeletingId(activeWod.id)}
-                    className="flex-1 border border-neutral-800 text-neutral-600 font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-red-800 hover:text-red-500 transition text-sm"
-                  >
-                    Eliminar
-                  </button>
-                )}
-              </div>
 
-              {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
+                  <div className="flex-1 p-6 flex flex-col gap-5 max-w-2xl">
+                    {/* Tipo */}
+                    <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1 w-fit">
+                      <span className="text-neutral-400 text-xs uppercase tracking-widest font-mono">
+                        {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
+                      </span>
+                    </div>
 
-              {/* Borrar día */}
-              <div className="pt-2 border-t border-neutral-900">
-                {deletingDay ? (
-                  <div className="flex gap-3">
-                    <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono uppercase tracking-widest">Confirmar borrar día</button>
-                    <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Cancelar</button>
+                    {/* Título */}
+                    <h1 className="text-white font-black text-4xl sm:text-5xl leading-none tracking-tighter uppercase">
+                      {activeWod.title}
+                    </h1>
+
+                    {/* Descripción */}
+                    <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
+                      {activeWod.description}
+                    </pre>
+
+                    {/* Acciones */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => { setEditingWod(activeWod); setModalOpen(true) }}
+                        className="flex-1 border border-neutral-700 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-white transition text-sm"
+                      >
+                        Editar
+                      </button>
+                      {deletingId === activeWod.id ? (
+                        <div className="flex-1 flex gap-2">
+                          <button
+                            onClick={() => handleDelete(activeWod.id)}
+                            className="flex-1 bg-red-600 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:bg-red-500 transition text-sm"
+                          >
+                            Confirmar
+                          </button>
+                          <button
+                            onClick={() => setDeletingId(null)}
+                            className="flex-1 border border-neutral-700 text-neutral-400 font-bold uppercase tracking-widest rounded-xl px-4 py-3 transition text-sm"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeletingId(activeWod.id)}
+                          className="flex-1 border border-neutral-800 text-neutral-600 font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-red-800 hover:text-red-500 transition text-sm"
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
+
+                    {activeWod.type !== 'Warmup' && <RankingSection wod={activeWod} />}
+
+                    {/* Borrar día */}
+                    <div className="pt-2 border-t border-neutral-900">
+                      {deletingDay ? (
+                        <div className="flex gap-3">
+                          <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono uppercase tracking-widest">Confirmar borrar día</button>
+                          <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Cancelar</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition">
+                          × Borrar todos los WODs de este día
+                        </button>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition">
-                    × Borrar todos los WODs de este día
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (dayWods.length === 0 || pendingBlock !== null) ? (
-            <WodModal
-              inline
-              date={selectedDate}
-              block={pendingBlock ?? 1}
-              program={programSlug}
-              onClose={() => {}}
-              onSaved={handleSaved}
-            />
-          ) : null}
-          </>)}
+                </div>
+              )}
+
+              {/* Estado vacío */}
+              {dayWods.length === 0 && pendingBlock === null && (
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Sin WODs este día</p>
+                </div>
+              )}
+            </>)}
+          </div>
         </div>
+
       </main>
 
       {modalOpen && (

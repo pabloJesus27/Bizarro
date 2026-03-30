@@ -27,7 +27,7 @@ function DashboardContent() {
 
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)
-  const [selectedBlock, setSelectedBlock] = useState(0)
+  const [selectedBlock, setSelectedBlock] = useState(1)
   const [wods,          setWods]          = useState<Wod[]>([])
   const [results,       setResults]       = useState<Result[]>([])
   const [loading,       setLoading]       = useState(true)
@@ -47,7 +47,6 @@ function DashboardContent() {
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
-  // Carga inicial: perfil
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
@@ -63,7 +62,6 @@ function DashboardContent() {
     })
   }, [authLoading, user, router])
 
-  // Carga WODs cuando cambia semana o programa
   useEffect(() => {
     if (loading || !program) return
     setWodLoading(true)
@@ -89,20 +87,14 @@ function DashboardContent() {
       .finally(() => setWodLoading(false))
   }, [weekDates, program, loading])
 
-  // Al cambiar de semana, seleccionar el lunes (o hoy si es la semana actual)
   useEffect(() => {
-    if (weekOffset === 0) {
-      setSelectedDate(today)
-    } else {
-      setSelectedDate(weekDates[0])
-    }
-    setSelectedBlock(0)
+    setSelectedDate(weekOffset === 0 ? today : weekDates[0])
+    setSelectedBlock(1)
   }, [weekOffset, weekDates, today])
 
-  // Reset block tab when day changes — seleccionar el primer bloque disponible
   useEffect(() => {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
-    setSelectedBlock(firstBlock ? firstBlock.block - 1 : 0)
+    setSelectedBlock(firstBlock?.block ?? 1)
     setActiveTab('wod')
   }, [selectedDate, wods])
 
@@ -122,7 +114,6 @@ function DashboardContent() {
 
   async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
     if (wod.timer_config) {
-      // timer_config may be stored as raw blocks array — wrap in mix format if needed
       const cfg = Array.isArray(wod.timer_config)
         ? { type: 'mix' as const, blocks: wod.timer_config }
         : wod.timer_config
@@ -147,15 +138,11 @@ function DashboardContent() {
     }
   }
 
-  const dayWods      = wods.filter(w => w.date === selectedDate)
-  const activeWod    = dayWods.find(w => w.block === selectedBlock + 1) ?? null
+  const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
+  const activeWod = dayWods.find(w => w.block === selectedBlock) ?? null
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
 
-  if (authLoading || loading) {
-    return (
-      <AthletePageLoading />
-    )
-  }
+  if (authLoading || loading) return <AthletePageLoading />
 
   return (
     <>
@@ -192,202 +179,192 @@ function DashboardContent() {
           </button>
         </div>
 
-        {/* Week tabs */}
+        {/* Day selector */}
         <div className="border-b border-neutral-900 overflow-x-auto [&::-webkit-scrollbar]:hidden">
-          <div className="flex min-w-full">
-            {weekDates.map((date) => {
-              const d          = new Date(date + 'T00:00:00')
-              const isToday    = date === today
-              const isSelected = date === selectedDate
-              const hasWod     = wods.some(w => w.date === date)
-
+          <div className="flex min-w-full gap-1 px-6 pt-2 pb-4">
+            {weekDates.map(d => {
+              if (isSunday(d)) return null
+              const hasWods    = wods.some(w => w.date === d)
+              const isSelected = d === selectedDate
+              const isToday    = d === today
               return (
                 <button
-                  key={date}
-                  onClick={() => setSelectedDate(date)}
-                  className={`flex-1 min-w-[3rem] flex flex-col items-center gap-1 px-1 sm:px-5 py-4 border-b-2 transition-colors ${
-                    isSelected ? 'border-white' : 'border-transparent'
+                  key={d}
+                  onClick={() => { setSelectedDate(d); setSelectedBlock(1); setActiveTab('wod') }}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition min-w-[44px] flex-1 ${
+                    isSelected ? 'bg-white' : 'hover:bg-neutral-900'
                   }`}
                 >
-                  <span className={`text-xs uppercase tracking-widest font-mono ${
-                    isSelected ? 'text-neutral-400' : 'text-neutral-700'
-                  }`}>
-                    {DAY_SHORT[d.getDay()]}
+                  <span className={`text-xs font-mono uppercase tracking-widest ${isSelected ? 'text-black' : 'text-neutral-500'}`}>
+                    {DAY_SHORT[new Date(d + 'T12:00:00').getDay()]}
                   </span>
-                  <span className={`text-lg font-black leading-none ${
-                    isSelected ? 'text-white' : isToday ? 'text-neutral-400' : 'text-neutral-600'
-                  }`}>
-                    {d.getDate()}
+                  <span className={`text-sm font-black ${isSelected ? 'text-black' : isToday ? 'text-white' : 'text-neutral-500'}`}>
+                    {new Date(d + 'T12:00:00').getDate()}
                   </span>
-                  <div className={`w-1 h-1 rounded-full ${
-                    hasWod ? (isSelected ? 'bg-white' : 'bg-neutral-600') : 'bg-transparent'
-                  }`} />
+                  {hasWods && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-black' : 'bg-neutral-600'}`} />}
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col lg:flex-row px-6 py-8 max-w-5xl mx-auto w-full gap-8">
+        {wodError && <div className="px-6 py-4 text-red-400 text-xs font-mono">{wodError}</div>}
 
-          {/* Coach message — desktop */}
-          {coachMessage && (
-            <div className="hidden lg:block w-64 shrink-0 pt-0">
-              <CoachMessageCard message={coachMessage} />
+        {wodLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex gap-1.5">
+              <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" />
+              <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" />
+              <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" />
             </div>
-          )}
-
-          <div className="flex-1 flex flex-col min-w-0">
-
-          {wodError && (
-            <p className="text-red-400 text-sm text-center py-4">{wodError}</p>
-          )}
-
-          {wodLoading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
-            </div>
-          ) : isSunday(selectedDate) ? (
-            <div className="flex-1 flex flex-col justify-center">
-              <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-4">Domingo</p>
-              <h2 className="text-neutral-800 font-black text-6xl sm:text-7xl uppercase tracking-tighter leading-none">
-                Descanso
-              </h2>
-            </div>
-          ) : (<>
-
-          {/* Block tabs — solo bloques con contenido */}
-          <div className="flex gap-2 mb-8 flex-wrap">
-            {dayWods.map((wod) => {
-              const isActive = selectedBlock === wod.block - 1
-              return (
-                <button
-                  key={wod.block}
-                  onClick={() => { setSelectedBlock(wod.block - 1); setActiveTab('wod') }}
-                  className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition ${
-                    isActive
-                      ? 'bg-white text-black'
-                      : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
-                  }`}
-                >
-                  {WOD_TYPE_LABEL[wod.type] ?? wod.type}
-                </button>
-              )
-            })}
           </div>
+        ) : isSunday(selectedDate) ? (
+          <div className="flex-1 flex flex-col justify-center px-6">
+            <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-4">Domingo</p>
+            <h2 className="text-neutral-800 font-black text-6xl sm:text-7xl uppercase tracking-tighter leading-none">Descanso</h2>
+          </div>
+        ) : dayWods.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Sin entrenos este día</p>
+          </div>
+        ) : (
+          <div className="flex flex-col flex-1 lg:flex-row">
 
-          {activeWod ? (
-            <>
-            <div className="flex-1 min-w-0">
-              {/* Type badge / Ranking tabs */}
-              <div className="flex items-center gap-2 mb-5">
-                <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1">
-                  <span className="text-neutral-400 text-xs uppercase tracking-widest font-mono">
-                    {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
-                  </span>
-                </div>
-                {!['Warmup', 'Gymnastics', 'Core', 'Mobility', 'Other'].includes(activeWod.type) && (
+            {/* Panel izquierdo: lista de bloques */}
+            <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden">
+              {dayWods.map(wod => {
+                const result   = results.find(r => r.wod_id === wod.id)
+                const isActive = wod.block === selectedBlock
+                return (
                   <button
-                    onClick={() => setActiveTab(t => t === 'ranking' ? 'wod' : 'ranking')}
-                    className={`inline-flex items-center px-4 py-1 rounded-full text-xs uppercase tracking-widest font-mono transition border ${
-                      activeTab === 'ranking'
-                        ? 'bg-white text-black border-white'
-                        : 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'
+                    key={wod.id}
+                    onClick={() => { setSelectedBlock(wod.block); setActiveTab('wod') }}
+                    className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                      isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                     }`}
                   >
-                    Ranking
-                  </button>
-                )}
-              </div>
-
-              {activeTab === 'ranking' ? (
-                <RankingSection wod={activeWod} refreshKey={rankingKey} />
-              ) : (
-                <>
-                {/* Title */}
-                <h1 className="text-white font-black text-5xl sm:text-7xl leading-none tracking-tighter uppercase mb-8">
-                  {activeWod.title}
-                </h1>
-
-                {/* Description + PRCalculator side by side from here */}
-                <div className="flex gap-6 items-start">
-                  <div className="flex-1 min-w-0">
-                    {/* Description */}
-                    <pre className="text-neutral-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-12">
-                      {activeWod.description}
-                    </pre>
-
-                    {/* Generar timer */}
-                    {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
-                      <div className="mb-6">
-                        <button
-                          onClick={() => handleGenerateTimer(activeWod)}
-                          disabled={generatingTimer}
-                          className="w-full border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
-                        </button>
-                        {timerError && (
-                          <p className="text-red-500 text-xs font-mono mt-2 text-center">
-                            No se pudo generar el temporizador. Inténtalo de nuevo.
-                          </p>
-                        )}
-                      </div>
+                    <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                      {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+                    </p>
+                    <p className="text-white font-black text-sm">{wod.title}</p>
+                    {result && (
+                      <p className="text-neutral-400 text-xs font-mono mt-1">{getScoreDisplay(wod, result)}</p>
                     )}
+                  </button>
+                )
+              })}
+            </div>
 
-                    {/* Result — oculto en bloques de Warmup */}
-                    {activeWod.type !== 'Warmup' && (
-                      activeResult ? (
-                        <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
-                          <div>
-                            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-                              Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
-                            </p>
-                            <p className="text-white font-black text-2xl tracking-tight">
-                              {getScoreDisplay(activeWod, activeResult)}
-                            </p>
-                            {activeResult.score_notes && (
-                              <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
+            {/* Panel derecho: detalle del WOD */}
+            {activeWod && (
+              <div className="flex-1 flex flex-col min-w-0">
+
+                {/* Tabs */}
+                <div className="flex border-b border-neutral-900 px-6">
+                  <button
+                    onClick={() => setActiveTab('wod')}
+                    className={`py-3 mr-6 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                      activeTab === 'wod' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                    }`}
+                  >
+                    WOD
+                  </button>
+                  {!['Warmup', 'Gymnastics', 'Core', 'Mobility', 'Other'].includes(activeWod.type) && (
+                    <button
+                      onClick={() => setActiveTab('ranking')}
+                      className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                        activeTab === 'ranking' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                      }`}
+                    >
+                      Ranking
+                    </button>
+                  )}
+                </div>
+
+                {activeTab === 'ranking' ? (
+                  <div className="flex-1 p-6">
+                    <RankingSection wod={activeWod} refreshKey={rankingKey} />
+                  </div>
+                ) : (
+                  <div className="flex-1 p-6">
+                    <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                      {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
+                    </p>
+                    <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
+
+                    <div className="flex gap-6 items-start">
+                      <div className="flex-1 min-w-0">
+                        {activeWod.description && (
+                          <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-6">
+                            {activeWod.description}
+                          </pre>
+                        )}
+
+                        {/* Generar timer */}
+                        {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
+                          <div className="mb-6">
+                            <button
+                              onClick={() => handleGenerateTimer(activeWod)}
+                              disabled={generatingTimer}
+                              className="border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
+                            >
+                              {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
+                            </button>
+                            {timerError && (
+                              <p className="text-red-500 text-xs font-mono mt-2">Error al generar el timer.</p>
                             )}
                           </div>
-                          <button
-                            onClick={() => setModalWod(activeWod)}
-                            className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
-                          >
-                            ✏ <span>Editar</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setModalWod(activeWod)}
-                          className="w-full bg-white text-black font-black text-lg uppercase tracking-widest rounded-xl px-6 py-5 hover:bg-neutral-100 active:scale-[0.98] transition-all"
-                        >
-                          Registrar resultado
-                        </button>
-                      )
+                        )}
+
+                        {/* Resultado */}
+                        {activeWod.type !== 'Warmup' && (
+                          activeResult ? (
+                            <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
+                              <div>
+                                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+                                  Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
+                                </p>
+                                <p className="text-white font-black text-2xl tracking-tight">
+                                  {getScoreDisplay(activeWod, activeResult)}
+                                </p>
+                                {activeResult.score_notes && (
+                                  <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setModalWod(activeWod)}
+                                className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
+                              >
+                                ✏ <span>Editar</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setModalWod(activeWod)}
+                              className="w-full bg-white text-black font-black text-lg uppercase tracking-widest rounded-xl px-6 py-5 hover:bg-neutral-100 active:scale-[0.98] transition-all"
+                            >
+                              Registrar resultado
+                            </button>
+                          )
+                        )}
+                      </div>
+                      <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                    </div>
+
+                    {/* Coach message — desktop */}
+                    {coachMessage && (
+                      <div className="hidden lg:block mt-8">
+                        <CoachMessageCard message={coachMessage} />
+                      </div>
                     )}
                   </div>
-                  <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
-                </div>
-                </>
-              )}
-            </div>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col justify-center pt-8">
-              <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">Bloque {selectedBlock + 1}</p>
-              <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">
-                Sin programar
-              </h2>
-            </div>
-          )}
-          </>)}
-          </div>{/* end flex-1 inner */}
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
-        </div>{/* end content outer */}
-
-      <CoachMessageBubble message={coachMessage} />
+        <CoachMessageBubble message={coachMessage} />
 
       </main>
 
@@ -399,7 +376,6 @@ function DashboardContent() {
           onSaved={handleSaved}
         />
       )}
-
     </>
   )
 }
