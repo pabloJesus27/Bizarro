@@ -312,24 +312,24 @@ export default function ComunidadPage() {
 
                     {/* Borrar WOD + día (solo owner) */}
                     {isOwner && (
-                      <div className="mt-6 flex flex-col gap-3 pt-4 border-t border-neutral-900">
+                      <div className="mt-6 flex flex-col gap-2 pt-4 border-t border-neutral-900">
                         {deletingId === activeWod.id ? (
-                          <div className="flex gap-2">
-                            <button onClick={() => handleDelete(activeWod.id)} className="flex-1 bg-red-600 text-white text-xs font-black uppercase tracking-widest rounded-xl px-4 py-2.5 hover:bg-red-500 transition">Confirmar</button>
-                            <button onClick={() => setDeletingId(null)} className="flex-1 border border-neutral-700 text-neutral-400 text-xs font-mono uppercase tracking-widest rounded-xl px-4 py-2.5 transition">Cancelar</button>
+                          <div className="flex gap-3">
+                            <button onClick={() => handleDelete(activeWod.id)} className="text-red-400 text-xs font-mono">Confirmar</button>
+                            <button onClick={() => setDeletingId(null)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
                           </div>
                         ) : (
-                          <button onClick={() => setDeletingId(activeWod.id)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition text-left">
+                          <button onClick={() => setDeletingId(activeWod.id)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition w-fit">
                             × Eliminar este WOD
                           </button>
                         )}
                         {deletingDay ? (
                           <div className="flex gap-3">
-                            <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono uppercase tracking-widest">Confirmar borrar día</button>
-                            <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Cancelar</button>
+                            <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono">Confirmar borrar día</button>
+                            <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
                           </div>
                         ) : (
-                          <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition text-left">
+                          <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition w-fit">
                             × Borrar todos los WODs de este día
                           </button>
                         )}
