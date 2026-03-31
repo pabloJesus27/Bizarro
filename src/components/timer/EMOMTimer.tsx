@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
+import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
 export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
   totalSeconds: number; intervalSeconds: number
@@ -58,10 +59,24 @@ export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
     }
   }, [elapsed, totalSeconds, intervalSeconds, intervalRemaining])
 
+  const isLandscape = useIsLandscape()
+
   function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
 
   return (
     <>
+      {isLandscape && !inPreCountdown && !finished && elapsed > 0 && (
+        <LandscapeDisplay
+          time={fmt(intervalRemaining)}
+          label={`EMOM · Intervalo ${currentInterval}/${totalIntervals}`}
+        >
+          {running ? (
+            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
+          ) : (
+            <button onClick={() => setRunning(true)} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+          )}
+        </LandscapeDisplay>
+      )}
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
