@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
+import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
 export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   label: string; totalSeconds: number; intervalSeconds?: number
@@ -15,6 +16,7 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
   const remaining = totalSeconds - elapsed
+  const isLandscape = useIsLandscape()
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
@@ -57,6 +59,15 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
 
   return (
     <>
+      {isLandscape && !inPreCountdown && !finished && (
+        <LandscapeDisplay time={fmt(remaining)} label={label}>
+          {running ? (
+            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
+          ) : elapsed > 0 ? (
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+          ) : null}
+        </LandscapeDisplay>
+      )}
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}

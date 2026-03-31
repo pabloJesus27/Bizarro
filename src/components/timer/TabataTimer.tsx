@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
+import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
 export default function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number; restSeconds: number; rounds: number }) {
   const router = useRouter()
@@ -73,6 +74,8 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [phaseElapsed, phase, workSeconds, restSeconds, running])
 
+  const isLandscape = useIsLandscape()
+
   function handleStart() {
     if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx) }
     if (phaseElapsed === 0 && currentRound === 1) { setInPreCountdown(true) } else { setRunning(true) }
@@ -80,6 +83,18 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
 
   return (
     <>
+      {isLandscape && !inPreCountdown && !finished && (
+        <LandscapeDisplay
+          time={fmt(phaseRemaining)}
+          label={`${phase === 'work' ? 'Trabajo' : 'Descanso'} · Ronda ${currentRound}/${rounds}`}
+        >
+          {running ? (
+            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
+          ) : (phaseElapsed > 0 || currentRound > 1) ? (
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+          ) : null}
+        </LandscapeDisplay>
+      )}
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}

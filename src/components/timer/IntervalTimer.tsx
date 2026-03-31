@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmt, beep, speak, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
+import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 import type { TimerConfig } from '@/lib/types'
 
 export default function IntervalTimer({ config }: { config: Extract<TimerConfig, { type: 'interval' }> }) {
@@ -47,6 +48,8 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
     }
   }, [elapsed, intervalSeconds, totalSeconds])
 
+  const isLandscape = useIsLandscape()
+
   function handleStart() { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx); setInPreCountdown(true) }
 
   if (!running && !inPreCountdown && elapsed === 0) {
@@ -72,6 +75,16 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
 
   return (
     <>
+      {isLandscape && running && !inPreCountdown && !finished && (
+        <LandscapeDisplay time={fmt(intervalRemaining)} label={isWarning ? '30 seg' : workLabel}>
+          <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
+        </LandscapeDisplay>
+      )}
+      {isLandscape && !running && elapsed > 0 && !inPreCountdown && !finished && (
+        <LandscapeDisplay time={fmt(intervalRemaining)} label={workLabel}>
+          <button onClick={() => setRunning(true)} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+        </LandscapeDisplay>
+      )}
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
+import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
 export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   const [elapsed, setElapsed] = useState(0)
@@ -19,6 +20,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   }, [])
 
   const cappedOut = capSeconds > 0 && elapsed >= capSeconds
+  const isLandscape = useIsLandscape()
 
   useEffect(() => {
     if (!running || cappedOut) return
@@ -54,6 +56,15 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
 
   return (
     <>
+      {isLandscape && !inPreCountdown && !cappedOut && (
+        <LandscapeDisplay time={fmt(elapsed)} label="For Time">
+          {running ? (
+            <button onClick={stop} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
+          ) : elapsed > 0 && !stopped ? (
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+          ) : null}
+        </LandscapeDisplay>
+      )}
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
+import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 import type { MixBlock } from '@/lib/types'
 
 export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
@@ -114,6 +115,8 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
     }
   }, [remaining, running, blockDuration, isEmom, isTabata, isCountUp])
 
+  const isLandscape = useIsLandscape()
+
   function handleStart() {
     if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx) }
     if (blockIdx === 0 && elapsed === 0) { setInPreCountdown(true) } else { setRunning(true) }
@@ -138,6 +141,15 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
 
   return (
     <>
+      {isLandscape && !inPreCountdown && !finished && (elapsed > 0 || running) && (
+        <LandscapeDisplay time={clockTime} label={`${current?.label ?? ''} · ${clockLabel}`}>
+          {running ? (
+            <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
+          ) : (
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+          )}
+        </LandscapeDisplay>
+      )}
       {inPreCountdown && audioRef.current && (
         <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
       )}
