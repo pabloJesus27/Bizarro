@@ -202,20 +202,26 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
 [{"date":"${date}","block":1,"title":"...","type":"...","description":"...","timerConfig":...}]`
   }
 
-  const msg = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    messages: [{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType, data: imageBase64 },
-        },
-        { type: 'text', text: promptText },
-      ],
-    }],
-  })
+  let msg
+  try {
+    msg = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: mediaType, data: imageBase64 },
+          },
+          { type: 'text', text: promptText },
+        ],
+      }],
+    })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Error desconocido'
+    return NextResponse.json({ error: `Error al contactar con la IA: ${msg}` }, { status: 500 })
+  }
 
   const raw = (msg.content[0] as { type: string; text: string }).text.trim()
 
