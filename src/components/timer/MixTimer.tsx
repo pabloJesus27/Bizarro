@@ -141,7 +141,7 @@ export default function MixTimer({ blocks }: { blocks: MixBlock[] }) {
 
   return (
     <>
-      {isLandscape && !inPreCountdown && !finished && (elapsed > 0 || running) && (
+      {isLandscape && !inPreCountdown && !finished && (
         <LandscapeDisplay time={clockTime} label={`${current?.label ?? ''} · ${clockLabel}`}>
           {running ? (
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>

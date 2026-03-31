@@ -65,7 +65,7 @@ export default function EMOMTimer({ totalSeconds, intervalSeconds }: {
 
   return (
     <>
-      {isLandscape && !inPreCountdown && !finished && elapsed > 0 && (
+      {isLandscape && !inPreCountdown && !finished && (
         <LandscapeDisplay
           time={fmt(intervalRemaining)}
           label={`EMOM · Intervalo ${currentInterval}/${totalIntervals}`}
