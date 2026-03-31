@@ -33,8 +33,9 @@ Reglas (aplica en orden, la primera que encaje gana):
 8. Ejercicios de fuerza con sets/reps: barra, halterofilia, powerlifting, press, squat, deadlift, clean, snatch, jerk, bench press, gorilla row, lateral raises, curl biceps, triceps, mancuernas, kettlebell (cuando es sets×reps sin formato de tiempo) → Strength
 9. Handstand, muscle up, ring dips, dominadas técnicas, gymnastics → Gymnastics
 10. Core, abdominales, plancha, GHD, hollow body → Core
-11. Movilidad, estiramientos, foam roller, recuperación activa, trote suave, técnica de carrera, progresivos de carrera → Mobility
-12. Resto → Other
+11. Movilidad, estiramientos, foam roller, recuperación activa, trote suave → Mobility
+12. Técnica de carrera, progresivos de carrera, drills atléticos → Other
+13. Resto → Other
 
 Bloques:
 ${list}
