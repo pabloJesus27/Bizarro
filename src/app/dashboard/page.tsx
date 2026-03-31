@@ -1,7 +1,7 @@
 'use client'
 
 
-import { useEffect, useMemo, useState, Suspense } from 'react'
+import { useEffect, useMemo, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessage } from '@/lib/db'
