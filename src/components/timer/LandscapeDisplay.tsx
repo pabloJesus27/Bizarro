@@ -5,11 +5,10 @@ import { useEffect, useState } from 'react'
 export function useIsLandscape(): boolean {
   const [isLandscape, setIsLandscape] = useState(false)
   useEffect(() => {
-    const mq = window.matchMedia('(orientation: landscape)')
-    setIsLandscape(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setIsLandscape(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    const check = () => setIsLandscape(window.innerWidth > window.innerHeight)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
   }, [])
   return isLandscape
 }
