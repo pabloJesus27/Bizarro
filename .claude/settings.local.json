@@ -49,7 +49,24 @@
       "Bash(do)",
       "Read(//Users/pjesussuarez/Documents/MisProyectos/Bizarro/**)",
       "Bash(done)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git revert:*)",
+      "Bash(grep:*)",
+      "Bash(git config:*)",
+      "Bash(head -15 echo \"---\" grep -A 20 \"^- For Time\\\\|^- AMRAP\\\\|^- EMOM\\\\|^- For Max\\\\|^- WOD\\\\|^- Tabata\\\\|^- Estructura\\\\|^- N sets\\\\|^- \"\"X sets\\\\|^- Nunca\" /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/app/api/generate-timer/route.ts)",
+      "Bash(find /Users/pjesussuarez/Documents/MisProyectos/Bizarro/.claude -name *.md)",
+      "Bash(sqlite3:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k,json.dumps\\(v,indent=2\\)\\) for k,v in d.get\\(''''mcpServers'''',{}\\).items\\(\\) if ''''engram'''' in k.lower\\(\\)]\")",
+      "Bash(cat ~/.claude/plugins/engram*/config.json)",
+      "Bash(engram search:*)",
+      "Bash(engram context:*)",
+      "Bash(engram setup:*)",
+      "Read(//Users/pjesussuarez/.claude/**)",
+      "Read(//Users/pjesussuarez/.claude/mcp/**)",
+      "mcp__plugin_engram_engram__mem_session_start",
+      "Read(//Users/pjesussuarez/**)",
+      "Read(//Users/pjesussuarez/.config/**)",
+      "Read(//Users/pjesussuarez/Library/**)"
     ]
   }
 }

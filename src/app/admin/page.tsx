@@ -150,14 +150,8 @@ function AdminContent() {
             <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
               {formatWeekRange(weekDates)}
             </span>
-            <button
-              onClick={() => setLoadWeekOpen(true)}
-              className="text-neutral-600 hover:text-white text-xs font-mono transition"
-            >
-              ↓ Cargar semana
-            </button>
-            {wods.length > 0 && (deletingWeek ? (
-              <div className="flex gap-2 mt-1">
+            {wods.length > 0 ? (deletingWeek ? (
+              <div className="flex gap-2">
                 <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
                 <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
               </div>
@@ -165,7 +159,14 @@ function AdminContent() {
               <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
                 × Borrar semana
               </button>
-            ))}
+            )) : (
+              <button
+                onClick={() => setLoadWeekOpen(true)}
+                className="text-neutral-600 hover:text-white text-xs font-mono transition"
+              >
+                ↓ Cargar semana
+              </button>
+            )}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}

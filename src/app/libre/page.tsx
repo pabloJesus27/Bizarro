@@ -49,6 +49,11 @@ export default function LibrePage() {
   const [communitySlug,  setCommunitySlug]  = useState<string | undefined>(undefined)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
+  const initPosRef = useRef<{ date: string; block: number } | null>(
+    typeof window !== 'undefined'
+      ? (() => { try { const s = sessionStorage.getItem('biz_libre_pos'); return s ? JSON.parse(s) : null } catch { return null } })()
+      : null
+  )
 
   useEffect(() => {
     if (authLoading) return
@@ -96,10 +101,20 @@ export default function LibrePage() {
 
   useEffect(() => {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
-    setSelectedBlock(firstBlock?.block ?? 1)
+    const pos = initPosRef.current
+    initPosRef.current = null
+    if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
+      setSelectedBlock(pos.block)
+    } else {
+      setSelectedBlock(firstBlock?.block ?? 1)
+    }
     setPendingBlock(null)
     setEditingWod(undefined)
   }, [selectedDate, wods])
+
+  useEffect(() => {
+    sessionStorage.setItem('biz_libre_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
+  }, [selectedDate, selectedBlock])
 
   function handleWodSaved(wod: Wod) {
     setWods(prev => {
@@ -222,14 +237,8 @@ export default function LibrePage() {
             <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
               {formatWeekRange(weekDates)}
             </span>
-            <button
-              onClick={() => setLoadWeekOpen(true)}
-              className="text-neutral-600 hover:text-white text-xs font-mono transition"
-            >
-              ↓ Cargar semana
-            </button>
-            {wods.length > 0 && (deletingWeek ? (
-              <div className="flex gap-2 mt-1">
+            {wods.length > 0 ? (deletingWeek ? (
+              <div className="flex gap-2">
                 <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
                 <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
               </div>
@@ -237,7 +246,14 @@ export default function LibrePage() {
               <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
                 × Borrar semana
               </button>
-            ))}
+            )) : (
+              <button
+                onClick={() => setLoadWeekOpen(true)}
+                className="text-neutral-600 hover:text-white text-xs font-mono transition"
+              >
+                ↓ Cargar semana
+              </button>
+            )}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}

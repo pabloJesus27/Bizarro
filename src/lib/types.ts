@@ -56,6 +56,7 @@ export interface Profile {
   role: string
   avatar_url: string | null
   program: string | null
+  gender: 'male' | 'female' | null
   email?: string | null
   updated_at: string
 }

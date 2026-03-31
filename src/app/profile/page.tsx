@@ -34,6 +34,7 @@ export default function ProfilePage() {
 
   const [profile,      setProfile]      = useState<Profile | null>(null)
   const [fullName,     setFullName]     = useState('')
+  const [gender,       setGender]       = useState<'male' | 'female' | null>(null)
   const [avatarUrl,    setAvatarUrl]    = useState('')
   const [avatarStyle,  setAvatarStyle]  = useState('initials')
   const [avatarSeed,   setAvatarSeed]   = useState('')
@@ -52,6 +53,7 @@ export default function ProfilePage() {
       if (!p) return
       setProfile(p)
       setFullName(p.full_name ?? '')
+      setGender(p.gender ?? null)
       setAvatarUrl(p.avatar_url ?? '')
 
       if (p.avatar_url) {
@@ -116,7 +118,7 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const avatar_url = tab === 'foto' ? avatarUrl : generatedUrl
-      await updateProfile(user.id, { full_name: fullName.trim(), avatar_url })
+      await updateProfile(user.id, { full_name: fullName.trim(), avatar_url, gender })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err: unknown) {
@@ -189,6 +191,32 @@ export default function ProfilePage() {
               required
               className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition"
             />
+          </div>
+
+          {/* Género */}
+          <div>
+            <label className="block text-neutral-500 text-xs uppercase tracking-widest mb-2 font-mono">
+              Género
+            </label>
+            <div className="flex gap-3">
+              {([
+                { key: 'male',   label: 'Hombre' },
+                { key: 'female', label: 'Mujer' },
+              ] as const).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setGender(key)}
+                  className={`flex-1 py-3 rounded-lg border text-sm font-mono transition ${
+                    gender === key
+                      ? 'border-white text-white bg-neutral-900'
+                      : 'border-neutral-700 text-neutral-500 hover:border-neutral-500'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Avatar tabs */}

@@ -46,6 +46,11 @@ function DashboardContent() {
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
+  const initPosRef = useRef<{ date: string; block: number } | null>(
+    typeof window !== 'undefined'
+      ? (() => { try { const s = sessionStorage.getItem('biz_dash_pos'); return s ? JSON.parse(s) : null } catch { return null } })()
+      : null
+  )
 
   useEffect(() => {
     if (authLoading) return
@@ -94,9 +99,19 @@ function DashboardContent() {
 
   useEffect(() => {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
-    setSelectedBlock(firstBlock?.block ?? 1)
+    const pos = initPosRef.current
+    initPosRef.current = null
+    if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
+      setSelectedBlock(pos.block)
+    } else {
+      setSelectedBlock(firstBlock?.block ?? 1)
+    }
     setActiveTab('wod')
   }, [selectedDate, wods])
+
+  useEffect(() => {
+    sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
+  }, [selectedDate, selectedBlock])
 
   function handleSaved(result: Result, isNewPR: boolean) {
     setResults(prev => {

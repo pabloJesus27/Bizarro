@@ -16,6 +16,7 @@ function RegisterContent() {
   const [email,           setEmail]           = useState('')
   const [password,        setPassword]        = useState('')
   const [search,          setSearch]          = useState('')
+  const [gender,          setGender]          = useState<'male' | 'female' | null>(null)
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null)
   const [dropdownOpen,    setDropdownOpen]    = useState(false)
   const [programs,        setPrograms]        = useState<ProgramEntry[]>([])
@@ -65,7 +66,7 @@ function RegisterContent() {
         // fail-open
       }
 
-      const data = await signUp(email, password, fullName, inviteToken ? null : (selectedProgram ?? 'libre'))
+      const data = await signUp(email, password, fullName, inviteToken ? null : (selectedProgram ?? 'libre'), gender)
 
       if (inviteToken && data.user) {
         const res = await fetch('/api/use-invite', {
@@ -119,6 +120,26 @@ function RegisterContent() {
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex gap-3">
+            {([
+              { key: 'male',   label: 'Hombre' },
+              { key: 'female', label: 'Mujer' },
+            ] as const).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setGender(key)}
+                className={`flex-1 py-3 rounded-lg border text-sm font-mono transition ${
+                  gender === key
+                    ? 'border-white text-white bg-neutral-900'
+                    : 'border-neutral-700 text-neutral-500 hover:border-neutral-500'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <input
             type="text"
             placeholder="Nombre completo"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AppHeader from '@/components/AppHeader'
@@ -46,6 +46,9 @@ export default function ComunidadPage() {
   const [wodError,      setWodError]      = useState<string | null>(null)
   const [prs,              setPrs]              = useState<PersonalRecord[]>([])
   const [editingWod,       setEditingWod]       = useState<Wod | null>(null)
+  const [pendingBlock,     setPendingBlock]     = useState<number | null>(null)
+  const [pendingMode,      setPendingMode]      = useState<'select' | 'manual' | null>(null)
+  const [loadWodOpen,      setLoadWodOpen]      = useState(false)
   const [deletingId,       setDeletingId]       = useState<string | null>(null)
   const [deletingDay,      setDeletingDay]      = useState(false)
   const [deletingWeek,     setDeletingWeek]     = useState(false)
@@ -53,6 +56,11 @@ export default function ComunidadPage() {
   const [timerError,       setTimerError]       = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
+  const initPosRef = useRef<{ date: string; block: number } | null>(
+    typeof window !== 'undefined'
+      ? (() => { try { const s = sessionStorage.getItem(`biz_com_${slug}_pos`); return s ? JSON.parse(s) : null } catch { return null } })()
+      : null
+  )
 
   const isOwner = !!user && community?.owner_id === user.id
 
@@ -105,8 +113,20 @@ export default function ComunidadPage() {
 
   useEffect(() => {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
-    setSelectedBlock(firstBlock?.block ?? 1)
+    const pos = initPosRef.current
+    initPosRef.current = null
+    if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
+      setSelectedBlock(pos.block)
+    } else {
+      setSelectedBlock(firstBlock?.block ?? 1)
+    }
+    setPendingBlock(null)
+    setPendingMode(null)
   }, [selectedDate, wods])
+
+  useEffect(() => {
+    sessionStorage.setItem(`biz_com_${slug}_pos`, JSON.stringify({ date: selectedDate, block: selectedBlock }))
+  }, [selectedDate, selectedBlock, slug])
 
   async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
     if (wod.timer_config) {
@@ -150,6 +170,18 @@ export default function ComunidadPage() {
     await deleteWodsForWeek(weekDates[0], weekDates[6], slug)
     setWods([])
     setDeletingWeek(false)
+  }
+
+  async function handleLoadSingleWod(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+    const item = parsed[0]
+    if (!item || pendingBlock === null) return
+    const tc = Array.isArray(item.timerConfig) ? { type: 'mix' as const, blocks: item.timerConfig } : item.timerConfig
+    const extra = tc != null ? { timer_config: tc } : {}
+    const saved = await createWod({ date: selectedDate, block: pendingBlock, title: item.title, type: item.type, description: item.description, program: slug, ...extra })
+    setWods(prev => [...prev, saved])
+    setSelectedBlock(pendingBlock)
+    setPendingBlock(null)
+    setPendingMode(null)
   }
 
   async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
@@ -202,14 +234,23 @@ export default function ComunidadPage() {
             <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
               {formatWeekRange(weekDates)}
             </span>
-            {isOwner && (
+            {isOwner && (wods.length > 0 ? (deletingWeek ? (
+              <div className="flex gap-2">
+                <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
+                <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+              </div>
+            ) : (
+              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                × Borrar semana
+              </button>
+            )) : (
               <button
                 onClick={() => setLoadWeekOpen(true)}
                 className="text-neutral-600 hover:text-white text-xs font-mono transition"
               >
                 ↓ Cargar semana
               </button>
-            )}
+            ))}
           </div>
           <button
             onClick={() => setWeekOffset(o => o + 1)}
@@ -219,20 +260,6 @@ export default function ComunidadPage() {
           </button>
         </div>
 
-        {/* Cabecera de comunidad */}
-        <div className="px-6 pt-4 pb-2 flex items-center justify-between">
-          <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest">{community?.name}</p>
-          {isOwner && wods.length > 0 && (deletingWeek ? (
-            <div className="flex gap-2">
-              <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
-              <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
-            </div>
-          ) : (
-            <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
-              × Borrar semana
-            </button>
-          ))}
-        </div>
 
         {/* Días de la semana */}
         <div className="border-b border-neutral-900 overflow-x-auto [&::-webkit-scrollbar]:hidden">
@@ -267,7 +294,7 @@ export default function ComunidadPage() {
         )}
 
         {/* Bloques del día */}
-        {dayWods.length === 0 ? (
+        {dayWods.length === 0 && !isOwner ? (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Sin entrenos este día</p>
           </div>
@@ -282,7 +309,7 @@ export default function ComunidadPage() {
                 return (
                   <button
                     key={wod.id}
-                    onClick={() => { setSelectedBlock(wod.block); setActiveTab('wod') }}
+                    onClick={() => { setSelectedBlock(wod.block); setActiveTab('wod'); setPendingBlock(null); setPendingMode(null) }}
                     className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
                       isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                     }`}
@@ -297,10 +324,79 @@ export default function ComunidadPage() {
                   </button>
                 )
               })}
+              {isOwner && (
+                <button
+                  onClick={() => {
+                    const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
+                    setPendingBlock(next)
+                    setPendingMode('select')
+                  }}
+                  className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                    pendingBlock !== null ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                  }`}
+                >
+                  <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">+ Añadir bloque</p>
+                </button>
+              )}
             </div>
 
-            {/* Panel derecho: WOD detail */}
-            {activeWod && (
+            {/* Panel derecho: selector de modo */}
+            {pendingBlock !== null && pendingMode === 'select' && isOwner && (
+              <div className="flex-1 p-6 flex flex-col gap-4">
+                <p className="text-neutral-500 text-sm font-mono">¿Cómo quieres añadir el bloque?</p>
+                {([
+                  { key: 'manual', label: 'Escribir manualmente', desc: 'Rellena el formulario' },
+                  { key: 'image', label: 'Cargar desde imagen', desc: 'La IA lee el WOD de una foto' },
+                ] as const).map(({ key, label, desc }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      if (key === 'manual') setPendingMode('manual')
+                      else setLoadWodOpen(true)
+                    }}
+                    className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
+                  >
+                    <div>
+                      <p className="text-white font-bold uppercase tracking-widest text-sm">{label}</p>
+                      <p className="text-neutral-600 text-xs font-mono mt-0.5">{desc}</p>
+                    </div>
+                    <span className="text-neutral-600 text-lg">→</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setPendingBlock(null); setPendingMode(null) }}
+                  className="text-neutral-600 hover:text-white text-xs font-mono transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            {/* Panel derecho: formulario manual */}
+            {pendingBlock !== null && pendingMode === 'manual' && isOwner && (
+              <div className="flex-1 p-6">
+                <WodModal
+                  inline
+                  date={selectedDate}
+                  block={pendingBlock}
+                  program={slug}
+                  onClose={() => { setPendingBlock(null); setPendingMode(null) }}
+                  onSaved={saved => {
+                    setWods(prev => [...prev, saved])
+                    setPendingBlock(null)
+                    setPendingMode(null)
+                    setSelectedBlock(saved.block)
+                  }}
+                />
+              </div>
+            )}
+            {!activeWod && pendingBlock === null && isOwner && (
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Pulsa + Añadir bloque para empezar</p>
+              </div>
+            )}
+            {activeWod && pendingBlock === null && pendingMode === null && (
               <div className="flex-1 flex flex-col">
 
                 {/* Tabs */}
@@ -455,6 +551,20 @@ export default function ComunidadPage() {
           variant="libre"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
+        />
+      )}
+
+      {loadWodOpen && isOwner && pendingBlock !== null && (
+        <LoadWeekModal
+          weekDates={weekDates}
+          selectedDate={selectedDate}
+          variant="libre"
+          forceMode="wod"
+          onConfirm={async (parsed) => {
+            await handleLoadSingleWod(parsed)
+            setLoadWodOpen(false)
+          }}
+          onClose={() => { setLoadWodOpen(false); setPendingBlock(null); setPendingMode(null) }}
         />
       )}
     </>

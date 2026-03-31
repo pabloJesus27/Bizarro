@@ -8,6 +8,39 @@ import { sortRanking } from '@/lib/wod-utils'
 
 const PAGE_SIZE = 10
 
+function parseSeconds(time: string): number | null {
+  const parts = time.split(':').map(Number)
+  if (parts.length === 2) return parts[0] * 60 + parts[1]
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  return null
+}
+
+function formatSeconds(s: number): string {
+  const m = Math.floor(s / 60)
+  const sec = Math.round(s % 60)
+  return `${m}:${sec.toString().padStart(2, '0')}`
+}
+
+function computeAverage(entries: RankingEntry[], type: WodType): string | null {
+  if (entries.length < 2) return null
+  if (type === 'For Time') {
+    const times = entries.map(e => e.score_time ? parseSeconds(e.score_time) : null).filter((v): v is number => v !== null)
+    if (times.length < 2) return null
+    return formatSeconds(times.reduce((a, b) => a + b, 0) / times.length)
+  }
+  if (type === 'AMRAP' || type === 'For Max') {
+    const vals = entries.map(e => e.score_rounds ? parseFloat(e.score_rounds) : null).filter((v): v is number => !isNaN(v as number) && v !== null)
+    if (vals.length < 2) return null
+    return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)
+  }
+  if (type === 'Strength' || type === 'EMOM') {
+    const vals = entries.map(e => e.score_weight).filter((v): v is number => v !== null)
+    if (vals.length < 2) return null
+    return `${(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)} kg`
+  }
+  return null
+}
+
 function formatScore(entry: RankingEntry, type: WodType): string {
   switch (type) {
     case 'For Time':  return entry.score_time   ?? '—'
@@ -53,11 +86,36 @@ export default function RankingSection({ wod, refreshKey = 0 }: { wod: Wod; refr
   const totalPages = Math.ceil(entries.length / PAGE_SIZE)
   const paged = entries.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
 
+  const maleEntries   = entries.filter(e => e.profiles?.gender === 'male')
+  const femaleEntries = entries.filter(e => e.profiles?.gender === 'female')
+  const maleAvg       = computeAverage(maleEntries, wod.type)
+  const femaleAvg     = computeAverage(femaleEntries, wod.type)
+  const showAverages  = maleAvg !== null || femaleAvg !== null
+
   return (
     <div className="mt-10 border-t border-neutral-900 pt-8">
       <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-5">
         Ranking · {entries.length} {entries.length === 1 ? 'atleta' : 'atletas'}
       </p>
+
+      {showAverages && (
+        <div className="flex gap-3 mb-6">
+          {maleAvg && (
+            <div className="flex-1 border border-neutral-800 rounded-xl px-4 py-3">
+              <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest mb-1">Media hombres</p>
+              <p className="text-white font-black text-lg">{maleAvg}</p>
+              <p className="text-neutral-600 text-xs font-mono">{maleEntries.length} atletas</p>
+            </div>
+          )}
+          {femaleAvg && (
+            <div className="flex-1 border border-neutral-800 rounded-xl px-4 py-3">
+              <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest mb-1">Media mujeres</p>
+              <p className="text-white font-black text-lg">{femaleAvg}</p>
+              <p className="text-neutral-600 text-xs font-mono">{femaleEntries.length} atletas</p>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex flex-col gap-3">
         {paged.map((entry, i) => {
           const pos      = page * PAGE_SIZE + i + 1

@@ -97,13 +97,13 @@ export interface RankingEntry {
   score_weight: number | null
   score_notes: string | null
   rx: boolean
-  profiles: { full_name: string | null; avatar_url: string | null } | null
+  profiles: { full_name: string | null; avatar_url: string | null; gender: 'male' | 'female' | null } | null
 }
 
 export async function getWodRanking(wodId: string): Promise<RankingEntry[]> {
   const { data, error } = await supabase
     .from('results')
-    .select('*, profiles(full_name, avatar_url)')
+    .select('*, profiles(full_name, avatar_url, gender)')
     .eq('wod_id', wodId)
 
   if (error) throw error
@@ -172,7 +172,7 @@ export async function getMyResults(): Promise<Result[]> {
   return data
 }
 
-export async function updateProfile(userId: string, updates: { full_name: string; avatar_url: string }): Promise<void> {
+export async function updateProfile(userId: string, updates: { full_name: string; avatar_url: string; gender?: 'male' | 'female' | null }): Promise<void> {
   const { error } = await supabase
     .from('profiles')
     .update(updates)

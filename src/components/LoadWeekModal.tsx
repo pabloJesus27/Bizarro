@@ -20,17 +20,18 @@ interface Props {
   selectedDate?: string
   programSlug?: string
   variant?: 'coach' | 'libre'
+  forceMode?: 'week' | 'day' | 'wod'
   onConfirm: (wods: ParsedWod[]) => Promise<void>
   onClose: () => void
 }
 
-export default function LoadWeekModal({ weekDates, selectedDate, programSlug, variant = 'coach', onConfirm, onClose }: Props) {
+export default function LoadWeekModal({ weekDates, selectedDate, programSlug, variant = 'coach', forceMode, onConfirm, onClose }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageBase64,  setImageBase64]  = useState<string>('')
   const [mediaType,    setMediaType]    = useState<string>('image/jpeg')
-  const [step,         setStep]         = useState<'mode' | 'upload' | 'preview' | 'message'>(variant === 'libre' ? 'mode' : 'upload')
-  const [loadMode,     setLoadMode]     = useState<'week' | 'day' | 'wod'>('week')
+  const [step,         setStep]         = useState<'mode' | 'upload' | 'preview' | 'message'>(forceMode ? 'upload' : variant === 'libre' ? 'mode' : 'upload')
+  const [loadMode,     setLoadMode]     = useState<'week' | 'day' | 'wod'>(forceMode ?? 'week')
   const [loading,      setLoading]      = useState(false)
   const [saving,       setSaving]       = useState(false)
   const [savingMsg,    setSavingMsg]    = useState(false)
@@ -137,7 +138,7 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
               {step === 'mode' ? 'Seleccionar' : step === 'upload' ? 'Subir imagen' : step === 'preview' ? `${wods.length} WODs detectados` : 'Opcional'}
             </p>
             <h2 className="text-white font-black text-xl tracking-tight uppercase">
-              {step === 'message' ? 'Indicaciones de la semana' : step === 'mode' ? 'Cargar entrenamiento' : 'Cargar semana'}
+              {step === 'message' ? 'Indicaciones de la semana' : 'Cargar entrenamiento'}
             </h2>
           </div>
           <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
@@ -156,7 +157,6 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
               {([
                 { key: 'week', label: 'Semana', desc: 'Programación completa lunes–sábado' },
                 { key: 'day',  label: 'Día',    desc: 'Todos los bloques de hoy' },
-                { key: 'wod',  label: 'WOD',    desc: 'Un solo bloque o ejercicio' },
               ] as const).map(({ key, label, desc }) => (
                 <button
                   key={key}
