@@ -8,6 +8,7 @@ import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
 import LoadWeekModal from '@/components/LoadWeekModal'
+import WodModal from '@/components/admin/WodModal'
 import PRCalculator from '@/components/PRCalculator'
 import PesosTab from '@/components/comunidad/PesosTab'
 import {
@@ -44,6 +45,7 @@ export default function ComunidadPage() {
   const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking' | 'pesos'>('wod')
   const [wodError,      setWodError]      = useState<string | null>(null)
   const [prs,              setPrs]              = useState<PersonalRecord[]>([])
+  const [editingWod,       setEditingWod]       = useState<Wod | null>(null)
   const [deletingId,       setDeletingId]       = useState<string | null>(null)
   const [deletingDay,      setDeletingDay]      = useState(false)
   const [deletingWeek,     setDeletingWeek]     = useState(false)
@@ -372,6 +374,9 @@ export default function ComunidadPage() {
                     {/* Borrar WOD + día (solo owner) */}
                     {isOwner && (
                       <div className="mt-6 flex flex-col gap-2 pt-4 border-t border-neutral-900">
+                        <button onClick={() => setEditingWod(activeWod)} className="text-neutral-700 hover:text-white text-xs font-mono transition w-fit">
+                          ✎ Editar WOD
+                        </button>
                         {deletingId === activeWod.id ? (
                           <div className="flex gap-3">
                             <button onClick={() => handleDelete(activeWod.id)} className="text-red-400 text-xs font-mono">Confirmar</button>
@@ -425,6 +430,20 @@ export default function ComunidadPage() {
           existing={results.find(r => r.wod_id === modalWod.id)}
           onSaved={handleResultSaved}
           onClose={() => setModalWod(null)}
+        />
+      )}
+
+      {editingWod && isOwner && (
+        <WodModal
+          date={editingWod.date}
+          block={editingWod.block}
+          wod={editingWod}
+          program={slug}
+          onClose={() => setEditingWod(null)}
+          onSaved={saved => {
+            setWods(prev => prev.map(w => w.id === saved.id ? saved : w))
+            setEditingWod(null)
+          }}
         />
       )}
 
