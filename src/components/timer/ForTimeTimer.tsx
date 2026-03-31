@@ -62,6 +62,8 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
             <button onClick={stop} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
           ) : elapsed > 0 && !stopped ? (
             <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+          ) : !stopped ? (
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Iniciar</button>
           ) : null}
         </LandscapeDisplay>
       )}

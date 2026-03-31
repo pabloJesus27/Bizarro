@@ -65,7 +65,9 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
           ) : elapsed > 0 ? (
             <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
-          ) : null}
+          ) : (
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Iniciar</button>
+          )}
         </LandscapeDisplay>
       )}
       {inPreCountdown && audioRef.current && (
