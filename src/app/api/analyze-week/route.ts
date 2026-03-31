@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   const [lunes, martes, miercoles, jueves, viernes, sabado] = weekDates
 
   const msg = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 8192,
     messages: [{
       role: 'user',

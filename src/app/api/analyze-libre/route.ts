@@ -206,7 +206,7 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
   let msg
   try {
     msg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 8192,
       messages: [{
         role: 'user',
