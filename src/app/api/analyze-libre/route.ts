@@ -86,6 +86,7 @@ const WOD_FIELDS = `Para cada bloque:
 - timerConfig: configuración del timer (ver reglas abajo), o null si no aplica`
 
 export async function POST(req: NextRequest) {
+  try {
   const user = await getAuthenticatedUser(req)
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
@@ -248,5 +249,9 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
     return NextResponse.json({ wods: reviewed })
   } catch {
     return NextResponse.json({ error: 'Error al interpretar la imagen' }, { status: 500 })
+  }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: `Error interno: ${msg}` }, { status: 500 })
   }
 }
