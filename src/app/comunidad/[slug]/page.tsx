@@ -551,6 +551,7 @@ export default function ComunidadPage() {
           selectedDate={selectedDate}
           programSlug={slug}
           variant="libre"
+          forceMode="week"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
         />
@@ -561,12 +562,25 @@ export default function ComunidadPage() {
           weekDates={weekDates}
           selectedDate={selectedDate}
           variant="libre"
-          forceMode="wod"
+          forceMode="day"
           onConfirm={async (parsed) => {
-            await handleLoadSingleWod(parsed)
+            const sorted = [...parsed].sort((a, b) => a.block - b.block)
+            const firstBlock = pendingBlock
+            const newWods: import('@/lib/types').Wod[] = []
+            for (let i = 0; i < sorted.length; i++) {
+              const item = sorted[i]
+              const tc = Array.isArray(item.timerConfig) ? { type: 'mix' as const, blocks: item.timerConfig } : item.timerConfig
+              const extra = tc != null ? { timer_config: tc } : {}
+              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: slug, ...extra })
+              newWods.push(saved)
+            }
+            setWods(prev => [...prev, ...newWods])
+            setSelectedBlock(firstBlock)
+            setPendingBlock(null)
+            setPendingMode(null)
             setLoadWodOpen(false)
           }}
-          onClose={() => { setLoadWodOpen(false); setPendingBlock(null); setPendingMode(null) }}
+          onClose={() => { setLoadWodOpen(false); setPendingMode('select') }}
         />
       )}
     </>

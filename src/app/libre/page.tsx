@@ -527,6 +527,7 @@ export default function LibrePage() {
           weekDates={weekDates}
           selectedDate={selectedDate}
           variant="libre"
+          forceMode="week"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
         />
@@ -537,12 +538,15 @@ export default function LibrePage() {
           weekDates={weekDates}
           selectedDate={selectedDate}
           variant="libre"
-          forceMode="wod"
+          forceMode="day"
           onConfirm={async (parsed) => {
-            await handleLoadWeek(parsed)
+            const sorted = [...parsed].sort((a, b) => a.block - b.block)
+            const renumbered = sorted.map((w, i) => ({ ...w, date: selectedDate, block: pendingBlock + i }))
+            await handleLoadWeek(renumbered)
             setLoadWodOpen(false)
             setPendingBlock(null)
             setPendingMode(null)
+            setSelectedBlock(pendingBlock)
           }}
           onClose={() => { setLoadWodOpen(false); setPendingMode('select') }}
         />

@@ -30,7 +30,7 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageBase64,  setImageBase64]  = useState<string>('')
   const [mediaType,    setMediaType]    = useState<string>('image/jpeg')
-  const [step,         setStep]         = useState<'mode' | 'upload' | 'preview' | 'message'>(forceMode ? 'upload' : variant === 'libre' ? 'mode' : 'upload')
+  const [step,         setStep]         = useState<'upload' | 'preview' | 'message'>('upload')
   const [loadMode,     setLoadMode]     = useState<'week' | 'day' | 'wod'>(forceMode ?? 'week')
   const [loading,      setLoading]      = useState(false)
   const [saving,       setSaving]       = useState(false)
@@ -135,7 +135,7 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
         <div className="flex items-start justify-between p-6 border-b border-neutral-900">
           <div>
             <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-              {step === 'mode' ? 'Seleccionar' : step === 'upload' ? 'Subir imagen' : step === 'preview' ? `${wods.length} WODs detectados` : 'Opcional'}
+              {step === 'upload' ? 'Subir imagen' : step === 'preview' ? `${wods.length} WODs detectados` : 'Opcional'}
             </p>
             <h2 className="text-white font-black text-xl tracking-tight uppercase">
               {step === 'message' ? 'Indicaciones de la semana' : 'Cargar entrenamiento'}
@@ -148,31 +148,6 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-
-          {step === 'mode' && (
-            <div className="flex flex-col gap-3">
-              <p className="text-neutral-500 text-sm font-mono">
-                ¿Qué quieres cargar?
-              </p>
-              {([
-                { key: 'week', label: 'Semana', desc: 'Programación completa lunes–sábado' },
-                { key: 'day',  label: 'Día',    desc: 'Todos los bloques de hoy' },
-              ] as const).map(({ key, label, desc }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => { setLoadMode(key); setStep('upload') }}
-                  className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
-                >
-                  <div>
-                    <p className="text-white font-bold uppercase tracking-widest text-sm">{label}</p>
-                    <p className="text-neutral-600 text-xs font-mono mt-0.5">{desc}</p>
-                  </div>
-                  <span className="text-neutral-600 text-lg">→</span>
-                </button>
-              ))}
-            </div>
-          )}
 
           {step === 'upload' && (
             <div className="flex flex-col gap-4">
@@ -265,16 +240,8 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
 
         {/* Footer */}
         <div className="p-6 border-t border-neutral-900 flex gap-3">
-          {step === 'mode' ? null : step === 'upload' ? (
+          {step === 'upload' ? (
             <>
-              {variant === 'libre' && (
-                <button
-                  onClick={() => { setStep('mode'); setImagePreview(null); setImageBase64(''); setError('') }}
-                  className="flex-1 border border-neutral-700 text-white font-bold uppercase tracking-widest rounded-xl px-4 py-3 hover:border-white transition text-sm"
-                >
-                  Volver
-                </button>
-              )}
               <button
                 onClick={handleAnalyze}
                 disabled={!imageBase64 || loading}
