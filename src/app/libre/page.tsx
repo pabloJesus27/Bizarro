@@ -306,7 +306,7 @@ export default function LibrePage() {
           <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden">
             {dayWods.map(wod => {
               const result   = results.find(r => r.wod_id === wod.id)
-              const isActive = wod.block === selectedBlock && pendingBlock === null && pendingMode === null && !editingWod
+              const isActive = wod.block === selectedBlock && !editingWod
               return (
                 <button
                   key={wod.id}
@@ -335,7 +335,7 @@ export default function LibrePage() {
                 setPendingMode('select')
               }}
               className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
-                pendingBlock !== null ? 'bg-neutral-900' : 'bg-black hover:bg-neutral-950'
+                selectedBlock === 0 ? 'bg-neutral-900' : 'bg-black hover:bg-neutral-950'
               }`}
             >
               <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">Nuevo</p>
