@@ -99,6 +99,7 @@ export default function LibrePage() {
     setSelectedDate(weekOffset === 0 ? today : weekDates[0])
     setSelectedBlock(1)
     setPendingBlock(null)
+    setPendingMode(null)
   }, [weekOffset, weekDates, today])
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function LibrePage() {
       setSelectedBlock(firstBlock?.block ?? 1)
     }
     setPendingBlock(null)
+    setPendingMode(null)
     setEditingWod(undefined)
   }, [selectedDate, wods])
 
@@ -308,7 +310,7 @@ export default function LibrePage() {
               return (
                 <button
                   key={wod.id}
-                  onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); setEditingWod(undefined) }}
+                  onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); setPendingMode(null); setEditingWod(undefined) }}
                   className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
                     isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                   }`}
