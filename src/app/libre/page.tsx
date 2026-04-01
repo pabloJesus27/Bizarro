@@ -210,7 +210,7 @@ export default function LibrePage() {
   }
 
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
-  const activeWod = pendingBlock === null ? (dayWods.find(w => w.block === selectedBlock) ?? null) : null
+  const activeWod = selectedBlock > 0 ? (dayWods.find(w => w.block === selectedBlock) ?? null) : null
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
 
   if (authLoading || loading) return <AthletePageLoading />
@@ -346,8 +346,8 @@ export default function LibrePage() {
           {/* Panel derecho */}
           <div className="flex-1 flex flex-col min-w-0">
 
-            {/* Selector manual / imagen */}
-            {pendingBlock !== null && pendingMode === 'select' && (
+            {/* Tab Añadir bloque: selector */}
+            {selectedBlock === 0 && pendingMode === 'select' && (
               <div className="flex-1 p-6 flex flex-col gap-4">
                 <p className="text-neutral-500 text-sm font-mono">¿Cómo quieres añadir el bloque?</p>
                 {([
@@ -370,23 +370,17 @@ export default function LibrePage() {
                     <span className="text-neutral-600 text-lg">→</span>
                   </button>
                 ))}
-                <button
-                  onClick={() => { setPendingBlock(null); setPendingMode(null) }}
-                  className="text-neutral-600 hover:text-white text-xs font-mono transition"
-                >
-                  Cancelar
-                </button>
               </div>
             )}
 
-            {/* Formulario nuevo bloque (manual) */}
-            {pendingBlock !== null && pendingMode === 'manual' && (
+            {/* Tab Añadir bloque: formulario manual */}
+            {selectedBlock === 0 && pendingMode === 'manual' && (
               <div className="p-6">
                 <WodForm
                   date={selectedDate}
-                  block={pendingBlock}
+                  block={pendingBlock!}
                   onSaved={handleWodSaved}
-                  onCancel={() => { setPendingBlock(null); setPendingMode(null); if (dayWods.length > 0) setSelectedBlock(dayWods[0]?.block ?? 1) }}
+                  onCancel={() => setPendingMode('select')}
                 />
               </div>
             )}
@@ -518,7 +512,7 @@ export default function LibrePage() {
             )}
 
             {/* Estado vacío: sin WODs y sin pending */}
-            {dayWods.length === 0 && pendingBlock === null && (
+            {dayWods.length === 0 && selectedBlock !== 0 && (
               <div className="flex-1 flex items-center justify-center">
                 <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Sin entrenos este día</p>
               </div>
