@@ -18,9 +18,9 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single()
+    .maybeSingle()
 
-  if (error && error.code !== 'PGRST116') throw error
+  if (error) throw error
   return data
 }
 
@@ -41,9 +41,9 @@ export async function getWodByDate(date: string): Promise<Wod | null> {
     .from('wods')
     .select('*')
     .eq('date', date)
-    .single()
+    .maybeSingle()
 
-  if (error && error.code !== 'PGRST116') throw error
+  if (error) throw error
   return data
 }
 
@@ -198,7 +198,7 @@ export async function getAthletes(programSlug: string): Promise<Profile[]> {
     .from('programs')
     .select('id, owner_id')
     .eq('slug', programSlug)
-    .single()
+    .maybeSingle()
 
   if (!program) return []
   if (program.owner_id !== user.id) throw new Error('No autorizado')
@@ -281,7 +281,7 @@ export async function maybeUpdatePR(
     .select('weight')
     .eq('user_id', userId)
     .eq('exercise', exercise)
-    .single()
+    .maybeSingle()
 
   const isNewPR = !current || weight > current.weight
   if (!isNewPR) return { isNewPR: false }
@@ -349,8 +349,8 @@ export async function getMyOwnedCommunity(userId: string): Promise<Community | n
     .select('*')
     .eq('owner_id', userId)
     .eq('type', 'community')
-    .single()
-  if (error && error.code !== 'PGRST116') throw error
+    .maybeSingle()
+  if (error) throw error
   return data
 }
 
@@ -360,8 +360,8 @@ export async function getCommunityInfo(slug: string): Promise<Community | null> 
     .select('*')
     .eq('slug', slug)
     .eq('type', 'community')
-    .single()
-  if (error && error.code !== 'PGRST116') throw error
+    .maybeSingle()
+  if (error) throw error
   return data
 }
 
@@ -371,8 +371,8 @@ export async function getMyCommunityMembership(communityId: string, userId: stri
     .select('*')
     .eq('program_id', communityId)
     .eq('athlete_id', userId)
-    .single()
-  if (error && error.code !== 'PGRST116') throw error
+    .maybeSingle()
+  if (error) throw error
   return data
 }
 
@@ -550,7 +550,7 @@ export async function getProgramBySlug(slug: string): Promise<{ name: string; sl
     .from('programs')
     .select('name, slug')
     .eq('slug', slug)
-    .single()
+    .maybeSingle()
   return data ?? null
 }
 
@@ -630,8 +630,8 @@ export async function getCoachMessage(programSlug: string, weekStart: string): P
     .select('*')
     .eq('program_slug', programSlug)
     .eq('week_start', weekStart)
-    .single()
+    .maybeSingle()
 
-  if (error && error.code !== 'PGRST116') throw error
+  if (error) throw error
   return data
 }

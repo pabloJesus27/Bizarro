@@ -16,7 +16,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bizarro",
   description: "Tu tracker de WODs",
-  themeColor: "#000000",
 };
 
 export default function RootLayout({
