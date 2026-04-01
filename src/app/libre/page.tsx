@@ -325,7 +325,7 @@ export default function LibrePage() {
                 </button>
               )
             })}
-            {/* Botón nuevo bloque */}
+            {/* Tab nuevo bloque */}
             <button
               onClick={() => {
                 const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
@@ -335,10 +335,11 @@ export default function LibrePage() {
                 setPendingMode('select')
               }}
               className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
-                pendingBlock !== null ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                pendingBlock !== null ? 'bg-neutral-900' : 'bg-black hover:bg-neutral-950'
               }`}
             >
-              <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">+ Añadir bloque</p>
+              <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">Nuevo</p>
+              <p className="text-neutral-400 font-black text-sm">+ Añadir bloque</p>
             </button>
           </div>
 
