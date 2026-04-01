@@ -105,10 +105,10 @@ export default function LibrePage() {
   useEffect(() => {
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
     const pos = initPosRef.current
-    initPosRef.current = null
     if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
+      initPosRef.current = null
       setSelectedBlock(pos.block)
-    } else {
+    } else if (!pos) {
       setSelectedBlock(firstBlock?.block ?? 1)
     }
     setPendingBlock(null)
