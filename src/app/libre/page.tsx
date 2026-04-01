@@ -45,6 +45,8 @@ export default function LibrePage() {
   const [timerError,     setTimerError]     = useState(false)
   const [wodError,       setWodError]       = useState<string | null>(null)
   const [loadWeekOpen,   setLoadWeekOpen]   = useState(false)
+  const [loadWodOpen,    setLoadWodOpen]    = useState(false)
+  const [pendingMode,    setPendingMode]    = useState<'select' | 'manual' | null>(null)
   const [prs,            setPrs]            = useState<PersonalRecord[]>([])
   const [communitySlug,  setCommunitySlug]  = useState<string | undefined>(undefined)
 
@@ -124,6 +126,7 @@ export default function LibrePage() {
     })
     setSelectedBlock(wod.block)
     setPendingBlock(null)
+    setPendingMode(null)
     setEditingWod(undefined)
   }
 
@@ -327,6 +330,7 @@ export default function LibrePage() {
                 setPendingBlock(next)
                 setSelectedBlock(next)
                 setEditingWod(undefined)
+                setPendingMode('select')
               }}
               className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
                 pendingBlock !== null ? 'bg-neutral-900' : 'hover:bg-neutral-950'
@@ -339,14 +343,47 @@ export default function LibrePage() {
           {/* Panel derecho */}
           <div className="flex-1 flex flex-col min-w-0">
 
-            {/* Formulario nuevo bloque */}
-            {pendingBlock !== null && (
+            {/* Selector manual / imagen */}
+            {pendingBlock !== null && pendingMode === 'select' && (
+              <div className="flex-1 p-6 flex flex-col gap-4">
+                <p className="text-neutral-500 text-sm font-mono">¿Cómo quieres añadir el bloque?</p>
+                {([
+                  { key: 'manual', label: 'Escribir manualmente', desc: 'Rellena el formulario' },
+                  { key: 'image',  label: 'Cargar desde imagen',  desc: 'La IA lee el WOD de una foto' },
+                ] as const).map(({ key, label, desc }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      if (key === 'manual') setPendingMode('manual')
+                      else setLoadWodOpen(true)
+                    }}
+                    className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
+                  >
+                    <div>
+                      <p className="text-white font-bold uppercase tracking-widest text-sm">{label}</p>
+                      <p className="text-neutral-600 text-xs font-mono mt-0.5">{desc}</p>
+                    </div>
+                    <span className="text-neutral-600 text-lg">→</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setPendingBlock(null); setPendingMode(null) }}
+                  className="text-neutral-600 hover:text-white text-xs font-mono transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            {/* Formulario nuevo bloque (manual) */}
+            {pendingBlock !== null && pendingMode === 'manual' && (
               <div className="p-6">
                 <WodForm
                   date={selectedDate}
                   block={pendingBlock}
                   onSaved={handleWodSaved}
-                  onCancel={dayWods.length > 0 ? () => { setPendingBlock(null); setSelectedBlock(dayWods[0]?.block ?? 1) } : undefined}
+                  onCancel={() => { setPendingBlock(null); setPendingMode(null); if (dayWods.length > 0) setSelectedBlock(dayWods[0]?.block ?? 1) }}
                 />
               </div>
             )}
@@ -495,6 +532,22 @@ export default function LibrePage() {
           variant="libre"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
+        />
+      )}
+
+      {loadWodOpen && pendingBlock !== null && (
+        <LoadWeekModal
+          weekDates={weekDates}
+          selectedDate={selectedDate}
+          variant="libre"
+          forceMode="wod"
+          onConfirm={async (parsed) => {
+            await handleLoadWeek(parsed)
+            setLoadWodOpen(false)
+            setPendingBlock(null)
+            setPendingMode(null)
+          }}
+          onClose={() => { setLoadWodOpen(false); setPendingBlock(null); setPendingMode(null) }}
         />
       )}
 
