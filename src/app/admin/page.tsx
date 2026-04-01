@@ -34,6 +34,8 @@ function AdminContent() {
   const [deletingDay,   setDeletingDay]   = useState(false)
   const [deletingWeek,  setDeletingWeek]  = useState(false)
   const [pendingBlock,  setPendingBlock]  = useState<number | null>(null)
+  const [pendingMode,   setPendingMode]   = useState<'select' | 'manual' | null>(null)
+  const [loadWodOpen,   setLoadWodOpen]   = useState(false)
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
   const [profileName,   setProfileName]   = useState('')
   const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
@@ -82,6 +84,7 @@ function AdminContent() {
       return [...prev, wod]
     })
     setPendingBlock(null)
+    setPendingMode(null)
     setSelectedBlock(wod.block)
     setModalOpen(false)
     setEditingWod(undefined)
@@ -238,6 +241,7 @@ function AdminContent() {
                   const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
                   setPendingBlock(next)
                   setSelectedBlock(0)
+                  setPendingMode('select')
                 }}
                 className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
                   selectedBlock === 0 ? 'bg-neutral-900' : 'hover:bg-neutral-950'
@@ -258,16 +262,40 @@ function AdminContent() {
               </div>
             ) : (<>
 
-              {/* Formulario nuevo bloque (inline) */}
-              {selectedBlock === 0 && pendingBlock !== null && (
+              {/* Selector manual / imagen */}
+              {selectedBlock === 0 && pendingMode === 'select' && (
+                <div className="flex-1 p-6 flex flex-col gap-4">
+                  <p className="text-neutral-500 text-sm font-mono">¿Cómo quieres añadir el bloque?</p>
+                  {([
+                    { key: 'manual', label: 'Escribir manualmente', desc: 'Rellena el formulario' },
+                    { key: 'image',  label: 'Cargar desde imagen',  desc: 'La IA lee el WOD de una foto' },
+                  ] as const).map(({ key, label, desc }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => { if (key === 'manual') setPendingMode('manual'); else setLoadWodOpen(true) }}
+                      className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
+                    >
+                      <div>
+                        <p className="text-white font-bold uppercase tracking-widest text-sm">{label}</p>
+                        <p className="text-neutral-600 text-xs font-mono mt-0.5">{desc}</p>
+                      </div>
+                      <span className="text-neutral-600 text-lg">→</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Formulario nuevo bloque (manual) */}
+              {selectedBlock === 0 && pendingMode === 'manual' && pendingBlock !== null && (
                 <div className="p-6">
                   <WodModal
                     inline
                     date={selectedDate}
                     block={pendingBlock}
                     program={programSlug}
-                    onClose={() => setPendingBlock(null)}
-                    onSaved={handleSaved}
+                    onClose={() => setPendingMode('select')}
+                    onSaved={wod => { handleSaved(wod); setPendingMode(null) }}
                   />
                 </div>
               )}
@@ -379,8 +407,34 @@ function AdminContent() {
         <LoadWeekModal
           weekDates={weekDates}
           programSlug={programSlug}
+          forceMode="week"
           onConfirm={handleLoadWeek}
           onClose={() => setLoadWeekOpen(false)}
+        />
+      )}
+
+      {loadWodOpen && selectedBlock === 0 && pendingBlock !== null && (
+        <LoadWeekModal
+          weekDates={weekDates}
+          selectedDate={selectedDate}
+          programSlug={programSlug}
+          forceMode="day"
+          onConfirm={async (parsed) => {
+            const sorted = [...parsed].sort((a, b) => a.block - b.block)
+            const firstBlock = pendingBlock
+            for (let i = 0; i < sorted.length; i++) {
+              const item = sorted[i]
+              const tc = Array.isArray(item.timerConfig) ? { type: 'mix' as const, blocks: item.timerConfig } : item.timerConfig
+              const extra = tc != null ? { timer_config: tc } : {}
+              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: programSlug, ...extra })
+              handleSaved(saved)
+            }
+            setLoadWodOpen(false)
+            setPendingBlock(null)
+            setPendingMode(null)
+            setSelectedBlock(firstBlock)
+          }}
+          onClose={() => { setLoadWodOpen(false); setPendingMode('select') }}
         />
       )}
     </>
