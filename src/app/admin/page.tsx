@@ -120,7 +120,7 @@ function AdminContent() {
   }
 
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
-  const activeWod = pendingBlock === null ? dayWods.find(w => w.block === selectedBlock) : undefined
+  const activeWod = selectedBlock > 0 ? dayWods.find(w => w.block === selectedBlock) : undefined
 
   if (authLoading || loading) return <CoachPageLoading />
 
@@ -216,11 +216,11 @@ function AdminContent() {
               </div>
             ) : (<>
               {dayWods.map(wod => {
-                const isActive = wod.block === selectedBlock && pendingBlock === null
+                const isActive = wod.block === selectedBlock
                 return (
                   <button
                     key={wod.id}
-                    onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null) }}
+                    onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); }}
                     className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
                       isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                     }`}
@@ -237,13 +237,14 @@ function AdminContent() {
                 onClick={() => {
                   const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
                   setPendingBlock(next)
-                  setSelectedBlock(next)
+                  setSelectedBlock(0)
                 }}
                 className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
-                  pendingBlock !== null ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                  selectedBlock === 0 ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                 }`}
               >
-                <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">+ Añadir bloque</p>
+                <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">Nuevo</p>
+                <p className="text-neutral-400 font-black text-sm">+ Añadir bloque</p>
               </button>
             </>)}
           </div>
@@ -258,7 +259,7 @@ function AdminContent() {
             ) : (<>
 
               {/* Formulario nuevo bloque (inline) */}
-              {pendingBlock !== null && (
+              {selectedBlock === 0 && pendingBlock !== null && (
                 <div className="p-6">
                   <WodModal
                     inline
@@ -272,7 +273,7 @@ function AdminContent() {
               )}
 
               {/* Detalle WOD */}
-              {activeWod && pendingBlock === null && (
+              {activeWod && selectedBlock > 0 && (
                 <div className="flex-1 flex flex-col">
                   {/* Tabs */}
                   <div className="flex border-b border-neutral-900 px-6">
@@ -352,7 +353,7 @@ function AdminContent() {
               )}
 
               {/* Estado vacío */}
-              {dayWods.length === 0 && pendingBlock === null && (
+              {dayWods.length === 0 && selectedBlock !== 0 && (
                 <div className="flex-1 flex items-center justify-center">
                   <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Sin WODs este día</p>
                 </div>

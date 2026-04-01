@@ -305,7 +305,7 @@ export default function ComunidadPage() {
             <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden">
               {dayWods.map(wod => {
                 const result = results.find(r => r.wod_id === wod.id)
-                const isActive = wod.block === selectedBlock && activeTab === 'wod'
+                const isActive = wod.block === selectedBlock && selectedBlock > 0 && activeTab === 'wod'
                 return (
                   <button
                     key={wod.id}
@@ -329,19 +329,21 @@ export default function ComunidadPage() {
                   onClick={() => {
                     const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
                     setPendingBlock(next)
+                    setSelectedBlock(0)
                     setPendingMode('select')
                   }}
                   className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
-                    pendingBlock !== null ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                    selectedBlock === 0 ? 'bg-neutral-900' : 'hover:bg-neutral-950'
                   }`}
                 >
-                  <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">+ Añadir bloque</p>
+                  <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">Nuevo</p>
+                  <p className="text-neutral-400 font-black text-sm">+ Añadir bloque</p>
                 </button>
               )}
             </div>
 
             {/* Panel derecho: selector de modo */}
-            {pendingBlock !== null && pendingMode === 'select' && isOwner && (
+            {selectedBlock === 0 && pendingMode === 'select' && isOwner && (
               <div className="flex-1 p-6 flex flex-col gap-4">
                 <p className="text-neutral-500 text-sm font-mono">¿Cómo quieres añadir el bloque?</p>
                 {([
@@ -374,14 +376,14 @@ export default function ComunidadPage() {
             )}
 
             {/* Panel derecho: formulario manual */}
-            {pendingBlock !== null && pendingMode === 'manual' && isOwner && (
+            {selectedBlock === 0 && pendingMode === 'manual' && isOwner && (
               <div className="flex-1 p-6">
                 <WodModal
                   inline
                   date={selectedDate}
-                  block={pendingBlock}
+                  block={pendingBlock!}
                   program={slug}
-                  onClose={() => { setPendingBlock(null); setPendingMode(null) }}
+                  onClose={() => { setPendingBlock(null); setPendingMode(null); setSelectedBlock(dayWods[0]?.block ?? 1) }}
                   onSaved={saved => {
                     setWods(prev => [...prev, saved])
                     setPendingBlock(null)
@@ -391,12 +393,12 @@ export default function ComunidadPage() {
                 />
               </div>
             )}
-            {!activeWod && pendingBlock === null && isOwner && (
+            {!activeWod && selectedBlock !== 0 && isOwner && (
               <div className="flex-1 flex items-center justify-center">
                 <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Pulsa + Añadir bloque para empezar</p>
               </div>
             )}
-            {activeWod && pendingBlock === null && pendingMode === null && (
+            {activeWod && selectedBlock > 0 && (
               <div className="flex-1 flex flex-col">
 
                 {/* Tabs */}
@@ -554,7 +556,7 @@ export default function ComunidadPage() {
         />
       )}
 
-      {loadWodOpen && isOwner && pendingBlock !== null && (
+      {loadWodOpen && isOwner && selectedBlock === 0 && pendingBlock !== null && (
         <LoadWeekModal
           weekDates={weekDates}
           selectedDate={selectedDate}
