@@ -547,7 +547,7 @@ export default function LibrePage() {
             setPendingBlock(null)
             setPendingMode(null)
           }}
-          onClose={() => { setLoadWodOpen(false); setPendingBlock(null); setPendingMode(null) }}
+          onClose={() => { setLoadWodOpen(false); setPendingMode('select') }}
         />
       )}
 
