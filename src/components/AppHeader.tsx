@@ -83,7 +83,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
             return (
               <>
                 {img ? (
-                  <Image src={img} alt={displayName} width={40} height={40} className="object-contain" />
+                  <Image src={img} alt={displayName} width={40} height={40} style={{ width: 'auto', height: '40px' }} className="object-contain" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
                     <span className="text-white font-black text-lg uppercase">{displayName[0]}</span>
