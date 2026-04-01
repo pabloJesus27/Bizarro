@@ -61,6 +61,7 @@ export default function ComunidadPage() {
       ? (() => { try { const s = sessionStorage.getItem(`biz_com_${slug}_pos`); return s ? JSON.parse(s) : null } catch { return null } })()
       : null
   )
+  const prevSelectedDateRef = useRef(today)
 
   const isOwner = !!user && community?.owner_id === user.id
 
@@ -112,13 +113,20 @@ export default function ComunidadPage() {
   }, [weekOffset, weekDates, today])
 
   useEffect(() => {
+    const dateChanged = prevSelectedDateRef.current !== selectedDate
+    prevSelectedDateRef.current = selectedDate
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
     const pos = initPosRef.current
-    initPosRef.current = null
     if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
+      initPosRef.current = null
       setSelectedBlock(pos.block)
-    } else {
+    } else if (dateChanged) {
       setSelectedBlock(firstBlock?.block ?? 1)
+    } else {
+      setSelectedBlock(prev => {
+        const exists = prev > 0 && wods.some(w => w.date === selectedDate && w.block === prev)
+        return exists ? prev : (firstBlock?.block ?? 1)
+      })
     }
     setPendingBlock(null)
     setPendingMode(null)

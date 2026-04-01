@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessage } from '@/lib/db'
+import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessage, getMyOwnedCommunity } from '@/lib/db'
 import type { PersonalRecord, CoachMessage } from '@/lib/db'
 import type { Wod, Result, Program } from '@/lib/types'
 import AppHeader from '@/components/AppHeader'
@@ -44,6 +44,7 @@ function DashboardContent() {
   const [timerError,      setTimerError]      = useState(false)
   const [wodError,        setWodError]        = useState<string | null>(null)
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
+  const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -51,14 +52,16 @@ function DashboardContent() {
       ? (() => { try { const s = sessionStorage.getItem('biz_dash_pos'); return s ? JSON.parse(s) : null } catch { return null } })()
       : null
   )
+  const prevSelectedDateRef = useRef(today)
 
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
 
-    Promise.all([getProfile(user.id), getMyPRs().catch(() => [])]).then(([profile, userPRs]) => {
+    Promise.all([getProfile(user.id), getMyPRs().catch(() => []), getMyOwnedCommunity(user.id).catch(() => null)]).then(([profile, userPRs, community]) => {
       setIsCoach(profile?.role === 'coach')
       setPrs(userPRs)
+      if (community) setCommunitySlug(community.slug)
       const programFromUrl = searchParams.get('program')
       const resolvedProgram = programFromUrl ?? profile?.program ?? null
       if (!resolvedProgram) { router.push('/elegir-modo'); return }
@@ -98,13 +101,20 @@ function DashboardContent() {
   }, [weekOffset, weekDates, today])
 
   useEffect(() => {
+    const dateChanged = prevSelectedDateRef.current !== selectedDate
+    prevSelectedDateRef.current = selectedDate
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
     const pos = initPosRef.current
-    initPosRef.current = null
     if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
+      initPosRef.current = null
       setSelectedBlock(pos.block)
-    } else {
+    } else if (dateChanged) {
       setSelectedBlock(firstBlock?.block ?? 1)
+    } else {
+      setSelectedBlock(prev => {
+        const exists = prev > 0 && wods.some(w => w.date === selectedDate && w.block === prev)
+        return exists ? prev : (firstBlock?.block ?? 1)
+      })
     }
     setActiveTab('wod')
   }, [selectedDate, wods])
@@ -163,7 +173,7 @@ function DashboardContent() {
     <>
       <main className="min-h-screen bg-black flex flex-col">
 
-        <AppHeader />
+        <AppHeader communitySlug={communitySlug} showCommunityTab={!!communitySlug} />
 
         {/* Banner nuevo PR */}
         {newPR && (

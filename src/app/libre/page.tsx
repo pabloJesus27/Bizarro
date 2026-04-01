@@ -56,6 +56,7 @@ export default function LibrePage() {
       ? (() => { try { const s = sessionStorage.getItem('biz_libre_pos'); return s ? JSON.parse(s) : null } catch { return null } })()
       : null
   )
+  const prevSelectedDateRef = useRef(today)
 
   useEffect(() => {
     if (authLoading) return
@@ -103,13 +104,21 @@ export default function LibrePage() {
   }, [weekOffset, weekDates, today])
 
   useEffect(() => {
+    const dateChanged = prevSelectedDateRef.current !== selectedDate
+    prevSelectedDateRef.current = selectedDate
     const firstBlock = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)[0]
     const pos = initPosRef.current
     if (pos && pos.date === selectedDate && wods.some(w => w.date === selectedDate && w.block === pos.block)) {
       initPosRef.current = null
       setSelectedBlock(pos.block)
-    } else if (!pos) {
+    } else if (dateChanged) {
       setSelectedBlock(firstBlock?.block ?? 1)
+    } else {
+      // Wods recargados en el mismo día — conservar bloque si sigue existiendo
+      setSelectedBlock(prev => {
+        const exists = prev > 0 && wods.some(w => w.date === selectedDate && w.block === prev)
+        return exists ? prev : (firstBlock?.block ?? 1)
+      })
     }
     setPendingBlock(null)
     setPendingMode(null)
