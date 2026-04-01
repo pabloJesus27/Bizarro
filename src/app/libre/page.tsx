@@ -330,6 +330,7 @@ export default function LibrePage() {
               onClick={() => {
                 const next = dayWods.length > 0 ? Math.max(...dayWods.map(w => w.block)) + 1 : 1
                 setPendingBlock(next)
+                setSelectedBlock(0)
                 setEditingWod(undefined)
                 setPendingMode('select')
               }}
