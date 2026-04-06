@@ -536,6 +536,7 @@ export async function getAllPrograms(): Promise<ProgramEntry[]> {
   const { data, error } = await supabase
     .from('programs')
     .select('*')
+    .neq('type', 'community')
     .order('name', { ascending: true })
   if (error) throw error
   return data
