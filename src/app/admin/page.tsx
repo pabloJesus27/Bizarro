@@ -208,22 +208,9 @@ function AdminContent() {
                 <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                {wods.some(w => w.date >= weekDates[0] && w.date <= weekDates[6] && !w.timer_config && ['For Time','AMRAP','EMOM','For Max'].includes(w.type)) && (
-                  <button
-                    onClick={handleGenerateWeekTimers}
-                    disabled={generatingTimers}
-                    className="text-neutral-600 hover:text-white text-xs font-mono transition disabled:opacity-50"
-                  >
-                    {generatingTimers && timerGenProgress
-                      ? `⚡ ${timerGenProgress.current}/${timerGenProgress.total}...`
-                      : '⚡ Generar timers'}
-                  </button>
-                )}
-                <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
-                  × Borrar semana
-                </button>
-              </div>
+              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                × Borrar semana
+              </button>
             )) : (
               <button
                 onClick={() => setLoadWeekOpen(true)}
@@ -240,6 +227,19 @@ function AdminContent() {
             siguiente →
           </button>
         </div>
+
+        {/* Generar timers — barra ancho completo */}
+        {wods.some(w => w.date >= weekDates[0] && w.date <= weekDates[6] && !w.timer_config && ['For Time','AMRAP','EMOM','For Max'].includes(w.type)) && (
+          <button
+            onClick={handleGenerateWeekTimers}
+            disabled={generatingTimers}
+            className="w-full border-b border-neutral-900 px-6 py-3 text-center text-xs font-mono uppercase tracking-widest text-neutral-500 hover:text-white hover:bg-neutral-950 transition disabled:opacity-50"
+          >
+            {generatingTimers && timerGenProgress
+              ? `⚡ Generando ${timerGenProgress.current}/${timerGenProgress.total}...`
+              : '⚡ Generar timers'}
+          </button>
+        )}
 
         {/* Day selector */}
         <div className="border-b border-neutral-900 overflow-x-auto [&::-webkit-scrollbar]:hidden">
