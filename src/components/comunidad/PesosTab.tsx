@@ -193,12 +193,12 @@ export default function PesosTab({ wodText, programSlug, session, endpoint = '/a
               Ningún miembro tiene PR para {selectedEntry?.label}
             </p>
           ) : (
-            <div className="flex flex-wrap gap-3 mb-6">
+            <div className="flex gap-3 mb-6 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
               {visibleMembers.map(m => (
                 <button
                   key={m.athlete_id}
                   onClick={() => toggleMember(m.athlete_id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono transition border ${
+                  className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono transition border ${
                     selectedIds.has(m.athlete_id)
                       ? 'border-white text-white'
                       : 'border-neutral-800 text-neutral-500 hover:border-neutral-600'
