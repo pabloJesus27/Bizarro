@@ -97,23 +97,28 @@ Las fechas de esta semana son:
 - VIERNES = ${viernes}
 - SÁBADO = ${sabado}
 
-IMPORTANTE — estructura de la imagen:
-- La imagen es una tabla donde cada COLUMNA es un día de la semana: primera columna = Lunes, segunda = Martes, y así sucesivamente.
-- Antes de extraer nada, identifica visualmente la posición horizontal (coordenada X) de cada columna usando los encabezados de día como referencia.
-- DEBES procesar la imagen COLUMNA por COLUMNA. Termina de extraer TODOS los bloques de Lunes antes de pasar a Martes, etc.
-- Las filas de separación (DESCANSO, HIDRATACION, etc.) NO son bloques — ignóralas.
-- Asigna block = 1 al primer bloque de cada día, block = 2 al segundo, etc. (numeración independiente por día).
+ESTRUCTURA DE LA TABLA:
+- Cada COLUMNA es un día. Usa los encabezados (LUNES, MARTES…) para identificar qué columna corresponde a qué día.
+- Cada FILA de la tabla es un bloque de entrenamiento. Hay filas ARRIBA y filas ABAJO del separador "DESCANSO / HIDRATACION".
+- El separador "DESCANSO" NO es un bloque — ignóralo. Pero las filas que van DESPUÉS del separador SÍ son bloques reales y debes extraerlos igual que los de arriba.
+- Algunos días pueden tener 6 bloques (3 antes + 3 después del separador), otros 5, otros 2. Extrae todo el contenido que veas en cada celda, sin omitir filas.
 
-Para cada celda con contenido devuelve un objeto con:
+PROCESO (sigue este orden):
+1. Identifica cuántas filas tiene la tabla (sin contar el separador DESCANSO).
+2. Para cada fila, lee el contenido celda a celda de izquierda a derecha (LUNES → SÁBADO).
+3. Si una celda tiene contenido, genera un bloque. Si está vacía, no generes nada.
+4. Numera los bloques de cada día de forma independiente empezando en 1.
+
+Para cada bloque devuelve:
 - date: fecha YYYY-MM-DD del día correspondiente
-- block: número de bloque (1, 2, 3...)
-- title: nombre corto del ejercicio principal (máx 4 palabras). Para fuerza/halterofilia: solo el ejercicio final (ej: "Back Squat"). Para WODs metabólicos: ejercicios principales separados por '+' (ej: "Assault Bike + Burpees").
+- block: número de bloque (1, 2, 3… por día)
+- title: nombre corto del ejercicio principal (máx 4 palabras). Fuerza/halterofilia: solo el ejercicio (ej: "Back Squat"). WOD metabólico: ejercicios separados por '+' (ej: "Assault Bike + Burpees").
 - type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
-- description: texto completo exacto del WOD tal como aparece en la imagen
+- description: texto completo exacto del bloque tal como aparece en la imagen
 
 Reglas para el tipo:
-- Warm Up / calentamiento / activación → "Warmup"
-- Sets/reps con barra o pesas, halterofilia → "Strength"
+- Warm Up / calentamiento / activación / N sets de ejercicios variados sin tiempo → "Warmup"
+- Sets/reps con barra, halterofilia, pesas → "Strength"
 - Handstand, muscle up, ring, gymnastics → "Gymnastics"
 - Core, abdominales, plancha, GHD → "Core"
 - Estiramientos, movilidad, foam roller → "Mobility"
@@ -123,12 +128,13 @@ Reglas para el tipo:
 - Max cal / max reps / X" on X" off → "For Max"
 - Resto → "Other"
 
-Antes de escribir el JSON, escribe una línea por cada día con los bloques que ves (usa / como separador):
-LUNES: bloque1 / bloque2 / ...
-MARTES: bloque1 / bloque2 / ...
+ANTES del JSON, escribe el conteo de bloques por día para verificar que no te dejas ninguno:
+LUNES: N bloques → bloque1 / bloque2 / ...
+MARTES: N bloques → bloque1 / bloque2 / ...
+(una línea por día)
 
-Luego escribe exactamente esta línea: ===JSON===
-Y a continuación el array JSON completo, sin markdown:
+Luego escribe exactamente: ===JSON===
+Y el array JSON completo sin markdown:
 [{"date":"...","block":1,"title":"...","type":"...","description":"..."}]`,
         },
       ],
