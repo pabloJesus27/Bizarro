@@ -15,7 +15,7 @@ import PRCalculator from '@/components/PRCalculator'
 import CoachMessageCard from '@/components/CoachMessageCard'
 import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
-import { WOD_TYPE_LABEL, getScoreDisplay, detectPRExercise } from '@/lib/wod-utils'
+import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import PesosTab from '@/components/comunidad/PesosTab'
 
 // ── Dashboard Page ─────────────────────────────────────
@@ -305,7 +305,7 @@ function DashboardContent() {
                       Ranking
                     </button>
                   )}
-                  {detectPRExercise(`${activeWod.title} ${activeWod.description ?? ''}`) && /\d+\s*%/.test(activeWod.description ?? '') && (
+                  {activeWod.type === 'Strength' && /\d+\s*%/.test(activeWod.description ?? '') && (
                     <button
                       onClick={() => setActiveTab('pesos')}
                       className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${

@@ -532,7 +532,7 @@ export default function ComunidadPage() {
                   >
                     Ranking
                   </button>
-                  {detectPRExercise(`${activeWod.title} ${activeWod.description ?? ''}`) && /\d+\s*%/.test(activeWod.description ?? '') && (
+                  {activeWod.type === 'Strength' && /\d+\s*%/.test(activeWod.description ?? '') && (
                     <button
                       onClick={() => setActiveTab('pesos')}
                       className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
