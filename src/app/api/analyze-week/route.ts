@@ -32,7 +32,7 @@ Reglas de tipo (aplica en orden estricto, la primera que encaje gana — para en
 5. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
 6. "for time" explícito, time cap → For Time
 7. Carrera de distancia fija única sin sets ni rondas → For Time
-8. "ventanas de X min" con trabajo fijo por ventana → For Time
+8. "ventanas de X min" con trabajo fijo por ventana → Other
 9. N sets de ejercicios variados sin formato de tiempo → Warmup
 10. Calentamiento, activación, warm up → Warmup
 11. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
