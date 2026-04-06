@@ -103,7 +103,7 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
       {finished && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
-          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white transition">Terminar</button>
+          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center gap-6 text-center">
