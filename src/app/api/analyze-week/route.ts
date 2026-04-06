@@ -27,16 +27,16 @@ Tipos válidos: Warmup | Strength | Gymnastics | Core | Mobility | For Time | AM
 Reglas de tipo (aplica en orden estricto, la primera que encaje gana — para en cuanto encuentres una coincidencia):
 1. Contiene "AMRAP" explícito → AMRAP
 2. Contiene "EMOM" o "E2MOM" explícito → EMOM
-3. COMPRUEBA PRIMERO: ¿contiene "max cal", "max reps", o "max [cualquier ejercicio]" en cualquier parte del texto? → For Max. Esta regla tiene prioridad sobre todas las siguientes aunque el bloque también tenga ventanas, sets o rondas fijas.
+3. COMPRUEBA PRIMERO: ¿el texto termina con "max cal [ejercicio]" o "max reps [ejercicio]" como métrica final? (ej: "...max cal row", "...max cal bikeerg", "...max reps pull ups") → For Max. IMPORTANTE: "max bar muscle up" o "max pull ups" en medio de una lista de sets/reps NO cuenta — ahí "max" forma parte del nombre del ejercicio, no es la métrica.
 4. Contiene formato "X'' on X'' off" o "X'' work X'' rest" → For Max
-5. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
-6. "for time" explícito, time cap → For Time
-7. Carrera de distancia fija única sin sets ni rondas → For Time
-8. "ventanas de X min" con trabajo fijo por ventana → For Max
-9. N sets de ejercicios variados sin formato de tiempo → Warmup
+5. "ventanas de X min" con trabajo fijo por ventana → For Max
+6. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
+7. "for time" explícito, time cap → For Time
+8. Carrera de distancia fija única sin sets ni rondas → For Time
+9. N sets de ejercicios variados sin formato de tiempo (aunque incluya ring row, hollow rocks, v-ups, push ups, pull ups u otros movimientos de gymnastics) → Warmup
 10. Calentamiento, activación, warm up → Warmup
-11. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
-12. Handstand, muscle up, ring dips, gymnastics → Gymnastics
+11. Trabajo de gymnastics a calidad sin tiempo (muscle up, handstand walk, double unders técnico) con sets pero sin métrica de tiempo → Gymnastics
+12. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
 13. Core, abdominales, plancha, GHD, hollow body → Core
 14. Movilidad, estiramientos, foam roller → Mobility
 15. Resto → Other
