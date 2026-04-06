@@ -126,6 +126,9 @@ El texto dentro de una celda puede tener múltiples líneas, párrafos o notas d
 REGLA CRÍTICA — captura la primera línea de cada celda:
 Muchas celdas empiezan con "N sets", "N rondas", "N rounds" o similar en la primera línea. Esa primera línea es parte de la description y DEBE incluirse. No la omitas aunque sea breve.
 
+REGLA CRÍTICA — copia literal, nunca inventes:
+La description debe ser una transcripción exacta del texto visible en la celda. NUNCA añadas palabras, tiempos de descanso, repeticiones ni ningún dato que no esté escrito explícitamente en la imagen. Si algo no se ve con claridad, omítelo — nunca lo completes con suposiciones.
+
 PROCESO (columna por columna):
 1. Empieza por LUNES. Recorre sus celdas de arriba a abajo, incluyendo las que están después del separador DESCANSO.
 2. Para cada celda con texto real de entrenamiento, genera un bloque. Si la celda está vacía, omítela sin generar nada.
