@@ -123,6 +123,9 @@ ESTRUCTURA DE LA TABLA:
 REGLA CRÍTICA — una celda = un bloque:
 El texto dentro de una celda puede tener múltiples líneas, párrafos o notas del coach. TODO ese texto forma la description de ese único bloque. NUNCA dividas el contenido de una sola celda en bloques distintos.
 
+REGLA CRÍTICA — captura la primera línea de cada celda:
+Muchas celdas empiezan con "N sets", "N rondas", "N rounds" o similar en la primera línea. Esa primera línea es parte de la description y DEBE incluirse. No la omitas aunque sea breve.
+
 PROCESO (columna por columna):
 1. Empieza por LUNES. Recorre sus celdas de arriba a abajo, incluyendo las que están después del separador DESCANSO.
 2. Para cada celda con texto real de entrenamiento, genera un bloque. Si la celda está vacía, omítela sin generar nada.
