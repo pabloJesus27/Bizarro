@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   // Pasada 1: visión — extrae solo date, block y description en crudo (Sonnet para mayor precisión en tablas)
   const msg = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [{
       role: 'user',
       content: [
