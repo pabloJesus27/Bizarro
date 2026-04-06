@@ -24,19 +24,21 @@ async function enrichWods(raws: RawWod[]): Promise<FullWod[]> {
 
 Tipos válidos: Warmup | Strength | Gymnastics | Core | Mobility | For Time | AMRAP | EMOM | For Max | Other
 
-Reglas de tipo (aplica en orden, la primera que encaje gana):
-1. Contiene AMRAP → AMRAP
-2. Contiene EMOM o E2MOM → EMOM
-3. "max cal", "max reps", "max [ejercicio]", formato X" on X" off → For Max
-4. "for time", time cap, lista de rondas metabólicas sin sets×reps → For Time
-5. Carrera de distancia fija única sin sets ni rondas → For Time
-6. N sets de ejercicios variados sin formato de tiempo explícito → Warmup
-7. Calentamiento, activación, warm up → Warmup
-8. Sets/reps con barra, halterofilia, pesas, o ejercicios de musculación (lateral raises, curl biceps, triceps, extensiones, femoral, abducciones, press) → Strength
-9. Handstand, muscle up, ring dips, gymnastics → Gymnastics
-10. Core, abdominales, plancha, GHD, hollow body → Core
-11. Movilidad, estiramientos, foam roller → Mobility
-12. Resto → Other
+Reglas de tipo (aplica en orden estricto, la primera que encaje gana — no sigas leyendo):
+1. Contiene "AMRAP" explícito → AMRAP
+2. Contiene "EMOM" o "E2MOM" explícito → EMOM
+3. Contiene "max cal", "max reps", "max [ejercicio]", o formato "X'' on X'' off" / "X'' work X'' rest" → For Max
+4. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min", "3 rondas X+Y+Z") → For Time
+5. "for time" explícito, time cap, o circuito metabólico sin sets×reps → For Time
+6. Carrera de distancia fija única sin sets ni rondas → For Time
+7. "ventanas de X min" con trabajo fijo por ventana (sin "max" en la descripción) → For Time
+8. N sets de ejercicios variados sin formato de tiempo explícito → Warmup
+9. Calentamiento, activación, warm up → Warmup
+10. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
+11. Handstand, muscle up, ring dips, gymnastics → Gymnastics
+12. Core, abdominales, plancha, GHD, hollow body → Core
+13. Movilidad, estiramientos, foam roller → Mobility
+14. Resto → Other
 
 Reglas de título (máx 4 palabras):
 - Fuerza/halterofilia: solo el ejercicio principal (ej: "Back Squat", "Power Snatch")
