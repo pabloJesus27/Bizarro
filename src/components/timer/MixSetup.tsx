@@ -73,10 +73,10 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       <div className="border border-neutral-700 rounded-2xl px-6 py-5 flex flex-col gap-5 w-80">
         <button
           onClick={() => setCardOpen(o => !o)}
-          className="flex items-center justify-between w-full"
+          className="flex items-center justify-between w-full py-1"
         >
-          <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Bloques personalizados</p>
-          <span className={`text-neutral-500 text-xs font-mono transition-transform duration-200 ${cardOpen ? 'rotate-180' : ''}`}>▾</span>
+          <p className="text-neutral-400 text-xs uppercase tracking-widest font-mono">Bloques personalizados</p>
+          <span className={`text-white text-base font-black transition-transform duration-200 leading-none ${cardOpen ? 'rotate-180' : ''}`}>▾</span>
         </button>
 
         {cardOpen && (
