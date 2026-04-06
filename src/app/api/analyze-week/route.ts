@@ -24,21 +24,22 @@ async function enrichWods(raws: RawWod[]): Promise<FullWod[]> {
 
 Tipos válidos: Warmup | Strength | Gymnastics | Core | Mobility | For Time | AMRAP | EMOM | For Max | Other
 
-Reglas de tipo (aplica en orden estricto, la primera que encaje gana — no sigas leyendo):
+Reglas de tipo (aplica en orden estricto, la primera que encaje gana — para en cuanto encuentres una coincidencia):
 1. Contiene "AMRAP" explícito → AMRAP
 2. Contiene "EMOM" o "E2MOM" explícito → EMOM
-3. Contiene "max cal", "max reps", "max [ejercicio]", o formato "X'' on X'' off" / "X'' work X'' rest" → For Max
-4. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min", "3 rondas X+Y+Z") → For Time
-5. "for time" explícito, time cap, o circuito metabólico sin sets×reps → For Time
-6. Carrera de distancia fija única sin sets ni rondas → For Time
-7. "ventanas de X min" con trabajo fijo por ventana (sin "max" en la descripción) → For Time
-8. N sets de ejercicios variados sin formato de tiempo explícito → Warmup
-9. Calentamiento, activación, warm up → Warmup
-10. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
-11. Handstand, muscle up, ring dips, gymnastics → Gymnastics
-12. Core, abdominales, plancha, GHD, hollow body → Core
-13. Movilidad, estiramientos, foam roller → Mobility
-14. Resto → Other
+3. COMPRUEBA PRIMERO: ¿contiene "max cal", "max reps", o "max [cualquier ejercicio]" en cualquier parte del texto? → For Max. Esta regla tiene prioridad sobre todas las siguientes aunque el bloque también tenga ventanas, sets o rondas fijas.
+4. Contiene formato "X'' on X'' off" o "X'' work X'' rest" → For Max
+5. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
+6. "for time" explícito, time cap → For Time
+7. Carrera de distancia fija única sin sets ni rondas → For Time
+8. "ventanas de X min" con trabajo fijo por ventana → For Time
+9. N sets de ejercicios variados sin formato de tiempo → Warmup
+10. Calentamiento, activación, warm up → Warmup
+11. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
+12. Handstand, muscle up, ring dips, gymnastics → Gymnastics
+13. Core, abdominales, plancha, GHD, hollow body → Core
+14. Movilidad, estiramientos, foam roller → Mobility
+15. Resto → Other
 
 Reglas de título (máx 4 palabras):
 - Fuerza/halterofilia: solo el ejercicio principal (ej: "Back Squat", "Power Snatch")
