@@ -15,6 +15,7 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   const [finished, setFinished] = useState(false)
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
+  const startEpochRef = useRef<number>(0)
   const remaining = totalSeconds - elapsed
   const isLandscape = useIsLandscape()
 
@@ -25,15 +26,21 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
   }, [])
 
   useEffect(() => {
+    if (running) startEpochRef.current = Date.now() - elapsed * 1000
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running])
+
+  useEffect(() => {
     if (!running) return
-    const id = setInterval(() => {
-      setElapsed(p => {
-        const next = p + 1
-        if (next >= totalSeconds) { setRunning(false); setFinished(true) }
-        return next
-      })
-    }, 1000)
-    return () => clearInterval(id)
+    const tick = () => {
+      const next = Math.min(totalSeconds, Math.round((Date.now() - startEpochRef.current) / 1000))
+      setElapsed(next)
+      if (next >= totalSeconds) { setRunning(false); setFinished(true) }
+    }
+    const id = setInterval(tick, 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
   }, [running, totalSeconds])
 
   useEffect(() => {

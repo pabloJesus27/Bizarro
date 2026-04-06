@@ -16,6 +16,7 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
   const [finished, setFinished] = useState(false)
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
+  const startEpochRef = useRef<number>(0)
 
   const totalRemaining = Math.max(0, totalSeconds - elapsed)
   const intervalElapsed = elapsed % intervalSeconds
@@ -25,10 +26,21 @@ export default function IntervalTimer({ config }: { config: Extract<TimerConfig,
   const isWarning = running && intervalRemaining <= 30 && intervalRemaining > 0
 
   useEffect(() => {
-    if (!running) return
-    const id = setInterval(() => setElapsed(p => p + 1), 1000)
-    return () => clearInterval(id)
+    if (running) startEpochRef.current = Date.now() - elapsed * 1000
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running])
+
+  useEffect(() => {
+    if (!running) return
+    const tick = () => {
+      const next = Math.min(totalSeconds, Math.round((Date.now() - startEpochRef.current) / 1000))
+      setElapsed(next)
+    }
+    const id = setInterval(tick, 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
+  }, [running, totalSeconds])
 
   useEffect(() => {
     if (!audioRef.current) return

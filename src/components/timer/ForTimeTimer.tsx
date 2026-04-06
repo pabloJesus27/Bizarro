@@ -12,6 +12,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   const [stopped, setStopped] = useState(false)
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
+  const startEpochRef = useRef<number>(0)
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
@@ -23,9 +24,17 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
   const isLandscape = useIsLandscape()
 
   useEffect(() => {
+    if (running) startEpochRef.current = Date.now() - elapsed * 1000
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running])
+
+  useEffect(() => {
     if (!running || cappedOut) return
-    const id = setInterval(() => setElapsed(p => p + 1), 1000)
-    return () => clearInterval(id)
+    const tick = () => setElapsed(Math.round((Date.now() - startEpochRef.current) / 1000))
+    const id = setInterval(tick, 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
   }, [running, cappedOut])
 
   useEffect(() => {

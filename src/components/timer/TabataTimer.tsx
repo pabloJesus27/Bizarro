@@ -8,13 +8,19 @@ import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
 export default function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number; restSeconds: number; rounds: number }) {
   const router = useRouter()
-  const [phase, setPhase] = useState<'work' | 'rest'>('work')
-  const [phaseElapsed, setPhaseElapsed] = useState(0)
-  const [currentRound, setCurrentRound] = useState(1)
+  const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
+  const startEpochRef = useRef<number>(0)
+
+  const cycle = workSeconds + restSeconds
+  const totalDuration = rounds * cycle
+  const cycleElapsed = elapsed % cycle
+  const phase: 'work' | 'rest' = cycleElapsed < workSeconds ? 'work' : 'rest'
+  const phaseRemaining = phase === 'work' ? workSeconds - cycleElapsed : cycle - cycleElapsed
+  const currentRound = Math.min(Math.floor(elapsed / cycle) + 1, rounds)
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
@@ -22,8 +28,10 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
     return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
   }, [])
 
-  const phaseDuration = phase === 'work' ? workSeconds : restSeconds
-  const phaseRemaining = phaseDuration - phaseElapsed
+  useEffect(() => {
+    if (running) startEpochRef.current = Date.now() - elapsed * 1000
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running])
 
   useEffect(() => {
     if (!running || !('wakeLock' in navigator)) return
@@ -35,50 +43,30 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
 
   useEffect(() => {
     if (!running) return
-    const id = setInterval(() => {
-      setPhaseElapsed(prev => {
-        const next = prev + 1
-        const duration = phase === 'work' ? workSeconds : restSeconds
+    const tick = () => {
+      const next = Math.min(totalDuration, Math.round((Date.now() - startEpochRef.current) / 1000))
+      setElapsed(next)
+      if (next >= totalDuration) { setRunning(false); setFinished(true) }
+    }
+    const id = setInterval(tick, 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
+  }, [running, totalDuration])
 
-        if (next >= duration) {
-          if (phase === 'work') {
-            // switch to rest
-            setPhase('rest')
-            setPhaseElapsed(0)
-            if (audioRef.current) beepGo(audioRef.current)
-          } else {
-            // rest done, next round or finish
-            if (currentRound >= rounds) {
-              setRunning(false)
-              setFinished(true)
-              if (audioRef.current) beepGo(audioRef.current)
-            } else {
-              setCurrentRound(r => r + 1)
-              setPhase('work')
-              setPhaseElapsed(0)
-              if (audioRef.current) beepGo(audioRef.current)
-            }
-          }
-          return 0
-        }
-        return next
-      })
-    }, 1000)
-    return () => clearInterval(id)
-  }, [running, phase, workSeconds, restSeconds, currentRound, rounds])
-
+  // Beeps: transiciones de fase y cuenta atrás
   useEffect(() => {
-    if (!running || !audioRef.current) return
-    const duration = phase === 'work' ? workSeconds : restSeconds
-    const remaining = duration - phaseElapsed
-    if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
-  }, [phaseElapsed, phase, workSeconds, restSeconds, running])
+    if (!running || !audioRef.current || elapsed === 0) return
+    if (elapsed >= totalDuration) { beepGo(audioRef.current); return }
+    if (cycleElapsed === 0 || cycleElapsed === workSeconds) { beepGo(audioRef.current); return }
+    if (phaseRemaining <= 3 && phaseRemaining > 0) beep(audioRef.current, phaseRemaining === 1 ? 1100 : 880, 1.0)
+  }, [elapsed, running, cycleElapsed, workSeconds, phaseRemaining, totalDuration])
 
   const isLandscape = useIsLandscape()
 
   function handleStart() {
     if (!audioRef.current) { const ctx = new AudioContext(); audioRef.current = ctx; keepAudioContextAlive(ctx) }
-    if (phaseElapsed === 0 && currentRound === 1) { setInPreCountdown(true) } else { setRunning(true) }
+    if (elapsed === 0) { setInPreCountdown(true) } else { setRunning(true) }
   }
 
   return (
@@ -90,7 +78,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
         >
           {running ? (
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
-          ) : (phaseElapsed > 0 || currentRound > 1) ? (
+          ) : elapsed > 0 ? (
             <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
           ) : (
             <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Iniciar</button>
@@ -141,7 +129,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
             <p className="text-neutral-600 text-xs font-mono">Ronda {currentRound} / {rounds}</p>
             {!running && !finished && !inPreCountdown && (
               <button onClick={handleStart} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
-                {phaseElapsed === 0 && currentRound === 1 ? 'Iniciar' : 'Reanudar'}
+                {elapsed === 0 ? 'Iniciar' : 'Reanudar'}
               </button>
             )}
             {running && (
