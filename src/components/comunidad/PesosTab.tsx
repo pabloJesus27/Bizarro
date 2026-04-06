@@ -134,7 +134,7 @@ export default function PesosTab({ wodText, programSlug, session, endpoint = '/a
       })
       .catch(() => setError('Error al cargar los pesos'))
       .finally(() => setLoading(false))
-  }, [selectedEntry, communitySlug, session])
+  }, [selectedEntry, programSlug, session])
 
   if (entries.length === 0 || percentages.length === 0) return (
     <div className="flex-1 flex items-center justify-center p-6">
