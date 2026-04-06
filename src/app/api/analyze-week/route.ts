@@ -77,17 +77,13 @@ export async function POST(req: NextRequest) {
 
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 8192,
+    max_tokens: 4096,
     messages: [{
       role: 'user',
       content: [
         {
           type: 'image',
-          source: {
-            type: 'base64',
-            media_type: mediaType,
-            data: imageBase64,
-          },
+          source: { type: 'base64', media_type: mediaType, data: imageBase64 },
         },
         {
           type: 'text',
@@ -103,61 +99,37 @@ Las fechas de esta semana son:
 
 IMPORTANTE — estructura de la imagen:
 - La imagen es una tabla donde cada COLUMNA es un día de la semana: primera columna = Lunes, segunda = Martes, y así sucesivamente.
-- Antes de extraer nada, identifica visualmente la posición horizontal (coordenada X) de cada columna usando los encabezados de día como referencia. Esa posición X define a qué día pertenece cualquier celda, independientemente de su fila.
+- Antes de extraer nada, identifica visualmente la posición horizontal (coordenada X) de cada columna usando los encabezados de día como referencia.
 - DEBES procesar la imagen COLUMNA por COLUMNA. Termina de extraer TODOS los bloques de Lunes antes de pasar a Martes, etc.
-- Para cada columna: recórrela de arriba a abajo leyendo ÚNICAMENTE el contenido dentro de esa franja horizontal. El contenido de columnas adyacentes no existe mientras procesas esta columna.
-- Las filas de separación (DESCANSO, HIDRATACION, etc.) ocupan toda la fila y NO son bloques. Cuando encuentres una, ignórala y re-ancla visualmente cada columna volviendo a mirar los encabezados de día para confirmar la posición X de cada una ANTES de continuar leyendo las filas siguientes.
-- Una celda vacía en una fila no interrumpe la lectura del resto de la columna. Sigue hacia abajo.
-- Al asignar un bloque, verifica SIEMPRE que su posición horizontal corresponde a la columna que estás procesando, no a una adyacente.
-- Si una columna tiene pocas celdas o ninguna en las filas inferiores, es correcto — no añadas contenido que visualmente pertenece a otras columnas.
-- Asigna block = 1 al primer bloque de ejercicio de cada día, block = 2 al segundo, etc. (numeración independiente por día, sin contar filas de separación). El número de bloque DEBE reflejar el orden visual de arriba a abajo: la celda más alta es siempre block=1, la siguiente block=2, y así sucesivamente.
+- Las filas de separación (DESCANSO, HIDRATACION, etc.) NO son bloques — ignóralas.
+- Asigna block = 1 al primer bloque de cada día, block = 2 al segundo, etc. (numeración independiente por día).
 
-Para cada celda con contenido, devuelve un WOD con:
+Para cada celda con contenido devuelve un objeto con:
 - date: fecha YYYY-MM-DD del día correspondiente
-- block: número de bloque según la regla de arriba
-- title: identifica la parte PRINCIPAL del bloque (no el calentamiento ni los ejercicios técnicos previos). Para bloques de fuerza/halterofilia usa solo el nombre del ejercicio principal (ej: "Cluster", "Clean & Jerk", "Back Squat"). Si hay una progresión técnica antes del ejercicio principal (muscle clean, tall clean, drills), ignórala y pon solo el ejercicio final. Para WODs metabólicos usa los ejercicios principales separados por '+' (ej: "Assault Bike + Burpees", "Thrusters + Pull Ups"). Máximo 4 palabras.
+- block: número de bloque (1, 2, 3...)
+- title: nombre corto del ejercicio principal (máx 4 palabras). Para fuerza/halterofilia: solo el ejercicio final (ej: "Back Squat"). Para WODs metabólicos: ejercicios principales separados por '+' (ej: "Assault Bike + Burpees").
 - type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
 - description: texto completo exacto del WOD tal como aparece en la imagen
-- timerConfig: configuración del timer (ver reglas abajo), o null si no aplica
 
 Reglas para el tipo:
-- Warm Up → siempre "Warmup"
-- Sets/reps con barra o pesas → "Strength"
+- Warm Up / calentamiento / activación → "Warmup"
+- Sets/reps con barra o pesas, halterofilia → "Strength"
 - Handstand, muscle up, ring, gymnastics → "Gymnastics"
-- Ejercicios de core, abdominales, giros de cintura, plancha, GHD → "Core"
-- Estiramientos, foam roller, movilidad, recuperación activa → "Mobility"
+- Core, abdominales, plancha, GHD → "Core"
+- Estiramientos, movilidad, foam roller → "Mobility"
 - AMRAP → "AMRAP"
-- For time / tiempo límite / completar X trabajo lo antes posible → "For Time"
-- Circuitos de sets con ejercicios metabólicos (assault bike, remo, ski erg, toes to bar, burpees, wall balls, box jumps, double unders, sandbag, kettlebell, thrusters...) aunque no diga explícitamente "for time" → "For Time"
-- EMOM → "EMOM"
-- Max cal / max reps / "max [ejercicio]" en ventanas de tiempo (aunque sea X" on X" off con varios ejercicios) → "For Max"
-- Bloque de N sets con ejercicios variados SIN formato de tiempo explícito (AMRAP/EMOM/for time/max) y SIN ser halterofilia/fuerza → "Warmup" si parece activación o acondicionamiento general, "Other" si no encaja en ninguna categoría
+- For time / tiempo límite / circuito metabólico → "For Time"
+- EMOM / E2MOM → "EMOM"
+- Max cal / max reps / X" on X" off → "For Max"
 - Resto → "Other"
 
-Reglas para timerConfig: usa SIEMPRE formato mix con bloques. Cada bloque: {"label":"...","seconds":N}.
-- Warmup, Strength, Gymnastics, Core, Mobility → null
-- For Time sin time cap → [{"label":"For Time","seconds":0,"countUp":true}] (cuenta arriba, el atleta para manualmente)
-- For Time con time cap X min → [{"label":"For Time","seconds":X*60,"countUp":true}]
-- AMRAP N min → [{"label":"AMRAP","seconds":N*60}]
-- EMOM N min con intervalos de X seg → 1 bloque [{"label":"EMOM","seconds":N*60,"intervalSeconds":X}] (EMOM estándar = intervalSeconds:60, E2MOM = intervalSeconds:120, etc.)
-- For Max ventanas de X min durante Y min → (Y/X) bloques {"label":"Ronda 1","seconds":X*60}... (cada bloque es un esfuerzo máximo distinto)
-- Tabata work W seg / rest R seg × N rondas → N pares alternando {"label":"Trabajo","seconds":W} y {"label":"Descanso","seconds":R}
-- Estructura compleja (AMRAP + descanso + AMRAP, etc.) → tantos bloques como partes haya con label descriptivo y seconds correcto
-- N sets con M ejercicios en formato "X" on X" off" y descanso Y" entre sets → expande completamente: por cada set crea [Ejercicio1(Xs), Descanso(Xs), Ejercicio2(Xs), Descanso(Xs), ...] y añade Descanso(Ys) al final de cada set excepto el último. Ej: "3 sets, 30" on 30" off, DU / Thrusters / Burpees, rest 90" entre sets" → 17 bloques: [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s),Desc(90s)] × 2 + [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s)]
-- El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
-- En notación CrossFit: X" = X segundos, X' = X minutos. Ej: 30" = 30 seg, 3' = 180 seg
-- Los bloques de descanso (off, rest) SIEMPRE deben tener su duración en segundos correcta
-- "X sets / X rondas" SIN descanso explícito entre sets → For Time simple (1 solo bloque)
-- Nunca uses seconds: 0 salvo en For Time sin time cap con countUp: true
-
-Antes de escribir el JSON, escribe una línea por cada día con los bloques que ves en esa columna (usa / como separador):
+Antes de escribir el JSON, escribe una línea por cada día con los bloques que ves (usa / como separador):
 LUNES: bloque1 / bloque2 / ...
 MARTES: bloque1 / bloque2 / ...
-(continúa para cada día con contenido)
 
 Luego escribe exactamente esta línea: ===JSON===
 Y a continuación el array JSON completo, sin markdown:
-[{"date":"...","block":1,"title":"...","type":"...","description":"...","timerConfig":...}]`,
+[{"date":"...","block":1,"title":"...","type":"...","description":"..."}]`,
         },
       ],
     }],
@@ -165,7 +137,6 @@ Y a continuación el array JSON completo, sin markdown:
 
   const raw = (msg.content[0] as { type: string; text: string }).text.trim()
 
-  // Extraer el array JSON: buscar delimitador ===JSON=== o, como fallback, el último [{ del texto
   const delimiter = '===JSON==='
   const delimPos = raw.indexOf(delimiter)
   let extracted: string

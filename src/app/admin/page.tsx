@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getProfile, getWodsForWeek, createWod, deleteWod, deleteWodsForDay, deleteWodsForWeek, getMyPrograms, getPendingJoinRequests } from '@/lib/db'
+import { getProfile, getWodsForWeek, createWod, deleteWod, deleteWodsForDay, deleteWodsForWeek, getMyPrograms, getPendingJoinRequests, updateWodTimerConfig } from '@/lib/db'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import CoachHeader from '@/components/CoachHeader'
 import { CoachPageLoading } from '@/components/PageLoading'
@@ -16,7 +16,7 @@ import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 // ── Admin Page ─────────────────────────────────────────
 
 function AdminContent() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, session, loading: authLoading } = useAuth()
   const router       = useRouter()
   const searchParams = useSearchParams()
   const programSlug  = searchParams.get('program') ?? 'bizarro'
@@ -35,8 +35,10 @@ function AdminContent() {
   const [deletingWeek,  setDeletingWeek]  = useState(false)
   const [pendingBlock,  setPendingBlock]  = useState<number | null>(null)
   const [pendingMode,   setPendingMode]   = useState<'select' | 'manual' | null>(null)
-  const [loadWodOpen,   setLoadWodOpen]   = useState(false)
-  const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
+  const [loadWodOpen,        setLoadWodOpen]        = useState(false)
+  const [loadWeekOpen,       setLoadWeekOpen]       = useState(false)
+  const [generatingTimers,   setGeneratingTimers]   = useState(false)
+  const [timerGenProgress,   setTimerGenProgress]   = useState<{ current: number; total: number } | null>(null)
   const [profileName,   setProfileName]   = useState('')
   const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
   const [programName,   setProgramName]   = useState('')
@@ -108,18 +110,46 @@ function AdminContent() {
     setDeletingWeek(false)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
     if (parsed.length > 0) {
       const dates = parsed.map(w => w.date).sort()
       await deleteWodsForWeek(dates[0], dates[dates.length - 1], programSlug as import('@/lib/types').Program)
     }
-    for (const { date, block, title, type, description, timerConfig } of parsed) {
-      const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
-      const extra = tc != null ? { timer_config: tc } : {}
-      await createWod({ date, block, title, type, description, program: programSlug as import('@/lib/types').Program, ...extra })
+    for (const { date, block, title, type, description } of parsed) {
+      await createWod({ date, block, title, type, description, program: programSlug as import('@/lib/types').Program })
     }
     const updated = await getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
     setWods(updated)
+  }
+
+  async function handleGenerateWeekTimers() {
+    const TIMER_TYPES = new Set(['For Time', 'AMRAP', 'EMOM', 'For Max'])
+    const eligible = wods.filter(w =>
+      w.date >= weekDates[0] && w.date <= weekDates[6] &&
+      !w.timer_config &&
+      TIMER_TYPES.has(w.type)
+    )
+    if (eligible.length === 0) return
+    setGeneratingTimers(true)
+    setTimerGenProgress({ current: 0, total: eligible.length })
+    for (let i = 0; i < eligible.length; i++) {
+      const wod = eligible[i]
+      setTimerGenProgress({ current: i + 1, total: eligible.length })
+      try {
+        const res = await fetch('/api/generate-timer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ title: wod.title, description: wod.description, type: wod.type }),
+        })
+        const cfg = await res.json()
+        if (!cfg.error) {
+          await updateWodTimerConfig(wod.id, cfg)
+          setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
+        }
+      } catch { /* continúa con el siguiente */ }
+    }
+    setGeneratingTimers(false)
+    setTimerGenProgress(null)
   }
 
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
@@ -159,9 +189,22 @@ function AdminContent() {
                 <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
               </div>
             ) : (
-              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
-                × Borrar semana
-              </button>
+              <div className="flex items-center gap-3">
+                {wods.some(w => w.date >= weekDates[0] && w.date <= weekDates[6] && !w.timer_config && ['For Time','AMRAP','EMOM','For Max'].includes(w.type)) && (
+                  <button
+                    onClick={handleGenerateWeekTimers}
+                    disabled={generatingTimers}
+                    className="text-neutral-600 hover:text-white text-xs font-mono transition disabled:opacity-50"
+                  >
+                    {generatingTimers && timerGenProgress
+                      ? `⚡ ${timerGenProgress.current}/${timerGenProgress.total}...`
+                      : '⚡ Generar timers'}
+                  </button>
+                )}
+                <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                  × Borrar semana
+                </button>
+              </div>
             )) : (
               <button
                 onClick={() => setLoadWeekOpen(true)}
@@ -424,9 +467,7 @@ function AdminContent() {
             const firstBlock = pendingBlock
             for (let i = 0; i < sorted.length; i++) {
               const item = sorted[i]
-              const tc = Array.isArray(item.timerConfig) ? { type: 'mix' as const, blocks: item.timerConfig } : item.timerConfig
-              const extra = tc != null ? { timer_config: tc } : {}
-              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: programSlug, ...extra })
+              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: programSlug })
               handleSaved(saved)
             }
             setLoadWodOpen(false)

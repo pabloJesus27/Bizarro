@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import type { TimerConfig, WodType } from '@/lib/types'
+import type { WodType } from '@/lib/types'
 import { DAY_SHORT } from '@/lib/week-utils'
 import { supabase } from '@/lib/supabase'
 import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
@@ -12,7 +12,6 @@ interface ParsedWod {
   title: string
   type: WodType
   description: string
-  timerConfig?: TimerConfig | null
 }
 
 interface Props {

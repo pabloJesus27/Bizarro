@@ -15,7 +15,7 @@ import {
   getCommunityInfo, getMyCommunityMembership,
   getWodsForCommunity, getResultsForWods, createWod,
   deleteWod, deleteWodsForDay, deleteWodsForWeek,
-  getMyPRs,
+  getMyPRs, updateWodTimerConfig,
 } from '@/lib/db'
 import type { CommunityMembership, PersonalRecord } from '@/lib/db'
 import type { Community } from '@/lib/types'
@@ -54,6 +54,8 @@ export default function ComunidadPage() {
   const [deletingWeek,     setDeletingWeek]     = useState(false)
   const [generatingTimer,  setGeneratingTimer]  = useState(false)
   const [timerError,       setTimerError]       = useState(false)
+  const [generatingTimers,   setGeneratingTimers]   = useState(false)
+  const [timerGenProgress,   setTimerGenProgress]   = useState<{ current: number; total: number } | null>(null)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -180,31 +182,57 @@ export default function ComunidadPage() {
     setDeletingWeek(false)
   }
 
-  async function handleLoadSingleWod(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+  async function handleLoadSingleWod(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
     const item = parsed[0]
     if (!item || pendingBlock === null) return
-    const tc = Array.isArray(item.timerConfig) ? { type: 'mix' as const, blocks: item.timerConfig } : item.timerConfig
-    const extra = tc != null ? { timer_config: tc } : {}
-    const saved = await createWod({ date: selectedDate, block: pendingBlock, title: item.title, type: item.type, description: item.description, program: slug, ...extra })
+    const saved = await createWod({ date: selectedDate, block: pendingBlock, title: item.title, type: item.type, description: item.description, program: slug })
     setWods(prev => [...prev, saved])
     setSelectedBlock(pendingBlock)
     setPendingBlock(null)
     setPendingMode(null)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
     if (parsed.length > 0) {
       const dates = parsed.map(w => w.date).sort()
       await deleteWodsForWeek(dates[0], dates[dates.length - 1], slug)
     }
-    for (const { date, block, title, type, description, timerConfig } of parsed) {
-      const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
-      const extra = tc != null ? { timer_config: tc } : {}
-      await createWod({ date, block, title, type, description, program: slug, ...extra })
+    for (const { date, block, title, type, description } of parsed) {
+      await createWod({ date, block, title, type, description, program: slug })
     }
     const joinedAt = isOwner ? undefined : membership?.joined_at
     const updated = await getWodsForCommunity(slug, weekDates[0], weekDates[6], joinedAt)
     setWods(updated)
+  }
+
+  async function handleGenerateWeekTimers() {
+    const TIMER_TYPES = new Set(['For Time', 'AMRAP', 'EMOM', 'For Max'])
+    const eligible = wods.filter(w =>
+      w.date >= weekDates[0] && w.date <= weekDates[6] &&
+      !w.timer_config &&
+      TIMER_TYPES.has(w.type)
+    )
+    if (eligible.length === 0) return
+    setGeneratingTimers(true)
+    setTimerGenProgress({ current: 0, total: eligible.length })
+    for (let i = 0; i < eligible.length; i++) {
+      const wod = eligible[i]
+      setTimerGenProgress({ current: i + 1, total: eligible.length })
+      try {
+        const res = await fetch('/api/generate-timer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ title: wod.title, description: wod.description, type: wod.type }),
+        })
+        const cfg = await res.json()
+        if (!cfg.error) {
+          await updateWodTimerConfig(wod.id, cfg)
+          setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
+        }
+      } catch { /* continúa con el siguiente */ }
+    }
+    setGeneratingTimers(false)
+    setTimerGenProgress(null)
   }
 
   function handleResultSaved(result: Result, _isNewPR: boolean) {
@@ -248,9 +276,22 @@ export default function ComunidadPage() {
                 <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
               </div>
             ) : (
-              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
-                × Borrar semana
-              </button>
+              <div className="flex gap-3 items-center">
+                {timerGenProgress ? (
+                  <span className="text-neutral-500 text-xs font-mono">Generando {timerGenProgress.current}/{timerGenProgress.total}...</span>
+                ) : (
+                  <button
+                    onClick={handleGenerateWeekTimers}
+                    disabled={generatingTimers}
+                    className="text-neutral-700 hover:text-yellow-400 text-xs font-mono transition disabled:opacity-50"
+                  >
+                    ⚡ Generar timers
+                  </button>
+                )}
+                <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                  × Borrar semana
+                </button>
+              </div>
             )) : (
               <button
                 onClick={() => setLoadWeekOpen(true)}
@@ -577,9 +618,7 @@ export default function ComunidadPage() {
             const newWods: import('@/lib/types').Wod[] = []
             for (let i = 0; i < sorted.length; i++) {
               const item = sorted[i]
-              const tc = Array.isArray(item.timerConfig) ? { type: 'mix' as const, blocks: item.timerConfig } : item.timerConfig
-              const extra = tc != null ? { timer_config: tc } : {}
-              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: slug, ...extra })
+              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: slug })
               newWods.push(saved)
             }
             setWods(prev => [...prev, ...newWods])

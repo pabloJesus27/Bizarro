@@ -11,7 +11,7 @@ import LoadWeekModal from '@/components/LoadWeekModal'
 import {
   getProfile, getWodsForWeekLibre, createLibreWod, deleteWod,
   deleteWodsForDay, deleteWodsForWeek,
-  getResultsForWods, getMyPRs, getMyOwnedCommunity,
+  getResultsForWods, getMyPRs, getMyOwnedCommunity, updateWodTimerConfig,
 } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
@@ -44,11 +44,13 @@ export default function LibrePage() {
   const [generatingTimer, setGeneratingTimer] = useState(false)
   const [timerError,     setTimerError]     = useState(false)
   const [wodError,       setWodError]       = useState<string | null>(null)
-  const [loadWeekOpen,   setLoadWeekOpen]   = useState(false)
-  const [loadWodOpen,    setLoadWodOpen]    = useState(false)
-  const [pendingMode,    setPendingMode]    = useState<'select' | 'manual' | null>(null)
-  const [prs,            setPrs]            = useState<PersonalRecord[]>([])
-  const [communitySlug,  setCommunitySlug]  = useState<string | undefined>(undefined)
+  const [loadWeekOpen,       setLoadWeekOpen]       = useState(false)
+  const [loadWodOpen,        setLoadWodOpen]        = useState(false)
+  const [pendingMode,        setPendingMode]        = useState<'select' | 'manual' | null>(null)
+  const [prs,                setPrs]                = useState<PersonalRecord[]>([])
+  const [communitySlug,      setCommunitySlug]      = useState<string | undefined>(undefined)
+  const [generatingTimers,   setGeneratingTimers]   = useState(false)
+  const [timerGenProgress,   setTimerGenProgress]   = useState<{ current: number; total: number } | null>(null)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -176,13 +178,11 @@ export default function LibrePage() {
     setDeletingWeek(false)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; timerConfig?: import('@/lib/types').TimerConfig | null }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
     if (!user) return
-    for (const { date, block, title, type, description, timerConfig } of parsed) {
-      const tc = Array.isArray(timerConfig) ? { type: 'mix' as const, blocks: timerConfig } : timerConfig
-      const extra = tc != null ? { timer_config: tc } : {}
+    for (const { date, block, title, type, description } of parsed) {
       try {
-        await createLibreWod({ date, block, title, type, description, ...extra }, user.id)
+        await createLibreWod({ date, block, title, type, description }, user.id)
       } catch (err: unknown) {
         if ((err as { code?: string })?.code === '23505') continue
         throw err
@@ -190,6 +190,36 @@ export default function LibrePage() {
     }
     const updated = await getWodsForWeekLibre(user.id, weekDates[0], weekDates[6])
     setWods(updated)
+  }
+
+  async function handleGenerateWeekTimers() {
+    const TIMER_TYPES = new Set(['For Time', 'AMRAP', 'EMOM', 'For Max'])
+    const eligible = wods.filter(w =>
+      w.date >= weekDates[0] && w.date <= weekDates[6] &&
+      !w.timer_config &&
+      TIMER_TYPES.has(w.type)
+    )
+    if (eligible.length === 0) return
+    setGeneratingTimers(true)
+    setTimerGenProgress({ current: 0, total: eligible.length })
+    for (let i = 0; i < eligible.length; i++) {
+      const wod = eligible[i]
+      setTimerGenProgress({ current: i + 1, total: eligible.length })
+      try {
+        const res = await fetch('/api/generate-timer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ title: wod.title, description: wod.description, type: wod.type }),
+        })
+        const cfg = await res.json()
+        if (!cfg.error) {
+          await updateWodTimerConfig(wod.id, cfg)
+          setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
+        }
+      } catch { /* continúa con el siguiente */ }
+    }
+    setGeneratingTimers(false)
+    setTimerGenProgress(null)
   }
 
   async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
@@ -257,9 +287,22 @@ export default function LibrePage() {
                 <button onClick={() => setDeletingWeek(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
               </div>
             ) : (
-              <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
-                × Borrar semana
-              </button>
+              <div className="flex items-center gap-3">
+                {wods.some(w => w.date >= weekDates[0] && w.date <= weekDates[6] && !w.timer_config && ['For Time','AMRAP','EMOM','For Max'].includes(w.type)) && (
+                  <button
+                    onClick={handleGenerateWeekTimers}
+                    disabled={generatingTimers}
+                    className="text-neutral-600 hover:text-white text-xs font-mono transition disabled:opacity-50"
+                  >
+                    {generatingTimers && timerGenProgress
+                      ? `⚡ ${timerGenProgress.current}/${timerGenProgress.total}...`
+                      : '⚡ Generar timers'}
+                  </button>
+                )}
+                <button onClick={() => setDeletingWeek(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition">
+                  × Borrar semana
+                </button>
+              </div>
             )) : (
               <button
                 onClick={() => setLoadWeekOpen(true)}

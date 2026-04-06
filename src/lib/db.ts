@@ -58,6 +58,11 @@ export async function createWod(wod: NewWod): Promise<Wod> {
   return data
 }
 
+export async function updateWodTimerConfig(id: string, timerConfig: import('@/lib/types').TimerConfig | null): Promise<void> {
+  const { error } = await supabase.from('wods').update({ timer_config: timerConfig }).eq('id', id)
+  if (error) throw error
+}
+
 export async function updateWod(id: string, updates: Pick<NewWod, 'title' | 'description' | 'type'>): Promise<Wod> {
   const { data, error } = await supabase
     .from('wods')
