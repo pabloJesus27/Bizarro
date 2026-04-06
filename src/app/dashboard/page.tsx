@@ -15,7 +15,8 @@ import PRCalculator from '@/components/PRCalculator'
 import CoachMessageCard from '@/components/CoachMessageCard'
 import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
-import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
+import { WOD_TYPE_LABEL, getScoreDisplay, detectPRExercise } from '@/lib/wod-utils'
+import PesosTab from '@/components/comunidad/PesosTab'
 
 // ── Dashboard Page ─────────────────────────────────────
 
@@ -40,7 +41,7 @@ function DashboardContent() {
   const [isCoach,         setIsCoach]         = useState(false)
   const [program,         setProgram]         = useState<Program>('bizarro')
   const [generatingTimer, setGeneratingTimer] = useState(false)
-  const [activeTab,       setActiveTab]       = useState<'wod' | 'ranking'>('wod')
+  const [activeTab,       setActiveTab]       = useState<'wod' | 'ranking' | 'pesos'>('wod')
   const [timerError,      setTimerError]      = useState(false)
   const [wodError,        setWodError]        = useState<string | null>(null)
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
@@ -297,11 +298,21 @@ function DashboardContent() {
                   {!['Warmup', 'Gymnastics', 'Core', 'Mobility', 'Other'].includes(activeWod.type) && (
                     <button
                       onClick={() => setActiveTab('ranking')}
-                      className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                      className={`py-3 mr-6 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
                         activeTab === 'ranking' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
                       }`}
                     >
                       Ranking
+                    </button>
+                  )}
+                  {detectPRExercise(`${activeWod.title} ${activeWod.description ?? ''}`) && /\d+\s*%/.test(activeWod.description ?? '') && (
+                    <button
+                      onClick={() => setActiveTab('pesos')}
+                      className={`py-3 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                        activeTab === 'pesos' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                      }`}
+                    >
+                      Pesos
                     </button>
                   )}
                 </div>
@@ -310,6 +321,13 @@ function DashboardContent() {
                   <div className="flex-1 p-6">
                     <RankingSection wod={activeWod} refreshKey={rankingKey} />
                   </div>
+                ) : activeTab === 'pesos' ? (
+                  <PesosTab
+                    wodText={`${activeWod.title} ${activeWod.description ?? ''}`}
+                    programSlug={program}
+                    session={session}
+                    endpoint="/api/program-prs"
+                  />
                 ) : (
                   <div className="flex-1 p-6">
                     <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">

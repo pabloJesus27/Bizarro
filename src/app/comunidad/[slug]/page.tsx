@@ -625,7 +625,7 @@ export default function ComunidadPage() {
                 {activeTab === 'pesos' && (
                   <PesosTab
                     wodText={`${activeWod.title} ${activeWod.description ?? ''}`}
-                    communitySlug={slug}
+                    programSlug={slug}
                     session={session}
                   />
                 )}

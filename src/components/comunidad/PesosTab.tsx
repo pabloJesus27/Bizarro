@@ -95,14 +95,15 @@ interface Member {
 }
 
 interface Props {
-  wodText:       string
-  communitySlug: string
-  session:       Session | null
+  wodText:      string
+  programSlug:  string
+  session:      Session | null
+  endpoint?:    string
 }
 
 // ── Component ────────────────────────────────────────────
 
-export default function PesosTab({ wodText, communitySlug, session }: Props) {
+export default function PesosTab({ wodText, programSlug, session, endpoint = '/api/community-prs' }: Props) {
   const entries     = extractEntries(wodText)
   const percentages = extractPercentages(wodText)
 
@@ -121,7 +122,7 @@ export default function PesosTab({ wodText, communitySlug, session }: Props) {
     if (!selectedEntry || !session) return
     setLoading(true)
     setError(null)
-    fetch(`/api/community-prs?slug=${communitySlug}&exercise=${encodeURIComponent(selectedEntry.prKey)}`, {
+    fetch(`${endpoint}?slug=${programSlug}&exercise=${encodeURIComponent(selectedEntry.prKey)}`, {
       headers: { 'Authorization': `Bearer ${session.access_token}` },
     })
       .then(async res => {
