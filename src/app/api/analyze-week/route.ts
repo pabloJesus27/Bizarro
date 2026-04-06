@@ -113,17 +113,19 @@ Las fechas de esta semana son:
 - SÁBADO = ${sabado}
 
 ESTRUCTURA DE LA TABLA:
-- Cada COLUMNA es un día. Usa los encabezados (LUNES, MARTES…) para identificar a qué día pertenece cada celda.
-- Cada FILA es un bloque de entrenamiento. Hay filas ANTES y DESPUÉS del separador "DESCANSO / HIDRATACION".
-- El separador "DESCANSO" NO es un bloque — ignóralo. Las filas después del separador SÍ son bloques reales.
-- Algunos días tienen 6 bloques, otros 5, otros 2. Extrae todo el contenido visible, sin omitir filas.
+- Cada COLUMNA es un día. Usa los encabezados (LUNES, MARTES…) para saber a qué día pertenece cada celda.
+- Las líneas horizontales de la tabla dividen las filas. Cada celda delimitada por esas líneas es UN bloque.
+- Hay un separador "DESCANSO / HIDRATACION" a mitad de la tabla — no es un bloque, ignóralo, pero las filas que vienen después de él SÍ son bloques reales.
 
-PROCESO:
-1. Cuenta cuántas filas tiene la tabla (sin el separador DESCANSO).
-2. Para cada fila, procesa cada columna de izquierda a derecha.
-3. Si la celda tiene texto real de entrenamiento, genera un bloque. Si está vacía o solo contiene guiones/espacios, NO la incluyas — no generes ningún objeto para esa celda.
-4. Numera los bloques de cada día de forma independiente (1, 2, 3…).
-5. Copia el texto de cada celda de forma LITERAL y COMPLETA, sin resumir ni interpretar.
+REGLA CRÍTICA — una celda = un bloque:
+El texto dentro de una celda puede tener múltiples líneas, párrafos o notas del coach. TODO ese texto forma la description de ese único bloque. NUNCA dividas el contenido de una sola celda en bloques distintos.
+
+PROCESO (columna por columna):
+1. Empieza por LUNES. Recorre sus celdas de arriba a abajo, incluyendo las que están después del separador DESCANSO.
+2. Para cada celda con texto real de entrenamiento, genera un bloque. Si la celda está vacía, omítela sin generar nada.
+3. Numera los bloques de ese día de forma independiente (1, 2, 3…).
+4. Repite para MARTES, MIÉRCOLES, JUEVES, VIERNES, SÁBADO.
+5. No mezcles contenido entre columnas. Cada celda pertenece solo a su columna.
 
 Para cada bloque devuelve SOLO:
 - date: fecha YYYY-MM-DD del día
