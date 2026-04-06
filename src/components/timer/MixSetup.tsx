@@ -258,7 +258,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       {blocks.length > 0 && (
         <div className="flex flex-col gap-2 w-80">
           <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Resumen</p>
-          <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-px [&::-webkit-scrollbar-track]:bg-neutral-900 [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-neutral-500">
+          <div className="flex flex-col gap-2">
             {blocks.map((b, i) => (
               <div
                 key={b.id}
