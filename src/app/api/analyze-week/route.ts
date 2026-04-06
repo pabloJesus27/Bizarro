@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
 
   const [lunes, martes, miercoles, jueves, viernes, sabado] = weekDates
 
-  // Pasada 1: visión — extrae solo date, block y description en crudo
+  // Pasada 1: visión — extrae solo date, block y description en crudo (Sonnet para mayor precisión en tablas)
   const msg = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4096,
     messages: [{
       role: 'user',
