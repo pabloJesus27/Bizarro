@@ -421,6 +421,7 @@ export async function getDiscoverPrograms(userId: string): Promise<ProgramEntry[
   const { data: all, error } = await supabase
     .from('programs')
     .select('*')
+    .neq('type', 'community')
     .order('name', { ascending: true })
   if (error) throw new Error(error.message)
 
