@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState, Suspense } from 'react'
+import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getProfile, getWodsForWeek, createWod, deleteWod, deleteWodsForDay, deleteWodsForWeek, getMyPrograms, getPendingJoinRequests, updateWodTimerConfig } from '@/lib/db'
+import { getProfile, getWodsForWeek, createWod, deleteWod, deleteWodsForDay, deleteWodsForWeek, getMyPrograms, getPendingJoinRequests, updateWodTimerConfig, reorderBlocks } from '@/lib/db'
 import LoadWeekModal from '@/components/LoadWeekModal'
 import CoachHeader from '@/components/CoachHeader'
 import { CoachPageLoading } from '@/components/PageLoading'
@@ -152,6 +152,25 @@ function AdminContent() {
     setTimerGenProgress(null)
   }
 
+  const dragIdx  = useRef<number | null>(null)
+  const touchDrag = useRef<{ from: number; over: number } | null>(null)
+  const [touchVisual, setTouchVisual] = useState<{ from: number; over: number } | null>(null)
+
+  async function handleReorderBlocks(fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return
+    const sorted = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
+    const next = [...sorted]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
+    const updates = next.map((w, i) => ({ id: w.id, block: i + 1 }))
+    setWods(prev => {
+      const others = prev.filter(w => w.date !== selectedDate)
+      return [...others, ...next.map((w, i) => ({ ...w, block: i + 1 }))]
+    })
+    setSelectedBlock(toIdx + 1)
+    await reorderBlocks(updates)
+  }
+
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
   const activeWod = selectedBlock > 0 ? dayWods.find(w => w.block === selectedBlock) : undefined
 
@@ -261,21 +280,65 @@ function AdminContent() {
                 <p className="text-neutral-600 text-xs font-mono uppercase tracking-widest">Descanso</p>
               </div>
             ) : (<>
-              {dayWods.map(wod => {
-                const isActive = wod.block === selectedBlock
+              {dayWods.map((wod, idx) => {
+                const isActive  = wod.block === selectedBlock
+                const isDragOver = touchVisual?.over === idx
                 return (
-                  <button
+                  <div
                     key={wod.id}
-                    onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); }}
-                    className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
-                      isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                    draggable
+                    onDragStart={() => { dragIdx.current = idx }}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={() => {
+                      if (dragIdx.current !== null) handleReorderBlocks(dragIdx.current, idx)
+                      dragIdx.current = null
+                    }}
+                    onTouchStart={() => {
+                      touchDrag.current = { from: idx, over: idx }
+                      setTouchVisual({ from: idx, over: idx })
+                    }}
+                    onTouchMove={e => {
+                      if (!touchDrag.current) return
+                      const touch = e.touches[0]
+                      const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                      const target = el?.closest('[data-block-idx]') as HTMLElement | null
+                      if (target) {
+                        const over = parseInt(target.dataset.blockIdx ?? '')
+                        if (!isNaN(over) && touchDrag.current.over !== over) {
+                          touchDrag.current.over = over
+                          setTouchVisual({ from: touchDrag.current.from, over })
+                        }
+                      }
+                    }}
+                    onTouchEnd={() => {
+                      if (touchDrag.current) {
+                        handleReorderBlocks(touchDrag.current.from, touchDrag.current.over)
+                        touchDrag.current = null
+                        setTouchVisual(null)
+                      }
+                    }}
+                    data-block-idx={idx}
+                    className={`flex-shrink-0 flex items-stretch border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                      isActive ? 'bg-neutral-900' : isDragOver ? 'bg-neutral-800' : 'hover:bg-neutral-950'
                     }`}
                   >
-                    <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
-                      {WOD_TYPE_LABEL[wod.type] ?? wod.type}
-                    </p>
-                    <p className="text-white font-black text-sm">{wod.title}</p>
-                  </button>
+                    <span className="flex items-center px-2 cursor-grab active:cursor-grabbing touch-none text-neutral-700 hover:text-neutral-400 transition">
+                      <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
+                        <circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/>
+                        <circle cx="3" cy="8" r="1.5"/><circle cx="9" cy="8" r="1.5"/>
+                        <circle cx="3" cy="13" r="1.5"/><circle cx="9" cy="13" r="1.5"/>
+                      </svg>
+                    </span>
+                    <button
+                      onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); }}
+                      className="flex-1 text-left px-4 py-4"
+                    >
+                      <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                        {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+                      </p>
+                      <p className="text-white font-black text-sm">{wod.title}</p>
+                    </button>
+                  </div>
                 )
               })}
               {/* Botón nuevo bloque */}

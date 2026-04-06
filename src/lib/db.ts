@@ -63,6 +63,12 @@ export async function updateWodTimerConfig(id: string, timerConfig: import('@/li
   if (error) throw error
 }
 
+export async function reorderBlocks(updates: { id: string; block: number }[]): Promise<void> {
+  await Promise.all(updates.map(({ id, block }) =>
+    supabase.from('wods').update({ block }).eq('id', id)
+  ))
+}
+
 export async function updateWod(id: string, updates: Pick<NewWod, 'title' | 'description' | 'type'>): Promise<Wod> {
   const { data, error } = await supabase
     .from('wods')

@@ -11,7 +11,7 @@ import LoadWeekModal from '@/components/LoadWeekModal'
 import {
   getProfile, getWodsForWeekLibre, createLibreWod, deleteWod,
   deleteWodsForDay, deleteWodsForWeek,
-  getResultsForWods, getMyPRs, getMyOwnedCommunity, updateWodTimerConfig,
+  getResultsForWods, getMyPRs, getMyOwnedCommunity, updateWodTimerConfig, reorderBlocks,
 } from '@/lib/db'
 import type { PersonalRecord } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
@@ -248,6 +248,25 @@ export default function LibrePage() {
     }
   }
 
+  const dragIdx   = useRef<number | null>(null)
+  const touchDrag = useRef<{ from: number; over: number } | null>(null)
+  const [touchVisual, setTouchVisual] = useState<{ from: number; over: number } | null>(null)
+
+  async function handleReorderBlocks(fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return
+    const sorted = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
+    const next = [...sorted]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
+    const updates = next.map((w, i) => ({ id: w.id, block: i + 1 }))
+    setWods(prev => {
+      const others = prev.filter(w => w.date !== selectedDate)
+      return [...others, ...next.map((w, i) => ({ ...w, block: i + 1 }))]
+    })
+    setSelectedBlock(next[toIdx].block !== moved.block ? toIdx + 1 : selectedBlock)
+    await reorderBlocks(updates)
+  }
+
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
   const activeWod = selectedBlock > 0 ? (dayWods.find(w => w.block === selectedBlock) ?? null) : null
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
@@ -356,25 +375,68 @@ export default function LibrePage() {
 
           {/* Panel izquierdo: lista de bloques + botón añadir */}
           <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden">
-            {dayWods.map(wod => {
+            {dayWods.map((wod, i) => {
               const result   = results.find(r => r.wod_id === wod.id)
               const isActive = wod.block === selectedBlock && !editingWod
               return (
-                <button
+                <div
                   key={wod.id}
-                  onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); setPendingMode(null); setEditingWod(undefined) }}
-                  className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
-                    isActive ? 'bg-neutral-900' : 'bg-black hover:bg-neutral-950'
-                  }`}
+                  data-idx={i}
+                  draggable
+                  onDragStart={() => { dragIdx.current = i }}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={() => {
+                    const from = dragIdx.current
+                    dragIdx.current = null
+                    if (from === null) return
+                    handleReorderBlocks(from, i)
+                  }}
+                  className={`flex-shrink-0 flex items-stretch border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                    touchVisual?.from === i ? 'opacity-40' : touchVisual?.over === i ? 'ring-1 ring-inset ring-white' : ''
+                  } ${isActive ? 'bg-neutral-900' : 'bg-black hover:bg-neutral-950'}`}
                 >
-                  <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
-                    {WOD_TYPE_LABEL[wod.type] ?? wod.type}
-                  </p>
-                  <p className="text-white font-black text-sm">{wod.title}</p>
-                  {result && (
-                    <p className="text-neutral-400 text-xs font-mono mt-1">{getScoreDisplay(wod, result)}</p>
-                  )}
-                </button>
+                  <span
+                    style={{ touchAction: 'none' }}
+                    className="flex items-center pl-3 pr-1 text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing"
+                    onTouchStart={() => { touchDrag.current = { from: i, over: i }; setTouchVisual({ from: i, over: i }) }}
+                    onTouchMove={e => {
+                      if (!touchDrag.current) return
+                      const touch = e.touches[0]
+                      const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                      const blockEl = el?.closest('[data-idx]')
+                      if (blockEl) {
+                        const over = Number(blockEl.getAttribute('data-idx'))
+                        touchDrag.current.over = over
+                        setTouchVisual({ from: touchDrag.current.from, over })
+                      }
+                    }}
+                    onTouchEnd={() => {
+                      if (!touchDrag.current) return
+                      const { from, over } = touchDrag.current
+                      touchDrag.current = null
+                      setTouchVisual(null)
+                      handleReorderBlocks(from, over)
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <line x1="2" y1="3" x2="12" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <line x1="2" y1="11" x2="12" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </span>
+                  <button
+                    onClick={() => { setSelectedBlock(wod.block); setPendingBlock(null); setPendingMode(null); setEditingWod(undefined) }}
+                    className="flex-1 text-left px-4 py-4"
+                  >
+                    <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                      {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+                    </p>
+                    <p className="text-white font-black text-sm">{wod.title}</p>
+                    {result && (
+                      <p className="text-neutral-400 text-xs font-mono mt-1">{getScoreDisplay(wod, result)}</p>
+                    )}
+                  </button>
+                </div>
               )
             })}
             {/* Tab nuevo bloque */}
