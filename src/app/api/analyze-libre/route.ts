@@ -7,71 +7,76 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const VALID_TYPES = new Set(['For Time','AMRAP','EMOM','Strength','Gymnastics','Core','Mobility','Warmup','For Max','Other'])
 
-async function reviewTypes(wods: Record<string, unknown>[]): Promise<Record<string, unknown>[]> {
-  const list = wods.map((w, i) =>
-    `${i}. tipo_actual="${w.type}" | título="${w.title}" | descripción="${w.description}"`
+interface RawWod { date: string; block: number; description: string }
+interface FullWod { date: string; block: number; title: string; type: string; description: string }
+
+async function enrichWods(raws: RawWod[]): Promise<FullWod[]> {
+  const list = raws.map((w, i) =>
+    `${i}. [${w.date} bloque ${w.block}] ${w.description}`
   ).join('\n')
 
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
+    max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `Revisa los tipos de estos bloques de CrossFit y corrígelos si son incorrectos.
+      content: `Para cada bloque de CrossFit genera un título corto y asigna el tipo correcto.
 
 Tipos válidos: Warmup | Strength | Gymnastics | Core | Mobility | For Time | AMRAP | EMOM | For Max | Other
 
-Reglas (aplica en orden, la primera que encaje gana):
-1. Contiene AMRAP → AMRAP
-2. Contiene EMOM o E2MOM → EMOM
-3. Contiene "max cal", "max reps", "max [ejercicio]", formato X" on X" off → For Max
-4. Contiene "for time" explícito, o time cap en minutos, o lista de rondas con ejercicios metabólicos SIN sets×reps (burpees, wall balls, sandbag, toes to bar, assault bike como único ejercicio) → For Time
-5. Carrera de distancia fija única (ej: "6000m carrera", "800m run") sin sets ni rondas → For Time
-6. tipo_actual="Warmup" y NO contiene formato de tiempo explícito (AMRAP/EMOM/for time/min) → mantener Warmup
-7. Calentamiento, activación, warm up, movilización dinámica → Warmup
-7b. N sets de múltiples ejercicios variados (press, squat, saltos, flexiones, rowing, air squat, pajaros, v-ups, sit-up, knees to chest, buenos dias) sin formato de tiempo explícito → Warmup
-8. Ejercicios de fuerza con sets/reps: barra, halterofilia, powerlifting, press, squat, deadlift, clean, snatch, jerk, bench press, gorilla row, lateral raises, curl biceps, triceps, mancuernas, kettlebell (cuando es sets×reps sin formato de tiempo) → Strength
-9. Handstand, muscle up, ring dips, dominadas técnicas, gymnastics → Gymnastics
-10. Core, abdominales, plancha, GHD, hollow body → Core
-11. Movilidad, estiramientos, foam roller, recuperación activa, trote suave → Mobility
-12. Técnica de carrera, progresivos de carrera, drills atléticos → Other
-13. Resto → Other
+Reglas de tipo (aplica en orden estricto, la primera que encaje gana — para en cuanto encuentres una coincidencia):
+1. Contiene "AMRAP" explícito → AMRAP
+2. Contiene "EMOM" o "E2MOM" explícito → EMOM
+3. COMPRUEBA PRIMERO: ¿el texto termina con "max cal [ejercicio]" o "max reps [ejercicio]" como métrica final? (ej: "...max cal row", "...max cal bikeerg", "...max reps pull ups") → For Max. IMPORTANTE: "max bar muscle up" o "max pull ups" en medio de una lista de sets/reps NO cuenta — ahí "max" forma parte del nombre del ejercicio, no es la métrica.
+4. Contiene formato "X'' on X'' off" o "X'' work X'' rest" → For Max
+5. "ventanas de X min" con trabajo fijo por ventana → For Max
+6. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
+7. "for time" explícito, time cap → For Time
+8. Carrera de distancia fija única sin sets ni rondas → For Time
+9. N sets de ejercicios variados sin formato de tiempo (aunque incluya ring row, hollow rocks, v-ups, push ups, pull ups u otros movimientos de gymnastics) → Warmup
+10. Calentamiento, activación, warm up → Warmup
+11. Trabajo de gymnastics a calidad sin tiempo (muscle up, handstand walk, double unders técnico) con sets pero sin métrica de tiempo → Gymnastics
+12. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
+13. Core, abdominales, plancha, GHD, hollow body → Core
+14. Movilidad, estiramientos, foam roller → Mobility
+15. Resto → Other
+
+Reglas de título (máx 4 palabras):
+- Fuerza/halterofilia: solo el ejercicio principal (ej: "Back Squat", "Power Snatch")
+- WOD metabólico: ejercicios clave separados por + (ej: "Toes to Bar + Burpees")
+- Warmup/activación: los 2-3 ejercicios principales (ej: "Ring Row + V-ups")
+- Movilidad: el movimiento principal (ej: "Rotaciones Hombro", "90/90 Cadera")
+- El título debe derivarse ÚNICAMENTE del texto de la descripción del bloque
 
 Bloques:
 ${list}
 
-Devuelve SOLO un array JSON con los índices y tipos corregidos, sin markdown:
-[{"i":0,"type":"..."},{"i":1,"type":"..."},...]`,
+Devuelve SOLO un array JSON con todos los bloques, sin markdown:
+[{"i":0,"title":"...","type":"..."},...]`,
     }],
   })
 
   const raw = (msg.content[0] as { type: string; text: string }).text.trim()
   const jsonStart = raw.indexOf('[')
   const jsonEnd = raw.lastIndexOf(']')
-  if (jsonStart === -1 || jsonEnd === -1) return wods
+  if (jsonStart === -1 || jsonEnd === -1) {
+    return raws.map(w => ({ ...w, title: 'WOD', type: 'Other' }))
+  }
 
   try {
-    const corrections: { i: number; type: string }[] = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
-    return wods.map((w, i) => {
-      const fix = corrections.find(c => c.i === i)
-      return fix && VALID_TYPES.has(fix.type) ? { ...w, type: fix.type } : w
+    const enriched: { i: number; title: string; type: string }[] = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
+    return raws.map((w, i) => {
+      const e = enriched.find(x => x.i === i)
+      return {
+        ...w,
+        title: e?.title ?? 'WOD',
+        type: e && VALID_TYPES.has(e.type) ? e.type : 'Other',
+      }
     })
   } catch {
-    return wods
+    return raws.map(w => ({ ...w, title: 'WOD', type: 'Other' }))
   }
 }
-
-const TYPE_RULES = `Reglas para el tipo:
-- Warm Up / calentamiento / activación → "Warmup"
-- Sets/reps con barra o pesas, halterofilia → "Strength"
-- Handstand, muscle up, ring, gymnastics → "Gymnastics"
-- Core, abdominales, plancha, GHD → "Core"
-- Estiramientos, movilidad, foam roller → "Mobility"
-- AMRAP → "AMRAP"
-- For time / tiempo límite / circuito metabólico → "For Time"
-- EMOM / E2MOM → "EMOM"
-- Max cal / max reps / X" on X" off → "For Max"
-- Resto → "Other"`
 
 export async function POST(req: NextRequest) {
   try {
@@ -86,11 +91,11 @@ export async function POST(req: NextRequest) {
 
     const { imageBase64, mediaType, mode, date, weekDates } = await req.json()
 
-    let promptText: string
+    let visionPrompt: string
 
     if (mode === 'week') {
       const [lunes, martes, miercoles, jueves, viernes, sabado] = weekDates
-      promptText = `Analiza esta imagen con la programación semanal de CrossFit y extrae todos los WODs.
+      visionPrompt = `Analiza esta imagen con la programación semanal de CrossFit y extrae el texto de cada celda.
 
 Las fechas de esta semana son:
 - LUNES = ${lunes}
@@ -100,78 +105,89 @@ Las fechas de esta semana son:
 - VIERNES = ${viernes}
 - SÁBADO = ${sabado}
 
-IMPORTANTE — estructura de la imagen:
-- La imagen es una tabla donde cada COLUMNA es un día de la semana: primera columna = Lunes, segunda = Martes, y así sucesivamente.
-- Antes de extraer nada, identifica visualmente la posición horizontal (coordenada X) de cada columna usando los encabezados de día como referencia.
-- DEBES procesar la imagen COLUMNA por COLUMNA. Termina de extraer TODOS los bloques de Lunes antes de pasar a Martes, etc.
-- Las filas de separación (DESCANSO, HIDRATACION, etc.) NO son bloques — ignóralas.
-- Asigna block = 1 al primer bloque de cada día, block = 2 al segundo, etc. (numeración independiente por día).
+ESTRUCTURA DE LA TABLA:
+- Cada COLUMNA es un día. Usa los encabezados (LUNES, MARTES…) para saber a qué día pertenece cada celda.
+- Las líneas horizontales de la tabla dividen las filas. Cada celda delimitada por esas líneas es UN bloque.
+- Hay un separador "DESCANSO / HIDRATACION" a mitad de la tabla — no es un bloque, ignóralo, pero las filas que vienen después de él SÍ son bloques reales.
 
-Para cada celda con contenido devuelve un objeto con:
-- date: fecha YYYY-MM-DD del día correspondiente
-- block: número de bloque (1, 2, 3...)
-- title: nombre corto del ejercicio principal (máx 4 palabras). Para fuerza/halterofilia: solo el ejercicio final (ej: "Back Squat"). Para WODs metabólicos: ejercicios principales separados por '+' (ej: "Assault Bike + Burpees").
-- type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
-- description: texto completo exacto del WOD tal como aparece en la imagen
+REGLA CRÍTICA — una celda = un bloque:
+El texto dentro de una celda puede tener múltiples líneas, párrafos o notas del coach. TODO ese texto forma la description de ese único bloque. NUNCA dividas el contenido de una sola celda en bloques distintos.
 
-${TYPE_RULES}
+REGLA CRÍTICA — captura la primera línea de cada celda:
+Muchas celdas empiezan con "N sets", "N rondas", "N rounds" o similar en la primera línea. Esa primera línea es parte de la description y DEBE incluirse. No la omitas aunque sea breve.
 
-Antes de escribir el JSON, escribe una línea por cada día con los bloques que ves (usa / como separador):
-LUNES: bloque1 / bloque2 / ...
-MARTES: bloque1 / bloque2 / ...
+REGLA CRÍTICA — copia literal, nunca inventes:
+La description debe ser una transcripción exacta del texto visible en la celda. NUNCA añadas palabras, tiempos de descanso, repeticiones ni ningún dato que no esté escrito explícitamente en la imagen. Si algo no se ve con claridad, omítelo — nunca lo completes con suposiciones.
 
-Luego escribe exactamente esta línea: ===JSON===
-Y a continuación el array JSON completo, sin markdown:
-[{"date":"...","block":1,"title":"...","type":"...","description":"..."}]`
+PROCESO (columna por columna):
+1. Empieza por LUNES. Recorre sus celdas de arriba a abajo, incluyendo las que están después del separador DESCANSO.
+2. Para cada celda con texto real de entrenamiento, genera un bloque. Si la celda está vacía, omítela sin generar nada.
+3. Numera los bloques de ese día de forma independiente (1, 2, 3…).
+4. Repite para MARTES, MIÉRCOLES, JUEVES, VIERNES, SÁBADO.
+5. No mezcles contenido entre columnas. Cada celda pertenece solo a su columna.
+
+Para cada bloque devuelve SOLO:
+- date: fecha YYYY-MM-DD del día
+- block: número de bloque (1, 2, 3… por día)
+- description: texto completo y literal de la celda, incluyendo cualquier prefijo como "N sets", "N rondas", "N rounds" que aparezca al inicio
+
+Antes del JSON escribe una línea por día con el conteo:
+LUNES: N bloques
+MARTES: N bloques
+...
+
+Luego escribe exactamente: ===JSON===
+Y el array JSON sin markdown:
+[{"date":"...","block":1,"description":"..."}]`
 
     } else if (mode === 'day') {
-      promptText = `Analiza esta imagen con el entrenamiento del día y extrae todos los bloques.
+      visionPrompt = `Analiza esta imagen con el entrenamiento del día y extrae todos los bloques de ejercicio.
 
 La fecha es: ${date}
 
-Para cada bloque devuelve un objeto con:
+REGLA CRÍTICA — copia literal, nunca inventes:
+La description debe ser una transcripción exacta del texto visible. NUNCA añadas datos que no estén escritos en la imagen.
+
+Para cada bloque devuelve SOLO:
 - date: "${date}"
-- block: número de bloque (1, 2, 3...)
-- title: nombre corto del ejercicio principal (máx 4 palabras)
-- type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
-- description: texto completo del bloque tal como aparece en la imagen
+- block: número de bloque (1, 2, 3…)
+- description: texto completo y literal del bloque
 
-${TYPE_RULES}
-Ignora notas de hidratación, nutrición, recordatorios o cualquier cosa que no sea un bloque de ejercicio.
+Ignora notas de hidratación, nutrición o recordatorios que no sean ejercicio.
 
-Devuelve SOLO un array JSON sin markdown:
-[{"date":"${date}","block":1,"title":"...","type":"...","description":"..."}]`
+Luego escribe exactamente: ===JSON===
+Y el array JSON sin markdown:
+[{"date":"${date}","block":1,"description":"..."}]`
 
     } else {
-      promptText = `Analiza esta imagen con un WOD de CrossFit y extrae el bloque principal.
+      visionPrompt = `Analiza esta imagen con un WOD de CrossFit y extrae el bloque principal.
 
 La fecha es: ${date}
 
-Devuelve un objeto con:
+REGLA CRÍTICA — copia literal, nunca inventes:
+La description debe ser una transcripción exacta del texto visible. NUNCA añadas datos que no estén escritos en la imagen.
+
+Devuelve SOLO:
 - date: "${date}"
 - block: 1
-- title: nombre corto del ejercicio principal (máx 4 palabras)
-- type: uno de "Warmup" | "Strength" | "Gymnastics" | "Core" | "Mobility" | "For Time" | "AMRAP" | "EMOM" | "For Max" | "Other"
-- description: texto completo del WOD tal como aparece en la imagen
+- description: texto completo y literal del WOD
 
-${TYPE_RULES}
 Si hay varios bloques visibles, extrae solo el bloque principal (el WOD metabólico o de mayor intensidad).
-Ignora notas de hidratación, nutrición, recordatorios o cualquier cosa que no sea un bloque de ejercicio.
 
 Devuelve SOLO un array JSON con un único elemento, sin markdown:
-[{"date":"${date}","block":1,"title":"...","type":"...","description":"..."}]`
+[{"date":"${date}","block":1,"description":"..."}]`
     }
 
     let msg
     try {
       msg = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4096,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8192,
         messages: [{
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-            { type: 'text', text: promptText },
+            { type: 'text', text: visionPrompt },
           ],
         }],
       })
@@ -195,13 +211,9 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
     const cleaned = extracted.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 
     try {
-      const wods = JSON.parse(cleaned)
-      const normalized = wods.map((w: Record<string, unknown>) => ({
-        ...w,
-        type: VALID_TYPES.has(w.type as string) ? w.type : 'Other',
-      }))
-      const reviewed = await reviewTypes(normalized)
-      return NextResponse.json({ wods: reviewed })
+      const raws: RawWod[] = JSON.parse(cleaned)
+      const wods = await enrichWods(raws)
+      return NextResponse.json({ wods })
     } catch {
       return NextResponse.json({ error: 'Error al interpretar la imagen' }, { status: 500 })
     }
