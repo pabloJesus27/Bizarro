@@ -170,12 +170,7 @@ export default function PRCalculator({ prs, wodText }: Props) {
     ? prs.find(p => p.exercise.toLowerCase() === selected.prKey.toLowerCase())
     : undefined
 
-  // When label ≠ prKey, show which PR is being referenced
-  const rmLabel = selected
-    ? (selected.label !== selected.prKey
-        ? `${selected.prKey} · ${pr?.weight ?? '—'} kg`
-        : `1RM · ${pr?.weight ?? '—'} kg`)
-    : ''
+  const rmLabel = selected ? `1RM · ${pr?.weight ?? '—'} kg` : ''
 
   return (
     <div className="border border-neutral-800 rounded-xl p-4 w-44 shrink-0">
@@ -192,7 +187,7 @@ export default function PRCalculator({ prs, wodText }: Props) {
                 : 'text-neutral-600 hover:text-neutral-400'
             }`}
           >
-            {entry.label}
+            {entry.prKey}
           </button>
         ))}
       </div>
