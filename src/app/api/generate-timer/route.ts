@@ -54,6 +54,8 @@ Ejemplos de WODs complejos → mix:
 - "Durante 20 min, cada 2'30'': ejercicio A + ejercicio B, resto del tiempo ejercicio C" → (20*60)/(2*60+30) = 8 bloques de 150s con label que combine los ejercicios (ej: "BikeErg + Sandbag")
 - "Durante X min, cada Y min: …" → (X*60 / Y*60) bloques de Y*60s con label descriptivo
 - "3 sets, 30" on 30" off, DU / Thrusters / Burpees, rest 90" entre sets" → 17 bloques: [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s),Desc(90s)] × 2 + [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s)]
+- "3 sets 30'' on 30'' off: handstand / pull over / hollow rocks / double unders" → cada ejercicio ocupa su propio bloque de 30s trabajo + 30s descanso, rotando en orden, repetido 3 veces → 24 bloques: [Handstand(30s),Off(30s),Pull Over(30s),Off(30s),Hollow Rocks(30s),Off(30s),Double Unders(30s),Off(30s)] × 3
+- "30'' on 30'' off: ejercicio A / ejercicio B / ejercicio C" SIN sets especificados → asumir 1 ronda → N*2 bloques alternando trabajo(30s) y descanso(30s) por ejercicio
 
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque

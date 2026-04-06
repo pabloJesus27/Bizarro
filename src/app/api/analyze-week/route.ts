@@ -133,7 +133,7 @@ PROCESO (columna por columna):
 Para cada bloque devuelve SOLO:
 - date: fecha YYYY-MM-DD del día
 - block: número de bloque (1, 2, 3… por día)
-- description: texto completo y literal de la celda
+- description: texto completo y literal de la celda, incluyendo cualquier prefijo como "N sets", "N rondas", "N rounds" que aparezca al inicio
 
 Antes del JSON escribe una línea por día con el conteo:
 LUNES: N bloques
