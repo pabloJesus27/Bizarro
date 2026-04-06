@@ -258,7 +258,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       {blocks.length > 0 && (
         <div className="flex flex-col gap-2 w-80">
           <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Resumen</p>
-          <div className="flex flex-col gap-2">
+          <div className={`flex flex-col gap-2 overflow-y-auto ${cardOpen ? 'max-h-40' : 'max-h-[calc(100dvh-20rem)]'}`}>
             {blocks.map((b, i) => (
               <div
                 key={b.id}
