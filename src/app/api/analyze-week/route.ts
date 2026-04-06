@@ -32,7 +32,7 @@ Reglas de tipo (aplica en orden, la primera que encaje gana):
 5. Carrera de distancia fija única sin sets ni rondas → For Time
 6. N sets de ejercicios variados sin formato de tiempo explícito → Warmup
 7. Calentamiento, activación, warm up → Warmup
-8. Sets/reps con barra, halterofilia, pesas → Strength
+8. Sets/reps con barra, halterofilia, pesas, o ejercicios de musculación (lateral raises, curl biceps, triceps, extensiones, femoral, abducciones, press) → Strength
 9. Handstand, muscle up, ring dips, gymnastics → Gymnastics
 10. Core, abdominales, plancha, GHD, hollow body → Core
 11. Movilidad, estiramientos, foam roller → Mobility
@@ -121,7 +121,7 @@ ESTRUCTURA DE LA TABLA:
 PROCESO:
 1. Cuenta cuántas filas tiene la tabla (sin el separador DESCANSO).
 2. Para cada fila, procesa cada columna de izquierda a derecha.
-3. Si la celda tiene texto, genera un bloque. Si está vacía, omítela.
+3. Si la celda tiene texto real de entrenamiento, genera un bloque. Si está vacía o solo contiene guiones/espacios, NO la incluyas — no generes ningún objeto para esa celda.
 4. Numera los bloques de cada día de forma independiente (1, 2, 3…).
 5. Copia el texto de cada celda de forma LITERAL y COMPLETA, sin resumir ni interpretar.
 
