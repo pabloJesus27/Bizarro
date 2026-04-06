@@ -66,7 +66,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
     : newLabel !== '' && newMinutes === 0 && newSecs === 0
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 pb-28">
       <p className="text-white font-black text-5xl uppercase tracking-tighter">Mix</p>
 
       {/* Tarjeta de configuración */}
@@ -258,7 +258,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       {blocks.length > 0 && (
         <div className="flex flex-col gap-2 w-80">
           <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Resumen</p>
-          <div className={`flex flex-col gap-2 overflow-y-auto ${cardOpen ? 'max-h-40' : 'max-h-[calc(100dvh-26rem)]'}`}>
+          <div className={`flex flex-col gap-2 overflow-y-auto ${cardOpen ? 'max-h-40' : ''}`}>
             {blocks.map((b, i) => (
               <div
                 key={b.id}
@@ -336,16 +336,20 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
         </div>
       )}
 
-      <button
-        onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks: blocks.map(({ id: _, ...b }) => b) })}
-        disabled={blocks.length === 0}
-        className="w-80 bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30"
-      >
-        Listo
-      </button>
-      {/iPad|iPhone|iPod/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '') && (
-        <p className="text-neutral-600 text-xs font-mono text-center">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
-      )}
+      <div className="fixed bottom-0 inset-x-0 px-6 pt-4 pb-8 bg-gradient-to-t from-black via-black to-transparent">
+        <div className="max-w-sm mx-auto flex flex-col gap-2">
+          {/iPad|iPhone|iPod/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '') && (
+            <p className="text-neutral-600 text-xs font-mono text-center">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
+          )}
+          <button
+            onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks: blocks.map(({ id: _, ...b }) => b) })}
+            disabled={blocks.length === 0}
+            className="w-full bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30 active:scale-95 active:bg-neutral-200 transition"
+          >
+            Listo
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
