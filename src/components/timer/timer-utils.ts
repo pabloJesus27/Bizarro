@@ -13,10 +13,10 @@ export function beepWarning(ctx: AudioContext) {
         gain.connect(ctx.destination)
         osc.frequency.value = 880
         osc.type = 'sine'
-        gain.gain.setValueAtTime(0.8, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+        gain.gain.setValueAtTime(1.0, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
         osc.start()
-        osc.stop(ctx.currentTime + 0.1)
+        osc.stop(ctx.currentTime + 0.15)
       }, delay)
     })
   }
