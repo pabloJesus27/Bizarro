@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import AppQR from '@/components/AppQR'
 
 export default function Home() {
   return (
@@ -36,6 +37,8 @@ export default function Home() {
             Registrarse
           </Link>
         </div>
+
+        <AppQR />
       </div>
     </main>
   )
