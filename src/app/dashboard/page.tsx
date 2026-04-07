@@ -17,6 +17,7 @@ import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import PesosTab from '@/components/comunidad/PesosTab'
+import WelcomeModal from '@/components/WelcomeModal'
 
 // ── Dashboard Page ─────────────────────────────────────
 
@@ -46,6 +47,7 @@ function DashboardContent() {
   const [wodError,        setWodError]        = useState<string | null>(null)
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
   const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
+  const [showWelcome,     setShowWelcome]     = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -75,6 +77,10 @@ function DashboardContent() {
 
       setProgram(resolvedProgram as Program)
       setLoading(false)
+      if (profile?.role !== 'coach') {
+        const key = `bizarro_welcome_v1_${user.id}`
+        if (!localStorage.getItem(key)) setShowWelcome(true)
+      }
     })
   }, [authLoading, user, router])
 
@@ -424,6 +430,16 @@ function DashboardContent() {
           existing={results.find(r => r.wod_id === modalWod.id)}
           onClose={() => setModalWod(null)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {showWelcome && (
+        <WelcomeModal
+          mode="program"
+          onClose={() => {
+            localStorage.setItem(`bizarro_welcome_v1_${user!.id}`, '1')
+            setShowWelcome(false)
+          }}
         />
       )}
     </>

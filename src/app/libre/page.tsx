@@ -19,6 +19,7 @@ import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from 
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import WodForm from '@/components/libre/WodForm'
 import PRCalculator from '@/components/PRCalculator'
+import WelcomeModal from '@/components/WelcomeModal'
 
 // ── Libre Page ───────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export default function LibrePage() {
   const [communitySlug,      setCommunitySlug]      = useState<string | undefined>(undefined)
   const [generatingTimers,   setGeneratingTimers]   = useState(false)
   const [timerGenProgress,   setTimerGenProgress]   = useState<{ current: number; total: number } | null>(null)
+  const [showWelcome,        setShowWelcome]        = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -74,6 +76,8 @@ export default function LibrePage() {
       setPrs(userPRs)
       if (community) setCommunitySlug(community.slug)
       setLoading(false)
+      const key = `bizarro_welcome_v1_${user.id}`
+      if (!localStorage.getItem(key)) setShowWelcome(true)
     })
   }, [authLoading, user, router])
 
@@ -698,6 +702,16 @@ export default function LibrePage() {
           existing={results.find(r => r.wod_id === modalWod.id)}
           onClose={() => setModalWod(null)}
           onSaved={handleResultSaved}
+        />
+      )}
+
+      {showWelcome && (
+        <WelcomeModal
+          mode="libre"
+          onClose={() => {
+            localStorage.setItem(`bizarro_welcome_v1_${user!.id}`, '1')
+            setShowWelcome(false)
+          }}
         />
       )}
     </>
