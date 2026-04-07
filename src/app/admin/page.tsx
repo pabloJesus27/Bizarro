@@ -12,6 +12,7 @@ import WodModal from '@/components/admin/WodModal'
 import type { Wod } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
+import WelcomeModal from '@/components/WelcomeModal'
 
 // ── Admin Page ─────────────────────────────────────────
 
@@ -43,6 +44,7 @@ function AdminContent() {
   const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
   const [programName,   setProgramName]   = useState('')
   const [pendingCount,  setPendingCount]  = useState(0)
+  const [showWelcome,   setShowWelcome]   = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -55,6 +57,8 @@ function AdminContent() {
       if (profile?.role !== 'coach') router.push('/dashboard')
       setProfileName(profile?.full_name ?? '')
       setAvatarUrl(profile?.avatar_url ?? null)
+      const key = `bizarro_welcome_v1_${user.id}`
+      if (!localStorage.getItem(key)) setShowWelcome(true)
     })
 
     getMyPrograms(user.id).then(async programs => {
@@ -539,6 +543,16 @@ function AdminContent() {
             setSelectedBlock(firstBlock)
           }}
           onClose={() => { setLoadWodOpen(false); setPendingMode('select') }}
+        />
+      )}
+
+      {showWelcome && (
+        <WelcomeModal
+          mode="coach"
+          onClose={() => {
+            localStorage.setItem(`bizarro_welcome_v1_${user!.id}`, '1')
+            setShowWelcome(false)
+          }}
         />
       )}
     </>

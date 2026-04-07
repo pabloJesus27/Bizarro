@@ -8,7 +8,7 @@ interface Slide {
   desc: string
 }
 
-const SLIDES: Record<'program' | 'libre', Slide[]> = {
+const SLIDES: Record<'program' | 'libre' | 'coach', Slide[]> = {
   program: [
     {
       icon: '🏋️',
@@ -34,6 +34,33 @@ const SLIDES: Record<'program' | 'libre', Slide[]> = {
       icon: '🏆',
       title: 'Rankings y PRs',
       desc: 'Compite con tus compañeros en el ranking del día. Tus máximos de fuerza se guardan solos.',
+    },
+  ],
+  coach: [
+    {
+      icon: '📊',
+      title: 'Bienvenido a Bizarro',
+      desc: 'Tu panel de control para gestionar entrenamientos CrossFit.',
+    },
+    {
+      icon: '📝',
+      title: 'Crea tus WODs',
+      desc: 'Añade los WODs de cada día a mano o carga toda la semana desde una foto. La IA los extrae automáticamente.',
+    },
+    {
+      icon: '👥',
+      title: 'Gestiona tus atletas',
+      desc: 'Invita atletas por email o comparte tu código de programa. Acepta solicitudes de unión desde notificaciones.',
+    },
+    {
+      icon: '🏆',
+      title: 'Rankings',
+      desc: 'Consulta los rankings de cada WOD y ve cómo progresan tus atletas en tiempo real.',
+    },
+    {
+      icon: '💬',
+      title: 'Mensaje semanal',
+      desc: 'Escribe un mensaje para tus atletas cada semana. Aparece destacado en su panel junto a los WODs.',
     },
   ],
   libre: [
@@ -66,7 +93,7 @@ const SLIDES: Record<'program' | 'libre', Slide[]> = {
 }
 
 interface Props {
-  mode: 'program' | 'libre'
+  mode: 'program' | 'libre' | 'coach'
   onClose: () => void
 }
 
