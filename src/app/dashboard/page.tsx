@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessage, getMyOwnedCommunity } from '@/lib/db'
+import { getWodsForWeek, getResultsForWods, getProfile, getMyPRs, getCoachMessage, getMyOwnedCommunity, getMyAthletePrograms } from '@/lib/db'
 import type { PersonalRecord, CoachMessage } from '@/lib/db'
 import type { Wod, Result, Program } from '@/lib/types'
 import AppHeader from '@/components/AppHeader'
@@ -59,13 +59,20 @@ function DashboardContent() {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
 
-    Promise.all([getProfile(user.id), getMyPRs().catch(() => []), getMyOwnedCommunity(user.id).catch(() => null)]).then(([profile, userPRs, community]) => {
+    Promise.all([getProfile(user.id), getMyPRs().catch(() => []), getMyOwnedCommunity(user.id).catch(() => null), getMyAthletePrograms(user.id).catch(() => [])]).then(([profile, userPRs, community, myPrograms]) => {
       setIsCoach(profile?.role === 'coach')
       setPrs(userPRs)
       if (community) setCommunitySlug(community.slug)
       const programFromUrl = searchParams.get('program')
       const resolvedProgram = programFromUrl ?? profile?.program ?? null
       if (!resolvedProgram) { router.push('/elegir-modo'); return }
+
+      // Verificar membresía (coaches pueden acceder a cualquier programa, libre no requiere membresía)
+      if (profile?.role !== 'coach' && resolvedProgram !== 'libre') {
+        const isMember = (myPrograms as { programs: { slug: string } }[]).some(ap => ap.programs.slug === resolvedProgram)
+        if (!isMember) { router.push('/elegir-modo'); return }
+      }
+
       setProgram(resolvedProgram as Program)
       setLoading(false)
     })
