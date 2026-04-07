@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       { onConflict: 'program_slug,week_start' }
     )
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Error interno' }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }
