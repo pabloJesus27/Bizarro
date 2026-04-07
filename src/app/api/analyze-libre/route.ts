@@ -160,19 +160,15 @@ Y el array JSON sin markdown:
 [{"date":"${date}","block":1,"description":"..."}]`
 
     } else {
-      visionPrompt = `Analiza esta imagen con un WOD de CrossFit y extrae el bloque principal.
+      visionPrompt = `Analiza esta imagen con un WOD de CrossFit.
 
 La fecha es: ${date}
 
+REGLA CRÍTICA — todo es UN solo WOD:
+Aunque la imagen contenga secciones A, B, C, D, múltiples partes o bloques diferenciados, TODA la imagen forma un único WOD. Devuelve exactamente 1 elemento en el array con TODO el texto concatenado como description.
+
 REGLA CRÍTICA — copia literal, nunca inventes:
-La description debe ser una transcripción exacta del texto visible. NUNCA añadas datos que no estén escritos en la imagen.
-
-Devuelve SOLO:
-- date: "${date}"
-- block: 1
-- description: texto completo y literal del WOD
-
-Si hay varios bloques visibles, extrae solo el bloque principal (el WOD metabólico o de mayor intensidad).
+La description debe ser una transcripción exacta y completa de todo el texto visible. NUNCA añadas datos que no estén escritos en la imagen. NUNCA omitas partes.
 
 Devuelve SOLO un array JSON con un único elemento, sin markdown:
 [{"date":"${date}","block":1,"description":"..."}]`

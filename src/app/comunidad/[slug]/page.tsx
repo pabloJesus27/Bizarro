@@ -47,8 +47,9 @@ export default function ComunidadPage() {
   const [prs,              setPrs]              = useState<PersonalRecord[]>([])
   const [editingWod,       setEditingWod]       = useState<Wod | null>(null)
   const [pendingBlock,     setPendingBlock]     = useState<number | null>(null)
-  const [pendingMode,      setPendingMode]      = useState<'select' | 'manual' | null>(null)
+  const [pendingMode,      setPendingMode]      = useState<'select' | 'manual' | 'image-select' | null>(null)
   const [loadWodOpen,      setLoadWodOpen]      = useState(false)
+  const [loadWodMode,      setLoadWodMode]      = useState<'day' | 'wod'>('day')
   const [deletingId,       setDeletingId]       = useState<string | null>(null)
   const [deletingDay,      setDeletingDay]      = useState(false)
   const [deletingWeek,     setDeletingWeek]     = useState(false)
@@ -468,8 +469,39 @@ export default function ComunidadPage() {
                     type="button"
                     onClick={() => {
                       if (key === 'manual') setPendingMode('manual')
-                      else setLoadWodOpen(true)
+                      else setPendingMode('image-select')
                     }}
+                    className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
+                  >
+                    <div>
+                      <p className="text-white font-bold uppercase tracking-widest text-sm">{label}</p>
+                      <p className="text-neutral-600 text-xs font-mono mt-0.5">{desc}</p>
+                    </div>
+                    <span className="text-neutral-600 text-lg">→</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setPendingBlock(null); setPendingMode(null) }}
+                  className="text-neutral-600 hover:text-white text-xs font-mono transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            {/* Panel derecho: selector de modo imagen */}
+            {selectedBlock === 0 && pendingMode === 'image-select' && isOwner && (
+              <div className="flex-1 p-6 flex flex-col gap-4">
+                <button onClick={() => setPendingMode('select')} className="text-neutral-500 hover:text-white text-xs font-mono transition self-start">← Volver</button>
+                <p className="text-neutral-500 text-sm font-mono">¿Qué contiene la imagen?</p>
+                {([
+                  { key: 'day' as const, label: 'Cargar día',  desc: 'Varios bloques del día' },
+                  { key: 'wod' as const, label: 'Cargar WOD',  desc: 'Un único WOD completo' },
+                ]).map(({ key, label, desc }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => { setLoadWodMode(key); setLoadWodOpen(true) }}
                     className="w-full border border-neutral-800 hover:border-neutral-500 rounded-xl px-5 py-4 flex items-center justify-between text-left transition"
                   >
                     <div>
@@ -675,7 +707,7 @@ export default function ComunidadPage() {
           weekDates={weekDates}
           selectedDate={selectedDate}
           variant="libre"
-          forceMode="day"
+          forceMode={loadWodMode}
           onConfirm={async (parsed) => {
             const sorted = [...parsed].sort((a, b) => a.block - b.block)
             const firstBlock = pendingBlock
