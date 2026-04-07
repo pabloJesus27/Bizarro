@@ -14,8 +14,8 @@ export default function AppQR() {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="bg-white p-3 rounded-xl">
-        <QRCodeSVG value={url} size={100} bgColor="#ffffff" fgColor="#000000" />
+      <div className="bg-white p-4 rounded-xl">
+        <QRCodeSVG value={url} size={160} bgColor="#ffffff" fgColor="#000000" level="H" />
       </div>
       <p className="text-neutral-600 font-mono text-xs uppercase tracking-widest">Comparte la app</p>
       <p className="text-neutral-700 font-mono text-xs">{url}</p>
