@@ -7,7 +7,7 @@ export default function AppQR() {
   const [url, setUrl] = useState('')
 
   useEffect(() => {
-    setUrl(window.location.origin)
+    setUrl(window.location.href)
   }, [])
 
   if (!url) return null
@@ -18,6 +18,7 @@ export default function AppQR() {
         <QRCodeSVG value={url} size={100} bgColor="#ffffff" fgColor="#000000" />
       </div>
       <p className="text-neutral-600 font-mono text-xs uppercase tracking-widest">Comparte la app</p>
+      <p className="text-neutral-700 font-mono text-xs">{url}</p>
     </div>
   )
 }
