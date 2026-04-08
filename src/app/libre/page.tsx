@@ -78,7 +78,7 @@ function LibreContent() {
       setPrs(userPRs)
       if (community) setCommunitySlug(community.slug)
       setLoading(false)
-      const key = `bizarro_welcome_v1_${user.id}`
+      const key = `bizarro_welcome_libre_${user.id}`
       if (!localStorage.getItem(key)) setShowWelcome(true)
     })
   }, [authLoading, user, router])
@@ -729,7 +729,7 @@ function LibreContent() {
         <WelcomeModal
           mode="libre"
           onClose={() => {
-            localStorage.setItem(`bizarro_welcome_v1_${user!.id}`, '1')
+            localStorage.setItem(`bizarro_welcome_libre_${user!.id}`, '1')
             setShowWelcome(false)
           }}
         />

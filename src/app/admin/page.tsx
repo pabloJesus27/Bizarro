@@ -57,7 +57,7 @@ function AdminContent() {
       if (profile?.role !== 'coach') router.push('/dashboard')
       setProfileName(profile?.full_name ?? '')
       setAvatarUrl(profile?.avatar_url ?? null)
-      const key = `bizarro_welcome_v1_${user.id}`
+      const key = `bizarro_welcome_coach_${user.id}`
       if (!localStorage.getItem(key)) setShowWelcome(true)
     })
 
@@ -550,7 +550,7 @@ function AdminContent() {
         <WelcomeModal
           mode="coach"
           onClose={() => {
-            localStorage.setItem(`bizarro_welcome_v1_${user!.id}`, '1')
+            localStorage.setItem(`bizarro_welcome_coach_${user!.id}`, '1')
             setShowWelcome(false)
           }}
         />

@@ -79,7 +79,7 @@ function DashboardContent() {
       setProgram(resolvedProgram as Program)
       setLoading(false)
       if (profile?.role !== 'coach') {
-        const key = `bizarro_welcome_v1_${user.id}`
+        const key = `bizarro_welcome_program_${user.id}`
         if (!localStorage.getItem(key)) setShowWelcome(true)
       }
     })
@@ -455,7 +455,7 @@ function DashboardContent() {
         <WelcomeModal
           mode="program"
           onClose={() => {
-            localStorage.setItem(`bizarro_welcome_v1_${user!.id}`, '1')
+            localStorage.setItem(`bizarro_welcome_program_${user!.id}`, '1')
             setShowWelcome(false)
           }}
         />
