@@ -431,7 +431,6 @@ function DashboardContent() {
                       {/* Sidebar derecho — solo desktop */}
                       <div className="hidden lg:flex flex-col gap-4 w-52 shrink-0">
                         <PRCalculator prs={prs} wodText={prCalcWodText} />
-                        {coachMessage && <CoachMessageCard message={coachMessage} />}
                       </div>
                     </div>
                   </div>

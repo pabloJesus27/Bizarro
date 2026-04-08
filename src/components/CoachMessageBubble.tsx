@@ -16,7 +16,7 @@ export default function CoachMessageBubble({ message }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed bottom-6 right-6 w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:bg-neutral-200 active:scale-95 transition-all z-40"
+        className="fixed bottom-6 right-6 w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:bg-neutral-200 active:scale-95 transition-all z-40"
         aria-label="Ver indicaciones del coach"
       >
         <span className="text-lg">💬</span>
