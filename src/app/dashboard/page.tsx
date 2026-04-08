@@ -418,12 +418,14 @@ function DashboardContent() {
                               </button>
                             </div>
                           ) : (
-                            <button
-                              onClick={() => setModalWod(activeWod)}
-                              className="px-4 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition w-full lg:self-start"
-                            >
-                              Registrar resultado
-                            </button>
+                            <div className="flex">
+                              <button
+                                onClick={() => setModalWod(activeWod)}
+                                className="flex-1 lg:flex-none px-4 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition"
+                              >
+                                Registrar resultado
+                              </button>
+                            </div>
                           )
                         )}
                       </div>
