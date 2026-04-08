@@ -370,7 +370,7 @@ function DashboardContent() {
                       className={`lg:hidden absolute top-6 right-6 text-[11px] font-mono border rounded-lg px-2 py-1 transition z-20 ${showPRCalc ? 'border-neutral-600 text-white bg-neutral-900' : 'border-neutral-800 text-neutral-600 hover:text-white hover:border-neutral-600'}`}
                       onClick={() => setShowPRCalc(v => !v)}
                     >
-                      {showPRCalc ? '✕' : '% PR'}
+                      {showPRCalc ? '− % PR' : '% PR'}
                     </button>
 
                     <div className="flex gap-6 items-start relative">
