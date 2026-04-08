@@ -182,7 +182,7 @@ export default function PRCalculator({ prs, wodText, onClose }: Props) {
   const rmLabel = selected ? `1RM · ${pr?.weight ?? '—'} kg` : ''
 
   return (
-    <div className="border border-neutral-800 rounded-xl p-4 w-44 shrink-0 bg-black">
+    <div className="border border-neutral-800 rounded-xl p-4 w-full bg-black">
       <div className="flex items-center justify-between mb-3">
         <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">% PR</p>
         {onClose && (

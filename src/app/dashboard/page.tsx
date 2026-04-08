@@ -365,14 +365,16 @@ function DashboardContent() {
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
                     <div className="flex gap-4 items-start">
-                      <div className="flex-1 min-w-0">
+                      <div className="w-[65%] min-w-0">
                         {activeWod.description && (
                           <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
                             {activeWod.description}
                           </pre>
                         )}
                       </div>
-                      <PRCalculator prs={prs} wodText={prCalcWodText} />
+                      <div className="w-[35%]">
+                        <PRCalculator prs={prs} wodText={prCalcWodText} />
+                      </div>
                     </div>
 
                     {/* Generar timer */}
