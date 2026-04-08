@@ -430,7 +430,7 @@ function DashboardContent() {
                         )}
                       </div>
                       {/* Móvil: overlay flotante. Desktop: inline */}
-                      <div className={showPRCalc ? 'absolute right-6 top-20 z-10 shadow-xl lg:relative lg:right-auto lg:top-auto lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
+                      <div className={showPRCalc ? 'fixed top-20 right-4 z-50 shadow-2xl lg:relative lg:static lg:shadow-none' : 'hidden lg:block'}>
                         <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
                       </div>
                     </div>
