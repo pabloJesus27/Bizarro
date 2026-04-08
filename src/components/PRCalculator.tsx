@@ -152,6 +152,10 @@ export function hasPRContent(wodText: string): boolean {
   return extractEntries(wodText).length > 0 && extractPercentages(wodText).length > 0
 }
 
+export function getFirstPRKey(wodText: string): string | null {
+  return extractEntries(wodText)[0]?.prKey ?? null
+}
+
 interface Props {
   prs: PersonalRecord[]
   wodText: string
@@ -188,17 +192,12 @@ export default function PRCalculator({ prs, wodText, onClose }: Props) {
 
       <div className="flex flex-col gap-0.5 mb-3">
         {entries.map(entry => (
-          <button
+          <p
             key={entry.prKey}
-            onClick={() => setSelected(s => s?.prKey === entry.prKey ? null : entry)}
-            className={`text-left text-[11px] font-mono px-2 py-1 rounded-lg transition ${
-              selected?.prKey === entry.prKey
-                ? 'bg-neutral-800 text-white'
-                : 'text-neutral-600 hover:text-neutral-400'
-            }`}
+            className="text-[11px] font-mono px-2 py-1 text-neutral-400"
           >
             {entry.prKey}
-          </button>
+          </p>
         ))}
       </div>
 
