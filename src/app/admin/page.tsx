@@ -330,8 +330,9 @@ function AdminContent() {
                         setTouchVisual(null)
                       }
                     }}
+                    onContextMenu={e => e.preventDefault()}
                     data-block-idx={idx}
-                    className={`flex-shrink-0 flex items-stretch border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                    className={`flex-shrink-0 flex items-stretch border-r lg:border-r-0 lg:border-b border-neutral-900 transition select-none ${
                       isActive ? 'bg-neutral-900' : isDragOver ? 'bg-neutral-800' : 'hover:bg-neutral-950'
                     }`}
                   >
