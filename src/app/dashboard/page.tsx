@@ -49,6 +49,7 @@ function DashboardContent() {
   const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
   const [showWelcome,     setShowWelcome]     = useState(false)
   const [showPRCalc,      setShowPRCalc]      = useState(false)
+  const [prCalcHasContent, setPrCalcHasContent] = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -139,7 +140,7 @@ function DashboardContent() {
     sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
 
-  useEffect(() => { setShowPRCalc(false) }, [selectedBlock, selectedDate])
+  useEffect(() => { setShowPRCalc(false); setPrCalcHasContent(false) }, [selectedBlock, selectedDate])
 
   useEffect(() => {
     if (resultHandledRef.current) return
@@ -365,16 +366,6 @@ function DashboardContent() {
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
-                    {/* Pill % PR — solo móvil, solo cuando está cerrada */}
-                    {!showPRCalc && (
-                      <button
-                        className="lg:hidden absolute top-6 right-6 text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition z-20"
-                        onClick={() => setShowPRCalc(true)}
-                      >
-                        % PR
-                      </button>
-                    )}
-
                     <div className="flex gap-6 items-start relative">
                       <div className="flex-1 min-w-0">
                         {activeWod.description && (
@@ -431,9 +422,19 @@ function DashboardContent() {
                           )
                         )}
                       </div>
-                      {/* Móvil: overlay flotante con botón −. Desktop: inline */}
-                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
-                        <div className="relative">
+                      {/* Móvil: pill cuando cerrada, tarjeta con − cuando abierta. Desktop: inline */}
+                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : (prCalcHasContent ? 'lg:block' : 'hidden lg:block')}>
+                        {/* Pill — móvil, cerrada */}
+                        {!showPRCalc && prCalcHasContent && (
+                          <button
+                            className="lg:hidden text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition"
+                            onClick={() => setShowPRCalc(true)}
+                          >
+                            % PR
+                          </button>
+                        )}
+                        {/* Tarjeta — móvil abierta o desktop siempre */}
+                        <div className={showPRCalc ? 'relative' : 'hidden lg:block'}>
                           {showPRCalc && (
                             <button
                               className="lg:hidden absolute top-2 right-2 z-10 text-neutral-500 hover:text-white text-base leading-none font-mono"
@@ -442,7 +443,7 @@ function DashboardContent() {
                               −
                             </button>
                           )}
-                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} onHasContent={setPrCalcHasContent} />
                         </div>
                       </div>
                     </div>

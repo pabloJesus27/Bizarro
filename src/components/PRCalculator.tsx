@@ -151,11 +151,13 @@ function calcWeight(rm: number, pct: number): string {
 interface Props {
   prs: PersonalRecord[]
   wodText: string
+  onHasContent?: (has: boolean) => void
 }
 
-export default function PRCalculator({ prs, wodText }: Props) {
+export default function PRCalculator({ prs, wodText, onHasContent }: Props) {
   const entries     = extractEntries(wodText)
   const percentages = extractPercentages(wodText)
+  const hasContent  = entries.length > 0 && percentages.length > 0
 
   const [selected, setSelected] = useState<DetectedEntry | null>(entries[0] ?? null)
 
@@ -164,7 +166,11 @@ export default function PRCalculator({ prs, wodText }: Props) {
     setSelected(e[0] ?? null)
   }, [wodText])
 
-  if (entries.length === 0 || percentages.length === 0) return null
+  useEffect(() => {
+    onHasContent?.(hasContent)
+  }, [hasContent, onHasContent])
+
+  if (!hasContent) return null
 
   const pr = selected
     ? prs.find(p => p.exercise.toLowerCase() === selected.prKey.toLowerCase())
