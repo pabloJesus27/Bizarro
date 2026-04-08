@@ -11,7 +11,7 @@ import AppHeader from '@/components/AppHeader'
 import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
-import PRCalculator from '@/components/PRCalculator'
+import PRCalculator, { hasPRContent } from '@/components/PRCalculator'
 import CoachMessageCard from '@/components/CoachMessageCard'
 import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
@@ -48,8 +48,7 @@ function DashboardContent() {
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
   const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
   const [showWelcome,     setShowWelcome]     = useState(false)
-  const [showPRCalc,      setShowPRCalc]      = useState(false)
-  const [prCalcHasContent, setPrCalcHasContent] = useState(false)
+  const [showPRCalc, setShowPRCalc] = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -140,7 +139,7 @@ function DashboardContent() {
     sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
 
-  useEffect(() => { setShowPRCalc(false); setPrCalcHasContent(false) }, [selectedBlock, selectedDate])
+  useEffect(() => { setShowPRCalc(false) }, [selectedBlock, selectedDate])
 
   useEffect(() => {
     if (resultHandledRef.current) return
@@ -198,6 +197,7 @@ function DashboardContent() {
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
   const activeWod = dayWods.find(w => w.block === selectedBlock) ?? null
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
+  const prCalcHasContent = activeWod ? hasPRContent(`${activeWod.title} ${activeWod.description ?? ''}`) : false
 
   if (authLoading || loading) return <AthletePageLoading />
 
@@ -422,19 +422,19 @@ function DashboardContent() {
                           )
                         )}
                       </div>
-                      {/* Móvil: pill cuando cerrada, tarjeta con − cuando abierta. Desktop: inline */}
-                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : (prCalcHasContent ? 'lg:block' : 'hidden lg:block')}>
-                        {/* Pill — móvil, cerrada */}
-                        {!showPRCalc && prCalcHasContent && (
-                          <button
-                            className="lg:hidden text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition"
-                            onClick={() => setShowPRCalc(true)}
-                          >
-                            % PR
-                          </button>
-                        )}
-                        {/* Tarjeta — móvil abierta o desktop siempre */}
-                        <div className={showPRCalc ? 'relative' : 'hidden lg:block'}>
+                      {/* Móvil: pill flotante cuando cerrada, tarjeta cuando abierta. Desktop: inline */}
+                      {/* Pill — absolute, no afecta layout */}
+                      {!showPRCalc && prCalcHasContent && (
+                        <button
+                          className="lg:hidden absolute top-0 right-0 z-20 text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition bg-black"
+                          onClick={() => setShowPRCalc(true)}
+                        >
+                          % PR
+                        </button>
+                      )}
+                      {/* Tarjeta — absolute en móvil cuando abierta, inline en desktop */}
+                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
+                        <div className="relative">
                           {showPRCalc && (
                             <button
                               className="lg:hidden absolute top-2 right-2 z-10 text-neutral-500 hover:text-white text-base leading-none font-mono"
@@ -443,7 +443,7 @@ function DashboardContent() {
                               −
                             </button>
                           )}
-                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} onHasContent={setPrCalcHasContent} />
+                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
                         </div>
                       </div>
                     </div>
