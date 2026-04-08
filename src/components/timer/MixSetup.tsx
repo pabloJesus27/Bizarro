@@ -26,7 +26,8 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
   const tabTotal = (tabWork + tabRest) * tabRounds
   const [cardOpen, setCardOpen] = useState(true)
   const dragIdx = useRef<number | null>(null)
-  const touchDrag = useRef<{ from: number; over: number } | null>(null)
+  const touchDrag      = useRef<{ from: number; over: number } | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [touchVisual, setTouchVisual] = useState<{ from: number; over: number } | null>(null)
 
   function addBlock() {
@@ -282,10 +283,18 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
                 <div className="flex items-center gap-3">
                   <span
                     style={{ touchAction: 'none' }}
-                    className="text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing"
-                    onTouchStart={() => { touchDrag.current = { from: i, over: i }; setTouchVisual({ from: i, over: i }) }}
+                    className="text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing select-none"
+                    onContextMenu={e => e.preventDefault()}
+                    onTouchStart={() => {
+                      longPressTimer.current = setTimeout(() => {
+                        touchDrag.current = { from: i, over: i }
+                        setTouchVisual({ from: i, over: i })
+                        navigator.vibrate?.(50)
+                      }, 600)
+                    }}
                     onTouchMove={e => {
                       if (!touchDrag.current) return
+                      e.preventDefault()
                       const touch = e.touches[0]
                       const el = document.elementFromPoint(touch.clientX, touch.clientY)
                       const blockEl = el?.closest('[data-idx]')
@@ -296,6 +305,10 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
                       }
                     }}
                     onTouchEnd={() => {
+                      if (longPressTimer.current) {
+                        clearTimeout(longPressTimer.current)
+                        longPressTimer.current = null
+                      }
                       if (!touchDrag.current) return
                       const { from, over } = touchDrag.current
                       touchDrag.current = null
