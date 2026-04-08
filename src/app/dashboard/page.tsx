@@ -361,75 +361,79 @@ function DashboardContent() {
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
-                    <div className="flex gap-4 items-start">
-                      <div className="w-[60%] min-w-0">
-                        {activeWod.description && (
-                          <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
-                            {activeWod.description}
-                          </pre>
-                        )}
-                      </div>
-                      <div className="w-[40%]">
-                        <PRCalculator prs={prs} wodText={prCalcWodText} />
-                      </div>
-                    </div>
+                    <div className="flex gap-6 items-start">
+                      {/* Columna principal */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-6">
+                        {/* Descripción + PRCalculator (móvil: 60/40, desktop: descripción sola) */}
+                        <div className="flex gap-4 items-start">
+                          <div className="w-[60%] lg:w-full min-w-0">
+                            {activeWod.description && (
+                              <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
+                                {activeWod.description}
+                              </pre>
+                            )}
+                          </div>
+                          {/* PRCalculator solo en móvil */}
+                          <div className="w-[40%] lg:hidden">
+                            <PRCalculator prs={prs} wodText={prCalcWodText} />
+                          </div>
+                        </div>
 
-                    {/* Generar timer */}
-                    {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
-                      <div className="mt-6">
-                        <button
-                          onClick={() => handleGenerateTimer(activeWod)}
-                          disabled={generatingTimer}
-                          className="border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
-                        >
-                          {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
-                        </button>
-                        {timerError && (
-                          <p className="text-red-500 text-xs font-mono mt-2">Error al generar el timer.</p>
+                        {/* Generar timer */}
+                        {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
+                          <div>
+                            <button
+                              onClick={() => handleGenerateTimer(activeWod)}
+                              disabled={generatingTimer}
+                              className="border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
+                            >
+                              {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
+                            </button>
+                            {timerError && (
+                              <p className="text-red-500 text-xs font-mono mt-2">Error al generar el timer.</p>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
 
-                    {/* Resultado */}
-                    {activeWod.type !== 'Warmup' && (
-                      <div className="mt-6">
-                        {activeResult ? (
-                          <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
-                            <div>
-                              <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-                                Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
-                              </p>
-                              <p className="text-white font-black text-2xl tracking-tight">
-                                {getScoreDisplay(activeWod, activeResult)}
-                              </p>
-                              {activeResult.score_notes && (
-                                <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
-                              )}
+                        {/* Resultado */}
+                        {activeWod.type !== 'Warmup' && (
+                          activeResult ? (
+                            <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
+                              <div>
+                                <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+                                  Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
+                                </p>
+                                <p className="text-white font-black text-2xl tracking-tight">
+                                  {getScoreDisplay(activeWod, activeResult)}
+                                </p>
+                                {activeResult.score_notes && (
+                                  <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setModalWod(activeWod)}
+                                className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
+                              >
+                                ✏ <span>Editar</span>
+                              </button>
                             </div>
+                          ) : (
                             <button
                               onClick={() => setModalWod(activeWod)}
-                              className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
+                              className="px-6 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition w-full"
                             >
-                              ✏ <span>Editar</span>
+                              Registrar resultado
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setModalWod(activeWod)}
-                            className="px-6 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition w-full"
-                          >
-                            Registrar resultado
-                          </button>
+                          )
                         )}
                       </div>
-                    )}
 
-                    {/* Coach message — desktop */}
-                    {coachMessage && (
-                      <div className="hidden lg:block mt-8">
-                        <CoachMessageCard message={coachMessage} />
+                      {/* Sidebar derecho — solo desktop */}
+                      <div className="hidden lg:flex flex-col gap-4 w-52 shrink-0">
+                        <PRCalculator prs={prs} wodText={prCalcWodText} />
+                        {coachMessage && <CoachMessageCard message={coachMessage} />}
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>
