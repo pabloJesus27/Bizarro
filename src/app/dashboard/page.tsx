@@ -370,10 +370,10 @@ function DashboardContent() {
                       className={`lg:hidden absolute top-6 right-6 text-[11px] font-mono border rounded-lg px-2 py-1 transition z-20 ${showPRCalc ? 'border-neutral-600 text-white bg-neutral-900' : 'border-neutral-800 text-neutral-600 hover:text-white hover:border-neutral-600'}`}
                       onClick={() => setShowPRCalc(v => !v)}
                     >
-                      % PR
+                      {showPRCalc ? '✕' : '% PR'}
                     </button>
 
-                    <div className="flex gap-6 items-start">
+                    <div className="flex gap-6 items-start relative">
                       <div className="flex-1 min-w-0">
                         {activeWod.description && (
                           <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-6">
@@ -430,7 +430,7 @@ function DashboardContent() {
                         )}
                       </div>
                       {/* Móvil: overlay flotante. Desktop: inline */}
-                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:shadow-none' : 'hidden lg:block'}>
+                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
                         <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
                       </div>
                     </div>
