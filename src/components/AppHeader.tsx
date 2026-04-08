@@ -143,7 +143,9 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
             <span className="text-white text-sm font-mono">{profileName.split(' ')[0]}</span>
           </button>
           {profileOpen && (
-            <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[140px]">
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+              <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[140px]">
               {showChangeProgram && (
               <button
                 onClick={() => { setProfileOpen(false); router.push('/elegir-modo') }}
@@ -165,6 +167,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
                 Salir
               </button>
             </div>
+            </>
           )}
         </div>
       </header>
