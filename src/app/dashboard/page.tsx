@@ -48,6 +48,7 @@ function DashboardContent() {
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
   const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
   const [showWelcome,     setShowWelcome]     = useState(false)
+  const [showPRCalc,      setShowPRCalc]      = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -137,6 +138,8 @@ function DashboardContent() {
   useEffect(() => {
     sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
+
+  useEffect(() => { setShowPRCalc(false) }, [selectedBlock, selectedDate])
 
   useEffect(() => {
     if (resultHandledRef.current) return
@@ -356,13 +359,21 @@ function DashboardContent() {
                     endpoint="/api/program-prs"
                   />
                 ) : (
-                  <div className="flex-1 p-6">
+                  <div className="flex-1 p-6 relative">
                     <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
                       {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                    {/* Toggle % PR — solo móvil */}
+                    <button
+                      className={`lg:hidden absolute top-6 right-6 text-[11px] font-mono border rounded-lg px-2 py-1 transition z-20 ${showPRCalc ? 'border-neutral-600 text-white bg-neutral-900' : 'border-neutral-800 text-neutral-600 hover:text-white hover:border-neutral-600'}`}
+                      onClick={() => setShowPRCalc(v => !v)}
+                    >
+                      % PR
+                    </button>
+
+                    <div className="flex gap-6 items-start">
                       <div className="flex-1 min-w-0">
                         {activeWod.description && (
                           <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-6">
@@ -418,7 +429,10 @@ function DashboardContent() {
                           )
                         )}
                       </div>
-                      <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                      {/* Móvil: overlay flotante. Desktop: inline */}
+                      <div className={showPRCalc ? 'absolute right-6 top-20 z-10 shadow-xl lg:relative lg:right-auto lg:top-auto lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
+                        <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                      </div>
                     </div>
 
                     {/* Coach message — desktop */}
