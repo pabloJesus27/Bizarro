@@ -125,14 +125,17 @@ export default function CoachHeader({
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[160px]">
-              <button
-                onClick={handleLogout}
-                className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition"
-              >
-                Salir
-              </button>
-            </div>
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+              <div className="absolute right-0 top-[calc(100%+12px)] bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl z-50 min-w-[160px]">
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2.5 text-left font-mono uppercase tracking-widest text-xs text-neutral-500 hover:text-white hover:bg-neutral-900 transition"
+                >
+                  Salir
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
