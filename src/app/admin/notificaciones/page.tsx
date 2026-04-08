@@ -95,34 +95,36 @@ function NotificacionesContent() {
         ) : (
           <div className="flex flex-col gap-3">
             {requests.map(req => (
-              <div key={req.id} className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-900">
-                {req.profiles?.avatar_url ? (
-                  <Image src={req.profiles.avatar_url} alt="" width={40} height={40} className="rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
-                    <span className="text-white text-xs font-black">
-                      {req.profiles?.full_name?.[0]?.toUpperCase() ?? '?'}
-                    </span>
+              <div key={req.id} className="flex flex-col gap-3 px-5 py-4 rounded-xl border border-neutral-900 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  {req.profiles?.avatar_url ? (
+                    <Image src={req.profiles.avatar_url} alt="" width={40} height={40} className="rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center shrink-0">
+                      <span className="text-white text-xs font-black">
+                        {req.profiles?.full_name?.[0]?.toUpperCase() ?? '?'}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-white font-black text-sm">{req.profiles?.full_name ?? 'Atleta'}</p>
+                    <p className="text-neutral-600 text-xs font-mono">
+                      Quiere unirse a <span className="text-neutral-400">{req.programs?.name}</span>
+                    </p>
                   </div>
-                )}
-                <div className="flex-1">
-                  <p className="text-white font-black text-sm">{req.profiles?.full_name ?? 'Atleta'}</p>
-                  <p className="text-neutral-600 text-xs font-mono">
-                    Quiere unirse a <span className="text-neutral-400">{req.programs?.name}</span>
-                  </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleAccept(req)}
                     disabled={acting === req.id}
-                    className="bg-white text-black font-black uppercase text-xs rounded-full px-4 py-1.5 hover:bg-neutral-200 transition disabled:opacity-50"
+                    className="flex-1 sm:flex-none bg-white text-black font-black uppercase text-xs rounded-full px-4 py-2 hover:bg-neutral-200 transition disabled:opacity-50"
                   >
                     Aceptar
                   </button>
                   <button
                     onClick={() => handleReject(req)}
                     disabled={acting === req.id}
-                    className="border border-neutral-700 text-neutral-400 hover:text-white font-mono text-xs rounded-full px-4 py-1.5 transition disabled:opacity-50"
+                    className="flex-1 sm:flex-none border border-neutral-700 text-neutral-400 hover:text-white font-mono text-xs rounded-full px-4 py-2 transition disabled:opacity-50"
                   >
                     Rechazar
                   </button>
