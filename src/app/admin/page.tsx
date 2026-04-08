@@ -156,8 +156,9 @@ function AdminContent() {
     setTimerGenProgress(null)
   }
 
-  const dragIdx  = useRef<number | null>(null)
-  const touchDrag = useRef<{ from: number; over: number } | null>(null)
+  const dragIdx        = useRef<number | null>(null)
+  const touchDrag      = useRef<{ from: number; over: number } | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [touchVisual, setTouchVisual] = useState<{ from: number; over: number } | null>(null)
 
   async function handleReorderBlocks(fromIdx: number, toIdx: number) {
@@ -298,11 +299,15 @@ function AdminContent() {
                       dragIdx.current = null
                     }}
                     onTouchStart={() => {
-                      touchDrag.current = { from: idx, over: idx }
-                      setTouchVisual({ from: idx, over: idx })
+                      longPressTimer.current = setTimeout(() => {
+                        touchDrag.current = { from: idx, over: idx }
+                        setTouchVisual({ from: idx, over: idx })
+                        navigator.vibrate?.(50)
+                      }, 600)
                     }}
                     onTouchMove={e => {
                       if (!touchDrag.current) return
+                      e.preventDefault()
                       const touch = e.touches[0]
                       const el = document.elementFromPoint(touch.clientX, touch.clientY)
                       const target = el?.closest('[data-block-idx]') as HTMLElement | null
@@ -315,6 +320,10 @@ function AdminContent() {
                       }
                     }}
                     onTouchEnd={() => {
+                      if (longPressTimer.current) {
+                        clearTimeout(longPressTimer.current)
+                        longPressTimer.current = null
+                      }
                       if (touchDrag.current) {
                         handleReorderBlocks(touchDrag.current.from, touchDrag.current.over)
                         touchDrag.current = null
