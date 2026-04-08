@@ -302,9 +302,6 @@ function DashboardContent() {
                       {WOD_TYPE_LABEL[wod.type] ?? wod.type}
                     </p>
                     <p className="text-white font-black text-sm">{wod.title}</p>
-                    {result && (
-                      <p className="text-neutral-400 text-xs font-mono mt-1">{getScoreDisplay(wod, result)}</p>
-                    )}
                   </button>
                 )
               })}
