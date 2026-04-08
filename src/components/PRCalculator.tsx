@@ -155,9 +155,10 @@ export function hasPRContent(wodText: string): boolean {
 interface Props {
   prs: PersonalRecord[]
   wodText: string
+  onClose?: () => void
 }
 
-export default function PRCalculator({ prs, wodText }: Props) {
+export default function PRCalculator({ prs, wodText, onClose }: Props) {
   const entries     = extractEntries(wodText)
   const percentages = extractPercentages(wodText)
 
@@ -178,7 +179,12 @@ export default function PRCalculator({ prs, wodText }: Props) {
 
   return (
     <div className="border border-neutral-800 rounded-xl p-4 w-44 shrink-0 bg-black">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-3">% PR</p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">% PR</p>
+        {onClose && (
+          <button onClick={onClose} className="text-neutral-600 hover:text-white text-sm font-mono leading-none transition">−</button>
+        )}
+      </div>
 
       <div className="flex flex-col gap-0.5 mb-3">
         {entries.map(entry => (

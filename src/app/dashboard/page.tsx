@@ -434,17 +434,7 @@ function DashboardContent() {
                       )}
                       {/* Tarjeta — absolute en móvil cuando abierta, inline en desktop */}
                       <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
-                        <div className="relative">
-                          {showPRCalc && (
-                            <button
-                              className="lg:hidden absolute top-2 right-2 z-10 text-neutral-500 hover:text-white text-base leading-none font-mono"
-                              onClick={() => setShowPRCalc(false)}
-                            >
-                              −
-                            </button>
-                          )}
-                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
-                        </div>
+                        <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} onClose={showPRCalc ? () => setShowPRCalc(false) : undefined} />
                       </div>
                     </div>
 
