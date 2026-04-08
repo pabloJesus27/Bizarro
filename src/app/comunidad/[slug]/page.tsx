@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AppHeader from '@/components/AppHeader'
 import { AthletePageLoading } from '@/components/PageLoading'
@@ -23,11 +23,12 @@ import type { Wod, Result } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay, detectPRExercise } from '@/lib/wod-utils'
 
-export default function ComunidadPage() {
+function ComunidadContent() {
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
+  const searchParams = useSearchParams()
 
   const today = useMemo(() => getTodayStr(), [])
 
@@ -139,7 +140,18 @@ export default function ComunidadPage() {
     sessionStorage.setItem(`biz_com_${slug}_pos`, JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock, slug])
 
-  async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+  useEffect(() => {
+    const resultWodId = searchParams.get('result')
+    if (!resultWodId || wods.length === 0) return
+    const wod = wods.find(w => w.id === resultWodId)
+    if (wod) {
+      setModalWod(wod)
+      window.history.replaceState(null, '', `/comunidad/${slug}`)
+    }
+  }, [wods, searchParams, slug])
+
+  async function handleGenerateTimer(wod: { id?: string; title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+    if (wod.id) sessionStorage.setItem('timer_return_context', JSON.stringify({ wodId: wod.id, returnUrl: `/comunidad/${slug}` }))
     if (wod.timer_config) {
       const cfg = Array.isArray(wod.timer_config)
         ? { type: 'mix' as const, blocks: wod.timer_config }
@@ -158,6 +170,11 @@ export default function ComunidadPage() {
       })
       const cfg = await res.json()
       if (cfg.error) { setTimerError(true); return }
+      if (wod.id) {
+        updateWodTimerConfig(wod.id, cfg).then(() =>
+          setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
+        ).catch(() => {})
+      }
       sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
       router.push('/timer')
     } catch { setTimerError(true) } finally {
@@ -729,3 +746,5 @@ export default function ComunidadPage() {
     </>
   )
 }
+
+export default function ComunidadPage() { return <Suspense><ComunidadContent /></Suspense> }

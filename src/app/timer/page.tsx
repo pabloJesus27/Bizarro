@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { TimerConfig, MixBlock } from '@/lib/types'
+import { updateWodTimerConfig } from '@/lib/db'
 import SimpleTimer from '@/components/timer/SimpleTimer'
 import ForTimeTimer from '@/components/timer/ForTimeTimer'
 import TabataTimer from '@/components/timer/TabataTimer'
@@ -17,14 +18,14 @@ import MixSetup from '@/components/timer/MixSetup'
 
 // ── Page ─────────────────────────────────────────────────
 
-function renderTimer(cfg: TimerConfig) {
-  if (cfg.type === 'interval')  return <IntervalTimer config={cfg} />
-  if (cfg.type === 'amrap')     return <SimpleTimer label="AMRAP" totalSeconds={cfg.totalSeconds} />
-  if (cfg.type === 'emom')      return <EMOMTimer totalSeconds={cfg.totalSeconds} intervalSeconds={cfg.intervalSeconds} />
-  if (cfg.type === 'fortime')   return <ForTimeTimer capSeconds={cfg.capSeconds} />
-  if (cfg.type === 'countdown') return <SimpleTimer label="COUNTDOWN" totalSeconds={cfg.totalSeconds} />
-  if (cfg.type === 'tabata')    return <TabataTimer workSeconds={cfg.workSeconds} restSeconds={cfg.restSeconds} rounds={cfg.rounds} />
-  if (cfg.type === 'mix')       return <MixTimer blocks={cfg.blocks} />
+function renderTimer(cfg: TimerConfig, onFinish: () => void) {
+  if (cfg.type === 'interval')  return <IntervalTimer config={cfg} onFinish={onFinish} />
+  if (cfg.type === 'amrap')     return <SimpleTimer label="AMRAP" totalSeconds={cfg.totalSeconds} onFinish={onFinish} />
+  if (cfg.type === 'emom')      return <EMOMTimer totalSeconds={cfg.totalSeconds} intervalSeconds={cfg.intervalSeconds} onFinish={onFinish} />
+  if (cfg.type === 'fortime')   return <ForTimeTimer capSeconds={cfg.capSeconds} onFinish={onFinish} />
+  if (cfg.type === 'countdown') return <SimpleTimer label="COUNTDOWN" totalSeconds={cfg.totalSeconds} onFinish={onFinish} />
+  if (cfg.type === 'tabata')    return <TabataTimer workSeconds={cfg.workSeconds} restSeconds={cfg.restSeconds} rounds={cfg.rounds} onFinish={onFinish} />
+  if (cfg.type === 'mix')       return <MixTimer blocks={cfg.blocks} onFinish={onFinish} />
   return null
 }
 
@@ -40,6 +41,33 @@ function TimerContent() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
   const timerActive = !!(config || generatedMixBlocks || pendingConfig || manualType)
+
+  function handleStart(cfg: TimerConfig) {
+    try {
+      const raw = sessionStorage.getItem('timer_return_context')
+      if (raw) {
+        const { wodId } = JSON.parse(raw) as { wodId: string; returnUrl: string }
+        const original = pendingConfig ?? (generatedMixBlocks ? { type: 'mix' as const, blocks: generatedMixBlocks } : null)
+        if (original && JSON.stringify(cfg) !== JSON.stringify(original)) {
+          updateWodTimerConfig(wodId, cfg).catch(() => {})
+        }
+      }
+    } catch { /* ignorar */ }
+    setConfig(cfg)
+  }
+
+  function handleFinish() {
+    try {
+      const raw = sessionStorage.getItem('timer_return_context')
+      sessionStorage.removeItem('timer_return_context')
+      if (raw) {
+        const { wodId, returnUrl } = JSON.parse(raw) as { wodId: string; returnUrl: string }
+        router.push(`${returnUrl}?result=${wodId}`)
+        return
+      }
+    } catch { /* ignorar */ }
+    router.push('/dashboard')
+  }
 
   useEffect(() => {
     if (!timerActive) return
@@ -95,28 +123,28 @@ function TimerContent() {
       <div className="flex-1 flex items-start justify-center">
         {config ? (
           <div className="w-full">
-            {renderTimer(config)}
+            {renderTimer(config, handleFinish)}
           </div>
         ) : (
           <div className="w-full max-w-md">
             {generatedMixBlocks && (
-              <MixSetup onStart={setConfig} initialBlocks={generatedMixBlocks} />
+              <MixSetup onStart={handleStart} initialBlocks={generatedMixBlocks} />
             )}
             {pendingConfig && !config && (
               <>
-                {pendingConfig.type === 'amrap'   && <AMRAPSetup   onStart={setConfig} initialConfig={pendingConfig} />}
-                {pendingConfig.type === 'emom'    && <EMOMSetup    onStart={setConfig} initialConfig={pendingConfig} />}
-                {pendingConfig.type === 'fortime' && <ForTimeSetup onStart={setConfig} initialConfig={pendingConfig} />}
-                {pendingConfig.type === 'tabata'  && <TabataSetup  onStart={setConfig} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'amrap'   && <AMRAPSetup   onStart={handleStart} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'emom'    && <EMOMSetup    onStart={handleStart} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'fortime' && <ForTimeSetup onStart={handleStart} initialConfig={pendingConfig} />}
+                {pendingConfig.type === 'tabata'  && <TabataSetup  onStart={handleStart} initialConfig={pendingConfig} />}
               </>
             )}
             {manualType && (
               <>
-                {manualType === 'amrap'   && <AMRAPSetup   onStart={setConfig} />}
-                {manualType === 'emom'    && <EMOMSetup    onStart={setConfig} />}
-                {manualType === 'fortime' && <ForTimeSetup onStart={setConfig} />}
-                {manualType === 'tabata'  && <TabataSetup  onStart={setConfig} />}
-                {manualType === 'mix'     && <MixSetup     onStart={setConfig} />}
+                {manualType === 'amrap'   && <AMRAPSetup   onStart={handleStart} />}
+                {manualType === 'emom'    && <EMOMSetup    onStart={handleStart} />}
+                {manualType === 'fortime' && <ForTimeSetup onStart={handleStart} />}
+                {manualType === 'tabata'  && <TabataSetup  onStart={handleStart} />}
+                {manualType === 'mix'     && <MixSetup     onStart={handleStart} />}
               </>
             )}
           </div>

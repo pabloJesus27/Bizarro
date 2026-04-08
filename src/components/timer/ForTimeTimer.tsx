@@ -6,7 +6,7 @@ import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-u
 import PreStartCountdown from './PreStartCountdown'
 import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
-export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
+export default function ForTimeTimer({ capSeconds, onFinish }: { capSeconds: number; onFinish?: () => void }) {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
   const [stopped, setStopped] = useState(false)
@@ -82,7 +82,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
       {cappedOut && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME CAP</p>
-          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
+          <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
@@ -122,7 +122,7 @@ export default function ForTimeTimer({ capSeconds }: { capSeconds: number }) {
             {stopped && (
               <>
                 <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest">Listo</p>
-                <button onClick={() => router.push('/dashboard')} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
+                <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
               </>
             )}
             {!running && !stopped && !cappedOut && !inPreCountdown && (

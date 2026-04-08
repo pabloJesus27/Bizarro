@@ -137,6 +137,16 @@ function DashboardContent() {
     sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
 
+  useEffect(() => {
+    const resultWodId = searchParams.get('result')
+    if (!resultWodId || wods.length === 0) return
+    const wod = wods.find(w => w.id === resultWodId)
+    if (wod) {
+      setModalWod(wod)
+      window.history.replaceState(null, '', '/dashboard')
+    }
+  }, [wods, searchParams])
+
   function handleSaved(result: Result, isNewPR: boolean) {
     setResults(prev => {
       const idx = prev.findIndex(r => r.wod_id === result.wod_id)
@@ -151,7 +161,8 @@ function DashboardContent() {
     }
   }
 
-  async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+  async function handleGenerateTimer(wod: { id?: string; title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+    if (wod.id) sessionStorage.setItem('timer_return_context', JSON.stringify({ wodId: wod.id, returnUrl: '/dashboard' }))
     if (wod.timer_config) {
       const cfg = Array.isArray(wod.timer_config)
         ? { type: 'mix' as const, blocks: wod.timer_config }

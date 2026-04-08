@@ -6,7 +6,7 @@ import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-u
 import PreStartCountdown from './PreStartCountdown'
 import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
-export default function TabataTimer({ workSeconds, restSeconds, rounds }: { workSeconds: number; restSeconds: number; rounds: number }) {
+export default function TabataTimer({ workSeconds, restSeconds, rounds, onFinish }: { workSeconds: number; restSeconds: number; rounds: number; onFinish?: () => void }) {
   const router = useRouter()
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
@@ -91,7 +91,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds }: { work
       {finished && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
-          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
+          <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">

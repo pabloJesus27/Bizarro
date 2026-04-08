@@ -6,8 +6,8 @@ import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-u
 import PreStartCountdown from './PreStartCountdown'
 import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 
-export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
-  label: string; totalSeconds: number; intervalSeconds?: number
+export default function SimpleTimer({ label, totalSeconds, intervalSeconds, onFinish }: {
+  label: string; totalSeconds: number; intervalSeconds?: number; onFinish?: () => void
 }) {
   const router = useRouter()
   const [elapsed, setElapsed] = useState(0)
@@ -83,7 +83,7 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds }: {
       {finished && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
           <p className="text-white font-black text-7xl uppercase tracking-tighter">TIME!</p>
-          <button onClick={() => router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
+          <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
       <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">

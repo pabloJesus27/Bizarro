@@ -1,8 +1,8 @@
 'use client'
 
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AppHeader from '@/components/AppHeader'
 import { AthletePageLoading } from '@/components/PageLoading'
@@ -23,9 +23,10 @@ import WelcomeModal from '@/components/WelcomeModal'
 
 // ── Libre Page ───────────────────────────────────────────
 
-export default function LibrePage() {
+function LibreContent() {
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const today = useMemo(() => getTodayStr(), [])
 
@@ -136,6 +137,16 @@ export default function LibrePage() {
     sessionStorage.setItem('biz_libre_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
 
+  useEffect(() => {
+    const resultWodId = searchParams.get('result')
+    if (!resultWodId || wods.length === 0) return
+    const wod = wods.find(w => w.id === resultWodId)
+    if (wod) {
+      setModalWod(wod)
+      window.history.replaceState(null, '', '/libre')
+    }
+  }, [wods, searchParams])
+
   function handleWodSaved(wod: Wod) {
     setWods(prev => {
       const idx = prev.findIndex(w => w.id === wod.id)
@@ -227,7 +238,8 @@ export default function LibrePage() {
     setTimerGenProgress(null)
   }
 
-  async function handleGenerateTimer(wod: { title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+  async function handleGenerateTimer(wod: { id?: string; title: string; description: string; type: string; timer_config?: import('@/lib/types').TimerConfig | null }) {
+    if (wod.id) sessionStorage.setItem('timer_return_context', JSON.stringify({ wodId: wod.id, returnUrl: '/libre' }))
     if (wod.timer_config) {
       const cfg = Array.isArray(wod.timer_config)
         ? { type: 'mix' as const, blocks: wod.timer_config }
@@ -246,6 +258,11 @@ export default function LibrePage() {
       })
       const cfg = await res.json()
       if (cfg.error) { setTimerError(true); return }
+      if (wod.id) {
+        updateWodTimerConfig(wod.id, cfg).then(() =>
+          setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
+        ).catch(() => {})
+      }
       sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
       router.push('/timer')
     } catch { setTimerError(true) } finally {
@@ -717,3 +734,5 @@ export default function LibrePage() {
     </>
   )
 }
+
+export default function LibrePage() { return <Suspense><LibreContent /></Suspense> }
