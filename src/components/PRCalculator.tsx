@@ -182,50 +182,37 @@ export default function PRCalculator({ prs, wodText, onClose }: Props) {
   const rmLabel = selected ? `1RM · ${pr?.weight ?? '—'} kg` : ''
 
   return (
-    <div className="border border-neutral-800 rounded-xl p-4 w-full bg-black">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">% PR</p>
-        {onClose && (
-          <button onClick={onClose} className="text-neutral-600 hover:text-white text-sm font-mono leading-none transition">−</button>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-0.5 mb-3">
-        {entries.map(entry => (
-          <p
-            key={entry.prKey}
-            className="text-[11px] font-mono px-2 py-1 text-neutral-400"
-          >
-            {entry.prKey}
-          </p>
-        ))}
-      </div>
-
-      {selected && (
-        <div className="border-t border-neutral-800 pt-3">
-          {pr ? (
+    <div className="border border-neutral-800 rounded-xl px-4 py-3 w-full bg-black">
+      <div className="flex items-center gap-4 flex-wrap">
+        {/* Ejercicio + 1RM */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-neutral-500 text-[11px] font-mono uppercase tracking-widest">% PR</span>
+          <span className="text-neutral-700 text-[11px] font-mono">·</span>
+          <span className="text-neutral-400 text-[11px] font-mono">{selected?.prKey}</span>
+          {pr && (
             <>
-              <p className="text-neutral-600 text-[11px] font-mono mb-2">{rmLabel}</p>
-              <div className="flex flex-col gap-1.5">
-                {percentages.map(pct => (
-                  <div key={pct} className="flex items-center justify-between">
-                    <span className="text-neutral-500 text-xs font-mono">{pct}%</span>
-                    <span className="text-white font-black text-sm tabular-nums">
-                      {calcWeight(pr.weight, pct)} kg
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <span className="text-neutral-700 text-[11px] font-mono">·</span>
+              <span className="text-neutral-600 text-[11px] font-mono">1RM {pr.weight} kg</span>
             </>
-          ) : (
-            <p className="text-neutral-600 text-[11px] font-mono leading-relaxed">
-              {prs.length === 0
-                ? 'Sin PRs cargados. Ve a Máximos para añadirlos.'
-                : `Sin PR para ${selected.prKey}. Ve a Máximos para añadirlo.`}
-            </p>
           )}
         </div>
-      )}
+
+        {/* Porcentajes */}
+        {pr ? (
+          <div className="flex items-center gap-4 flex-wrap">
+            {percentages.map(pct => (
+              <div key={pct} className="flex items-center gap-1.5">
+                <span className="text-neutral-600 text-[11px] font-mono">{pct}%</span>
+                <span className="text-white font-black text-sm tabular-nums">{calcWeight(pr.weight, pct)} kg</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-neutral-700 text-[11px] font-mono">
+            {prs.length === 0 ? 'Ve a Máximos para añadir tus PRs.' : `Sin PR para ${selected?.prKey}.`}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
