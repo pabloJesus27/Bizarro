@@ -431,7 +431,7 @@ function DashboardContent() {
                           className="lg:hidden absolute top-0 right-0 z-20 text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition bg-black"
                           onClick={() => setShowPRCalc(true)}
                         >
-                          {prCalcFirstKey ?? '% PR'}
+                          % PR{prCalcFirstKey ? ` · ${prCalcFirstKey}` : ''}
                         </button>
                       )}
                       {/* Tarjeta — absolute en móvil cuando abierta, inline en desktop */}
