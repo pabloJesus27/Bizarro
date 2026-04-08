@@ -365,13 +365,15 @@ function DashboardContent() {
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
-                    {/* Toggle % PR — solo móvil */}
-                    <button
-                      className={`lg:hidden absolute top-6 right-6 text-[11px] font-mono border rounded-lg px-2 py-1 transition z-20 ${showPRCalc ? 'border-neutral-600 text-white bg-neutral-900' : 'border-neutral-800 text-neutral-600 hover:text-white hover:border-neutral-600'}`}
-                      onClick={() => setShowPRCalc(v => !v)}
-                    >
-                      {showPRCalc ? '− % PR' : '% PR'}
-                    </button>
+                    {/* Pill % PR — solo móvil, solo cuando está cerrada */}
+                    {!showPRCalc && (
+                      <button
+                        className="lg:hidden absolute top-6 right-6 text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition z-20"
+                        onClick={() => setShowPRCalc(true)}
+                      >
+                        % PR
+                      </button>
+                    )}
 
                     <div className="flex gap-6 items-start relative">
                       <div className="flex-1 min-w-0">
@@ -429,9 +431,19 @@ function DashboardContent() {
                           )
                         )}
                       </div>
-                      {/* Móvil: overlay flotante. Desktop: inline */}
+                      {/* Móvil: overlay flotante con botón −. Desktop: inline */}
                       <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
-                        <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                        <div className="relative">
+                          {showPRCalc && (
+                            <button
+                              className="lg:hidden absolute top-2 right-2 z-10 text-neutral-500 hover:text-white text-base leading-none font-mono"
+                              onClick={() => setShowPRCalc(false)}
+                            >
+                              −
+                            </button>
+                          )}
+                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                        </div>
                       </div>
                     </div>
 
