@@ -336,88 +336,86 @@ function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRem
           <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col px-6 py-8 max-w-2xl mx-auto w-full">
-          {isSunday(selectedDate) ? (
-            <div className="flex-1 flex flex-col justify-center">
-              <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-4">Domingo</p>
-              <h2 className="text-neutral-800 font-black text-6xl uppercase tracking-tighter leading-none">Descanso</h2>
+        <div className="flex flex-col flex-1 lg:flex-row">
+          {/* Panel izquierdo: bloques */}
+          {!isSunday(selectedDate) && dayWods.length > 0 && (
+            <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden [&::-webkit-scrollbar]:hidden">
+              {dayWods.map(wod => {
+                const isActive = wod.block === selectedBlock + 1
+                const done = results.some(r => r.wod_id === wod.id)
+                return (
+                  <button
+                    key={wod.id}
+                    onClick={() => setSelectedBlock(wod.block - 1)}
+                    className={`flex-shrink-0 text-left px-6 py-4 border-r lg:border-r-0 lg:border-b border-neutral-900 transition ${
+                      isActive ? 'bg-neutral-900' : 'hover:bg-neutral-950'
+                    }`}
+                  >
+                    <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                      {WOD_TYPE_LABEL[wod.type] ?? wod.type}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-black text-sm">{wod.title}</p>
+                      {done && <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          ) : (
-            <>
-              {/* Block tabs */}
-              <div className="flex gap-2 mb-8 flex-wrap">
-                {[1, 2, 3, 4, 5, 6].map((block) => {
-                  const wod      = dayWods.find(w => w.block === block)
-                  const isActive = selectedBlock === block - 1
-                  const label    = wod ? (WOD_TYPE_LABEL[wod.type] ?? wod.type) : `Bloque ${block}`
-                  const done     = wod ? results.some(r => r.wod_id === wod.id) : false
-                  return (
-                    <button
-                      key={block}
-                      onClick={() => setSelectedBlock(block - 1)}
-                      className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest font-mono transition relative ${
-                        isActive
-                          ? 'bg-white text-black'
-                          : 'border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-300'
-                      }`}
-                    >
-                      {label}
-                      {done && !isActive && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white" />
-                      )}
-                    </button>
-                  )
-                })}
+          )}
+
+          {/* Panel derecho: detalle */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {isSunday(selectedDate) ? (
+              <div className="flex-1 flex flex-col justify-center px-6">
+                <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-4">Domingo</p>
+                <h2 className="text-neutral-800 font-black text-6xl uppercase tracking-tighter leading-none">Descanso</h2>
               </div>
+            ) : dayWods.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">Sin entrenos este día</p>
+              </div>
+            ) : activeWod ? (
+              <div className="flex-1 p-6 flex flex-col gap-6">
+                <div>
+                  <p className="text-neutral-500 text-xs font-mono uppercase tracking-widest mb-1">
+                    {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
+                  </p>
+                  <h2 className="text-white font-black text-2xl tracking-tight">{activeWod.title}</h2>
+                </div>
 
-              {activeWod ? (
-                <>
-                  {/* Type badge */}
-                  <div className="inline-flex border border-neutral-800 rounded-full px-4 py-1 mb-5 w-fit">
-                    <span className="text-neutral-400 text-xs uppercase tracking-widest font-mono">
-                      {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h1 className="text-white font-black text-5xl sm:text-6xl leading-none tracking-tighter uppercase mb-8">
-                    {activeWod.title}
-                  </h1>
-
-                  {/* Description */}
-                  <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-10">
+                {activeWod.description && (
+                  <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
                     {activeWod.description}
                   </pre>
+                )}
 
-                  {/* Result */}
-                  {activeWod.type !== 'Warmup' && (
-                    activeResult ? (
-                      <div className="border border-neutral-800 rounded-xl p-5">
-                        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
-                          Resultado · {activeResult.rx ? 'RX' : 'Scaled'}
-                        </p>
-                        <p className="text-white font-black text-2xl tracking-tight">
-                          {getScoreDisplay(activeWod, activeResult)}
-                        </p>
-                        {activeResult.score_notes && (
-                          <p className="text-neutral-600 text-xs font-mono mt-2">{activeResult.score_notes}</p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="border border-neutral-900 rounded-xl p-5">
-                        <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono">Sin resultado</p>
-                      </div>
-                    )
-                  )}
-                </>
-              ) : (
-                <div className="flex-1 flex flex-col justify-center pt-8">
-                  <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono mb-3">Bloque {selectedBlock + 1}</p>
-                  <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">Sin programar</h2>
-                </div>
-              )}
-            </>
-          )}
+                {activeWod.type !== 'Warmup' && (
+                  activeResult ? (
+                    <div className="border border-neutral-800 rounded-xl p-5">
+                      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+                        Resultado · {activeResult.rx ? 'RX' : 'Scaled'}
+                      </p>
+                      <p className="text-white font-black text-2xl tracking-tight">
+                        {getScoreDisplay(activeWod, activeResult)}
+                      </p>
+                      {activeResult.score_notes && (
+                        <p className="text-neutral-600 text-xs font-mono mt-2">{activeResult.score_notes}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border border-neutral-900 rounded-xl p-5">
+                      <p className="text-neutral-700 text-xs uppercase tracking-widest font-mono">Sin resultado</p>
+                    </div>
+                  )
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col justify-center px-6">
+                <h2 className="text-neutral-800 font-black text-4xl uppercase tracking-tighter leading-none">Sin programar</h2>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>
