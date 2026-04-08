@@ -57,6 +57,7 @@ function LibreContent() {
   const [showWelcome,        setShowWelcome]        = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
+  const resultHandledRef = useRef(false)
   const initPosRef = useRef<{ date: string; block: number } | null>(
     typeof window !== 'undefined'
       ? (() => { try { const s = sessionStorage.getItem('biz_libre_pos'); return s ? JSON.parse(s) : null } catch { return null } })()
@@ -138,10 +139,12 @@ function LibreContent() {
   }, [selectedDate, selectedBlock])
 
   useEffect(() => {
+    if (resultHandledRef.current) return
     const resultWodId = searchParams.get('result')
     if (!resultWodId || wods.length === 0) return
     const wod = wods.find(w => w.id === resultWodId)
     if (wod) {
+      resultHandledRef.current = true
       setModalWod(wod)
       window.history.replaceState(null, '', '/libre')
     }

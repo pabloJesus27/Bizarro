@@ -56,6 +56,7 @@ function DashboardContent() {
       : null
   )
   const prevSelectedDateRef = useRef(today)
+  const resultHandledRef = useRef(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -138,10 +139,12 @@ function DashboardContent() {
   }, [selectedDate, selectedBlock])
 
   useEffect(() => {
+    if (resultHandledRef.current) return
     const resultWodId = searchParams.get('result')
     if (!resultWodId || wods.length === 0) return
     const wod = wods.find(w => w.id === resultWodId)
     if (wod) {
+      resultHandledRef.current = true
       setModalWod(wod)
       window.history.replaceState(null, '', '/dashboard')
     }
