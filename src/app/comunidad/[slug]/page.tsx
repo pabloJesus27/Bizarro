@@ -451,9 +451,6 @@ function ComunidadContent() {
                         {WOD_TYPE_LABEL[wod.type] ?? wod.type}
                       </p>
                       <p className="text-white font-black text-sm">{wod.title}</p>
-                      {result && (
-                        <p className="text-neutral-400 text-xs font-mono mt-1">{getScoreDisplay(wod, result)}</p>
-                      )}
                     </button>
                   </div>
                 )
@@ -602,69 +599,98 @@ function ComunidadContent() {
                       {WOD_TYPE_LABEL[activeWod.type] ?? activeWod.type}
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
-                    <div className="flex gap-6 items-start">
-                    <div className="flex-1 min-w-0">
-                    {activeWod.description && (
-                      <p className="text-neutral-300 text-sm font-mono whitespace-pre-wrap mb-6">{activeWod.description}</p>
-                    )}
-                    {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
-                      <div className="mb-4">
-                        <button
-                          onClick={() => handleGenerateTimer(activeWod)}
-                          disabled={generatingTimer}
-                          className="border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
-                        >
-                          {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
-                        </button>
-                        {timerError && (
-                          <p className="text-red-500 text-xs font-mono mt-2 text-center">Error al generar el timer.</p>
-                        )}
+                    <div className="flex flex-col gap-6">
+                      {/* Descripción + PRCalculator 60/40 en móvil */}
+                      <div className="flex gap-4 items-start">
+                        <div className="w-[60%] min-w-0">
+                          {activeWod.description && (
+                            <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
+                              {activeWod.description}
+                            </pre>
+                          )}
+                        </div>
+                        <div className="w-[40%]">
+                          <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
+                        </div>
                       </div>
-                    )}
-                    <button
-                      onClick={() => setModalWod(activeWod)}
-                      className="px-6 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition"
-                    >
-                      {activeResult ? 'Editar resultado' : 'Registrar resultado'}
-                    </button>
-                    {activeResult && (
-                      <p className="text-neutral-400 text-xs font-mono mt-3">
-                        Tu resultado: {getScoreDisplay(activeWod, activeResult)}
-                        {activeResult.rx && ' · RX'}
-                      </p>
-                    )}
 
-                    {/* Borrar WOD + día (solo owner) */}
-                    {isOwner && (
-                      <div className="mt-6 flex flex-col gap-2 pt-4 border-t border-neutral-900">
-                        <button onClick={() => setEditingWod(activeWod)} className="text-neutral-700 hover:text-white text-xs font-mono transition w-fit">
-                          ✎ Editar WOD
-                        </button>
-                        {deletingId === activeWod.id ? (
-                          <div className="flex gap-3">
-                            <button onClick={() => handleDelete(activeWod.id)} className="text-red-400 text-xs font-mono">Confirmar</button>
-                            <button onClick={() => setDeletingId(null)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
-                          </div>
-                        ) : (
-                          <button onClick={() => setDeletingId(activeWod.id)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition w-fit">
-                            × Eliminar este WOD
+                      {/* Generar timer */}
+                      {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
+                        <div>
+                          <button
+                            onClick={() => handleGenerateTimer(activeWod)}
+                            disabled={generatingTimer}
+                            className="border border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white font-mono uppercase tracking-widest text-xs rounded-xl px-4 py-3 transition disabled:opacity-50"
+                          >
+                            {generatingTimer ? 'Generando...' : '⚡ Generar timer'}
                           </button>
-                        )}
-                        {deletingDay ? (
-                          <div className="flex gap-3">
-                            <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono">Confirmar borrar día</button>
-                            <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+                          {timerError && (
+                            <p className="text-red-500 text-xs font-mono mt-2">Error al generar el timer.</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Resultado */}
+                      {activeResult ? (
+                        <div className="border border-neutral-800 rounded-xl p-5 flex items-center justify-between">
+                          <div>
+                            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
+                              Tu resultado · {activeResult.rx ? 'RX' : 'Scaled'}
+                            </p>
+                            <p className="text-white font-black text-2xl tracking-tight">
+                              {getScoreDisplay(activeWod, activeResult)}
+                            </p>
+                            {activeResult.score_notes && (
+                              <p className="text-neutral-600 text-xs font-mono mt-1">{activeResult.score_notes}</p>
+                            )}
                           </div>
-                        ) : (
-                          <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition w-fit">
-                            × Borrar todos los WODs de este día
+                          <button
+                            onClick={() => setModalWod(activeWod)}
+                            className="text-white/40 hover:text-white/80 transition-colors text-xs flex items-center gap-1 font-mono"
+                          >
+                            ✏ <span>Editar</span>
                           </button>
-                        )}
-                      </div>
-                    )}
-                    </div>{/* end flex-1 */}
-                    <PRCalculator prs={prs} wodText={`${activeWod.title} ${activeWod.description ?? ''}`} />
-                    </div>{/* end flex gap-6 */}
+                        </div>
+                      ) : (
+                        <div className="flex">
+                          <button
+                            onClick={() => setModalWod(activeWod)}
+                            className="flex-1 lg:flex-none px-4 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition"
+                          >
+                            Registrar resultado
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Borrar WOD + día (solo owner) */}
+                      {isOwner && (
+                        <div className="flex flex-col gap-2 pt-4 border-t border-neutral-900">
+                          <button onClick={() => setEditingWod(activeWod)} className="text-neutral-700 hover:text-white text-xs font-mono transition w-fit">
+                            ✎ Editar WOD
+                          </button>
+                          {deletingId === activeWod.id ? (
+                            <div className="flex gap-3">
+                              <button onClick={() => handleDelete(activeWod.id)} className="text-red-400 text-xs font-mono">Confirmar</button>
+                              <button onClick={() => setDeletingId(null)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setDeletingId(activeWod.id)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition w-fit">
+                              × Eliminar este WOD
+                            </button>
+                          )}
+                          {deletingDay ? (
+                            <div className="flex gap-3">
+                              <button onClick={handleDeleteDay} className="text-red-400 text-xs font-mono">Confirmar borrar día</button>
+                              <button onClick={() => setDeletingDay(false)} className="text-neutral-600 text-xs font-mono">Cancelar</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setDeletingDay(true)} className="text-neutral-700 hover:text-red-400 text-xs font-mono transition w-fit">
+                              × Borrar todos los WODs de este día
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
