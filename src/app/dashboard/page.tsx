@@ -362,7 +362,7 @@ function DashboardContent() {
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
-                    <div className="flex gap-6 items-start">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                       <div className="flex-1 min-w-0">
                         {activeWod.description && (
                           <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-6">
