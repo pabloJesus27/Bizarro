@@ -11,7 +11,7 @@ import AppHeader from '@/components/AppHeader'
 import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
-import PRCalculator, { hasPRContent, getFirstPRKey } from '@/components/PRCalculator'
+import PRCalculator from '@/components/PRCalculator'
 import CoachMessageCard from '@/components/CoachMessageCard'
 import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
@@ -48,7 +48,6 @@ function DashboardContent() {
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
   const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
   const [showWelcome,     setShowWelcome]     = useState(false)
-  const [showPRCalc, setShowPRCalc] = useState(false)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -139,7 +138,6 @@ function DashboardContent() {
     sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
 
-  useEffect(() => { setShowPRCalc(false) }, [selectedBlock, selectedDate])
 
   useEffect(() => {
     if (resultHandledRef.current) return
@@ -198,8 +196,6 @@ function DashboardContent() {
   const activeWod = dayWods.find(w => w.block === selectedBlock) ?? null
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
   const prCalcWodText = activeWod ? `${activeWod.title} ${activeWod.description ?? ''}` : ''
-  const prCalcHasContent = prCalcWodText ? hasPRContent(prCalcWodText) : false
-  const prCalcFirstKey   = prCalcWodText ? getFirstPRKey(prCalcWodText) : null
 
   if (authLoading || loading) return <AthletePageLoading />
 
@@ -368,7 +364,7 @@ function DashboardContent() {
                     </p>
                     <h2 className="text-white font-black text-2xl tracking-tight mb-4">{activeWod.title}</h2>
 
-                    <div className="flex gap-6 items-start relative">
+                    <div className="flex gap-4 items-start">
                       <div className="flex-1 min-w-0">
                         {activeWod.description && (
                           <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5 mb-6">
@@ -424,20 +420,7 @@ function DashboardContent() {
                           )
                         )}
                       </div>
-                      {/* Móvil: pill flotante cuando cerrada, tarjeta cuando abierta. Desktop: inline */}
-                      {/* Pill — absolute, no afecta layout */}
-                      {!showPRCalc && prCalcHasContent && (
-                        <button
-                          className="lg:hidden absolute top-0 right-0 z-20 text-[11px] font-mono border border-neutral-800 rounded-lg px-2 py-1 text-neutral-600 hover:text-white hover:border-neutral-600 transition bg-black"
-                          onClick={() => setShowPRCalc(true)}
-                        >
-                          % PR{prCalcFirstKey ? ` · ${prCalcFirstKey}` : ''}
-                        </button>
-                      )}
-                      {/* Tarjeta — absolute en móvil cuando abierta, inline en desktop */}
-                      <div className={showPRCalc ? 'absolute right-0 top-0 z-30 shadow-2xl lg:relative lg:static lg:z-auto lg:shadow-none' : 'hidden lg:block'}>
-                        <PRCalculator prs={prs} wodText={prCalcWodText} onClose={showPRCalc ? () => setShowPRCalc(false) : undefined} />
-                      </div>
+                      <PRCalculator prs={prs} wodText={prCalcWodText} />
                     </div>
 
                     {/* Coach message — desktop */}
