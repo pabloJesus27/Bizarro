@@ -24,7 +24,7 @@ export default function CoachMessageBubble({ message }: Props) {
 
       {open && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-50 p-4"
           onClick={() => setOpen(false)}
         >
           <div
