@@ -286,7 +286,7 @@ function DashboardContent() {
           <div className="flex flex-col flex-1 lg:flex-row">
 
             {/* Panel izquierdo: lista de bloques */}
-            <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden">
+            <div className="lg:w-64 border-b lg:border-b-0 lg:border-r border-neutral-900 flex lg:flex-col overflow-x-auto lg:overflow-x-hidden [&::-webkit-scrollbar]:hidden">
               {dayWods.map(wod => {
                 const result   = results.find(r => r.wod_id === wod.id)
                 const isActive = wod.block === selectedBlock
