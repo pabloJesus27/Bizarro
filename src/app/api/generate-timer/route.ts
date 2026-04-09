@@ -44,7 +44,8 @@ Reglas:
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
 - WOD COMPLEJO con fases distintas y descanso explícito entre ellas (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
 - "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
-- "X sets" CON descanso explícito entre sets O con intervalos on/off por ejercicio → mix con todos los bloques expandidos
+- "X sets" CON descanso explícito Y CON tiempo de trabajo definido por set → mix con bloques alternos trabajo+descanso expandidos
+- "X sets" CON descanso explícito PERO SIN tiempo de trabajo definido (el atleta va a su ritmo, no hay cap) → For Time simple (1 solo bloque countUp:true, seconds:0). El atleta ve el crono corriendo y gestiona el descanso mentalmente. NO crear bloques individuales por set ni bloques de descanso.
 
 Ejemplos de WODs complejos → mix:
 - "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
@@ -56,15 +57,17 @@ Ejemplos de WODs complejos → mix:
 - "3 sets, 30" on 30" off, DU / Thrusters / Burpees, rest 90" entre sets" → 17 bloques: [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s),Desc(90s)] × 2 + [DU(30s),Desc(30s),Thrusters(30s),Desc(30s),Burpees(30s)]
 - "3 sets 30'' on 30'' off: handstand / pull over / hollow rocks / double unders" → cada ejercicio ocupa su propio bloque de 30s trabajo + 30s descanso, rotando en orden, repetido 3 veces → 24 bloques: [Handstand(30s),Off(30s),Pull Over(30s),Off(30s),Hollow Rocks(30s),Off(30s),Double Unders(30s),Off(30s)] × 3
 - "30'' on 30'' off: ejercicio A / ejercicio B / ejercicio C" SIN sets especificados → asumir 1 ronda → N*2 bloques alternando trabajo(30s) y descanso(30s) por ejercicio
+- "10 sets: 7 TTB + 7 burpees, rest 1 min" (sin tiempo de trabajo definido) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. NO crear 20 bloques sets+descanso.
 
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
 - Para patrones "cada X min/seg durante Y min", crea exactamente (Y*60 / intervalo) bloques iguales
-- seconds debe ser exacto según la descripción. NUNCA uses seconds: 0
+- seconds debe ser exacto según la descripción. NUNCA uses seconds: 0 EXCEPTO en For Time sin cap (countUp:true, seconds:0)
 - En notación CrossFit: X" = X segundos, X' = X minutos. Ej: 30" = 30 segundos, 90" = 90 segundos
 - Los bloques de descanso (off, rest) SIEMPRE deben tener su duración en segundos correcta
 - Si el WOD dice "X on / X off", crea bloques alternos de trabajo(X seg) y descanso(X seg)
-- Si el WOD dice "rest Y" al final de cada set, añade un bloque de descanso con seconds = Y
+- Si el WOD dice "rest Y" al final de cada set CON tiempo de trabajo definido, añade un bloque de descanso con seconds = Y
+- Si el WOD dice "rest Y" al final de cada set SIN tiempo de trabajo definido, NO crees bloques: usa For Time simple (countUp:true, seconds:0)
 
 Solo JSON, sin explicación ni markdown.`,
     }],
