@@ -48,9 +48,10 @@ export async function getWodByDate(date: string): Promise<Wod | null> {
 }
 
 export async function createWod(wod: NewWod): Promise<Wod> {
+  const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('wods')
-    .insert(wod)
+    .insert({ ...wod, owner_id: user?.id })
     .select()
     .single()
 
