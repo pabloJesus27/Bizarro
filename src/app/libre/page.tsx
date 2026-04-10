@@ -423,7 +423,7 @@ function LibreContent() {
                 >
                   <span
                     style={{ touchAction: 'none' }}
-                    className="flex items-center pl-3 pr-1 text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing"
+                    className="flex items-center pl-3 pr-1 text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing select-none"
                     onTouchStart={() => {
                       longPressTimer.current = setTimeout(() => {
                         touchDrag.current = { from: i, over: i }
