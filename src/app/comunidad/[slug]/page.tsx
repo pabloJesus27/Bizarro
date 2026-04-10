@@ -266,8 +266,9 @@ function ComunidadContent() {
     setRankingKey(k => k + 1)
   }
 
-  const dragIdx   = useRef<number | null>(null)
-  const touchDrag = useRef<{ from: number; over: number } | null>(null)
+  const dragIdx        = useRef<number | null>(null)
+  const touchDrag      = useRef<{ from: number; over: number } | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [touchVisual, setTouchVisual] = useState<{ from: number; over: number } | null>(null)
 
   async function handleReorderBlocks(fromIdx: number, toIdx: number) {
@@ -416,9 +417,16 @@ function ComunidadContent() {
                       <span
                         style={{ touchAction: 'none' }}
                         className="flex items-center pl-3 pr-1 text-neutral-700 hover:text-white transition cursor-grab active:cursor-grabbing"
-                        onTouchStart={() => { touchDrag.current = { from: i, over: i }; setTouchVisual({ from: i, over: i }) }}
+                        onTouchStart={() => {
+                          longPressTimer.current = setTimeout(() => {
+                            touchDrag.current = { from: i, over: i }
+                            setTouchVisual({ from: i, over: i })
+                            navigator.vibrate?.(50)
+                          }, 600)
+                        }}
                         onTouchMove={e => {
-                          if (!touchDrag.current) return
+                          if (!touchDrag.current) { clearTimeout(longPressTimer.current ?? undefined); longPressTimer.current = null; return }
+                          e.preventDefault()
                           const touch = e.touches[0]
                           const el = document.elementFromPoint(touch.clientX, touch.clientY)
                           const blockEl = el?.closest('[data-idx]')
@@ -429,12 +437,14 @@ function ComunidadContent() {
                           }
                         }}
                         onTouchEnd={() => {
+                          if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
                           if (!touchDrag.current) return
                           const { from, over } = touchDrag.current
                           touchDrag.current = null
                           setTouchVisual(null)
                           handleReorderBlocks(from, over)
                         }}
+                        onContextMenu={e => e.preventDefault()}
                       >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                           <line x1="2" y1="3" x2="12" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
