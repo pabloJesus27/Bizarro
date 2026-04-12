@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive, scheduleBlockBeeps, cancelScheduledBeeps } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 import type { MixBlock } from '@/lib/types'
@@ -16,7 +16,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
   const startEpochRef = useRef<number>(0)
-  const scheduledBeepsRef = useRef<OscillatorNode[]>([])
+  const beepedW10 = useRef<number>(-1)  // blockIdx en el que ya sonó el aviso de 10s
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
@@ -52,18 +52,8 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, blockIdx])
 
-  // Pre-programa beeps con el reloj del AudioContext cuando arranca/reanuda un bloque simple
-  useEffect(() => {
-    if (!running || !audioRef.current || isEmom || isTabata || isCountUp || blockDuration === 0) return
-    const ctx = audioRef.current
-    cancelScheduledBeeps(scheduledBeepsRef.current, ctx)
-    const remaining = blockDuration - elapsed
-    if (remaining > 1) {
-      scheduledBeepsRef.current = scheduleBlockBeeps(ctx, remaining, 0)
-    }
-    return () => { cancelScheduledBeeps(scheduledBeepsRef.current, ctx) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, blockIdx])
+  // Reset aviso 10s al cambiar de bloque
+  useEffect(() => { beepedW10.current = -1 }, [blockIdx])
 
   useEffect(() => {
     if (!running) return
@@ -119,13 +109,29 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
     }
   }, [elapsed, isTabata, tabCycle, tabWork, tabPhaseRemaining, running])
 
-  // Avisos For Time con cap (countUp) — usa remaining exacto, no throttleable pero con cap conocido
+  // Avisos For Time con cap (countUp)
   useEffect(() => {
     if (!running || !audioRef.current || !isCountUp || blockDuration === 0) return
     const remaining = blockDuration - elapsed
     if (remaining === 10) { beepWarning(audioRef.current); return }
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, running, isCountUp, blockDuration])
+
+  // Avisos bloques simples countdown — rango para sobrevivir throttling JS
+  useEffect(() => {
+    if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
+    // Aviso 10s: usa ref para no disparar dos veces si remaining salta de 11 a 9
+    if (remaining <= 10 && remaining > 0 && beepedW10.current !== blockIdx) {
+      beepWarning(audioRef.current)
+      beepedW10.current = blockIdx
+      return
+    }
+    if (remaining <= 3 && remaining > 0) { beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0); return }
+    if (remaining === 30 && blockDuration > 30) {
+      beep(audioRef.current, 660, 0.15, 1.0)
+      setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
+    }
+  }, [remaining, running, blockDuration, isEmom, isTabata, isCountUp, blockIdx])
 
   const isLandscape = useIsLandscape()
 
@@ -158,7 +164,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
           {running ? (
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
           ) : elapsed > 0 ? (
-            <button onClick={() => { cancelScheduledBeeps(scheduledBeepsRef.current, audioRef.current ?? undefined); handleStart() }} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+            <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
           ) : (
             <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Iniciar</button>
           )}
@@ -214,7 +220,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
                   </button>
                 )}
                 {running && (
-                  <button onClick={() => { cancelScheduledBeeps(scheduledBeepsRef.current, audioRef.current ?? undefined); setRunning(false) }} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                  <button onClick={() => setRunning(false)} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
                     Pausar
                   </button>
                 )}
