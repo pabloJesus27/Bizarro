@@ -2,6 +2,52 @@ export function keepAudioContextAlive(_ctx: AudioContext) {
   // No-op
 }
 
+// Pre-programa beeps para un bloque usando el reloj del AudioContext (inmune a throttling JS)
+export function scheduleBlockBeeps(ctx: AudioContext, blockDuration: number, offsetSeconds: number): OscillatorNode[] {
+  const nodes: OscillatorNode[] = []
+  const base = ctx.currentTime + offsetSeconds
+
+  function schedOsc(freq: number, dur: number, at: number, vol = 1.0) {
+    if (at <= ctx.currentTime) return
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = freq
+    osc.type = 'sine'
+    gain.gain.setValueAtTime(vol, at)
+    gain.gain.exponentialRampToValueAtTime(0.001, at + dur)
+    osc.start(at)
+    osc.stop(at + dur)
+    nodes.push(osc)
+  }
+
+  // Aviso 10 segundos: triple beep
+  if (blockDuration > 12) {
+    const t = base + blockDuration - 10
+    schedOsc(880, 0.15, t)
+    schedOsc(880, 0.15, t + 0.2)
+    schedOsc(880, 0.15, t + 0.4)
+  }
+
+  // Cuenta atrás 3, 2, 1
+  if (blockDuration > 3) {
+    schedOsc(880,  0.3, base + blockDuration - 3)
+    schedOsc(880,  0.3, base + blockDuration - 2)
+    schedOsc(1100, 0.3, base + blockDuration - 1)
+  }
+
+  // Beep de cambio al final del bloque
+  schedOsc(880,  0.5, base + blockDuration)
+  schedOsc(1100, 0.5, base + blockDuration + 0.2)
+
+  return nodes
+}
+
+export function cancelScheduledBeeps(nodes: OscillatorNode[]) {
+  nodes.forEach(osc => { try { osc.stop(0) } catch {} })
+}
+
 export function beepWarning(ctx: AudioContext) {
   speak('Diez segundos')
   const play = () => {
