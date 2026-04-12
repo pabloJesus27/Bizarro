@@ -120,13 +120,14 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   // Avisos bloques simples countdown — rango para sobrevivir throttling JS
   useEffect(() => {
     if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
+    // 3-2-1: prioridad máxima, siempre antes del aviso de 10s
+    if (remaining <= 3 && remaining > 0) { beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0); return }
     // Aviso 10s: usa ref para no disparar dos veces si remaining salta de 11 a 9
-    if (remaining <= 10 && remaining > 0 && beepedW10.current !== blockIdx) {
+    if (remaining <= 10 && remaining > 3 && beepedW10.current !== blockIdx) {
       beepWarning(audioRef.current)
       beepedW10.current = blockIdx
       return
     }
-    if (remaining <= 3 && remaining > 0) { beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0); return }
     if (remaining === 30 && blockDuration > 30) {
       beep(audioRef.current, 660, 0.15, 1.0)
       setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
