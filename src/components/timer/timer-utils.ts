@@ -1,5 +1,17 @@
-export function keepAudioContextAlive(_ctx: AudioContext) {
-  // No-op
+export function keepAudioContextAlive(ctx: AudioContext) {
+  // Auto-resume si Android suspende el contexto
+  ctx.onstatechange = () => {
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+  }
+  // Oscilador infrasónico (~0dB) que corre indefinidamente para que Android
+  // no duerma el AudioContext entre beeps largos (bloques de 2+ minutos)
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  gain.gain.value = 0.0001  // inaudible
+  osc.frequency.value = 1   // 1Hz, fuera del rango audible
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start()
 }
 
 // Pre-programa beeps para un bloque usando el reloj del AudioContext (inmune a throttling JS)

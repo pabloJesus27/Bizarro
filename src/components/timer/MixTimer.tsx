@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive, scheduleBlockBeeps, cancelScheduledBeeps } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 import type { MixBlock } from '@/lib/types'
@@ -16,7 +16,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
   const startEpochRef = useRef<number>(0)
-  const scheduledNodes = useRef<OscillatorNode[]>([])
+  const beepedW10 = useRef<number>(-1)
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
@@ -52,14 +52,18 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, blockIdx])
 
-  // Pre-programa beeps para bloques simples usando el reloj del AudioContext (inmune a throttling JS)
+  // Reset aviso 10s al cambiar de bloque
+  useEffect(() => { beepedW10.current = -1 }, [blockIdx])
+
+  // Avisos bloques simples countdown
   useEffect(() => {
-    if (!running || !audioRef.current || isEmom || isTabata || isCountUp || blockDuration === 0) return
-    const ctx = audioRef.current
-    scheduledNodes.current = scheduleBlockBeeps(ctx, blockDuration, -elapsed)
-    return () => { cancelScheduledBeeps(scheduledNodes.current, ctx); scheduledNodes.current = [] }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, blockIdx])
+    if (!running || !audioRef.current || isEmom || isTabata || isCountUp || elapsed === 0) return
+    if (remaining <= 3 && remaining > 0) { beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0); return }
+    if (remaining <= 10 && remaining > 3 && beepedW10.current !== blockIdx) {
+      beepWarning(audioRef.current)
+      beepedW10.current = blockIdx
+    }
+  }, [elapsed, running, isEmom, isTabata, isCountUp, blockIdx, remaining])
 
   useEffect(() => {
     if (!running) return
