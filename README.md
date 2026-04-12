@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bizarro
 
-## Getting Started
+Plataforma de gestión de entrenamientos CrossFit. Permite a coaches crear y publicar programas de WODs, y a atletas registrar resultados, comparar rankings y usar un timer inteligente generado por IA.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework:** Next.js 16 (App Router)
+- **Lenguaje:** TypeScript
+- **Base de datos:** Supabase (PostgreSQL + Auth)
+- **Estilos:** Tailwind CSS v4
+- **IA:** Anthropic SDK (Claude para generación de timers y carga de WODs por imagen)
+- **Email:** Resend
+- **Deploy:** Vercel
+- **App Android:** Capacitor
+
+## Requisitos
+
+- Node.js 18+
+- Cuenta en [Supabase](https://supabase.com)
+- Cuenta en [Anthropic](https://console.anthropic.com) (para funciones de IA)
+- Cuenta en [Resend](https://resend.com) (para emails)
+
+## Variables de entorno
+
+Crea un archivo `.env.local` en la raíz del proyecto:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+RESEND_API_KEY=your_resend_api_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Instalación
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Abre [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## Comandos
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev        # Servidor de desarrollo
+npm run build      # Build de producción
+npm run test       # Tests unitarios (Vitest)
+npm run lint       # Linter
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Estructura del proyecto
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/                  # Rutas (Next.js App Router)
+│   ├── dashboard/        # Panel atleta
+│   ├── admin/            # Panel coach
+│   ├── timer/            # Timer de entrenamiento
+│   ├── libre/            # Modo libre (WODs propios)
+│   ├── comunidad/        # Comunidades entre atletas
+│   └── api/              # API routes
+├── components/
+│   └── timer/            # Componentes del timer (AMRAP, EMOM, For Time, Tabata, Mix)
+└── lib/
+    ├── db.ts             # Acceso a Supabase
+    ├── types.ts          # Tipos TypeScript
+    └── wod-utils.ts      # Utilidades de WODs
+```
 
-## Deploy on Vercel
+## Funcionalidades principales
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Roles:** Coach (crea y gestiona programas) y Atleta (sigue programas, registra resultados)
+- **Timer IA:** describe el WOD en texto y la IA genera la configuración del timer automáticamente
+- **Carga por imagen:** sube una foto de la pizarra del box y la IA extrae los WODs de la semana
+- **Rankings:** clasificación por WOD con soporte para tiempos, rondas y kilos
+- **Personal Records:** auto-detecta y guarda PRs al registrar resultados de fuerza
+- **Comunidades:** cualquier atleta puede crear una comunidad para compartir WODs con amigos
+- **App Android:** empaquetada con Capacitor, apunta a la URL de producción en Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Base de datos
+
+Las migraciones están en `supabase/migrations/`. Para aplicarlas necesitas la [Supabase CLI](https://supabase.com/docs/guides/cli):
+
+```bash
+supabase db push
+```
+
+## Tests
+
+```bash
+npm run test
+```
+
+62 tests unitarios en `src/__tests__/` cubriendo utilidades de WODs, semanas y timer.
+
+## App Android
+
+El proyecto incluye configuración de Capacitor para generar un APK Android:
+
+```bash
+npx cap sync android    # Sincronizar assets
+# Luego abrir android/ en Android Studio y generar el APK
+```
+
+La app carga directamente desde la URL de producción en Vercel, por lo que no es necesario regenerar el APK en cada deploy.
