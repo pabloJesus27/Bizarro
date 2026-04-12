@@ -22,6 +22,13 @@ export function scheduleBlockBeeps(ctx: AudioContext, blockDuration: number, off
     nodes.push(osc)
   }
 
+  // Aviso 30 segundos: doble beep
+  if (blockDuration > 35) {
+    const t30 = base + blockDuration - 30
+    schedOsc(660, 0.15, t30)
+    schedOsc(660, 0.15, t30 + 0.25)
+  }
+
   // Aviso 10 segundos: triple beep
   if (blockDuration > 12) {
     const t = base + blockDuration - 10

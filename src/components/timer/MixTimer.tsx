@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive } from './timer-utils'
+import { fmt, beep, beepGo, beepWarning, keepAudioContextAlive, scheduleBlockBeeps, cancelScheduledBeeps } from './timer-utils'
 import PreStartCountdown from './PreStartCountdown'
 import LandscapeDisplay, { useIsLandscape } from './LandscapeDisplay'
 import type { MixBlock } from '@/lib/types'
@@ -16,7 +16,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   const [inPreCountdown, setInPreCountdown] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
   const startEpochRef = useRef<number>(0)
-  const beepedW10 = useRef<number>(-1)  // blockIdx en el que ya sonó el aviso de 10s
+  const scheduledNodes = useRef<OscillatorNode[]>([])
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
@@ -52,8 +52,14 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, blockIdx])
 
-  // Reset aviso 10s al cambiar de bloque
-  useEffect(() => { beepedW10.current = -1 }, [blockIdx])
+  // Pre-programa beeps para bloques simples usando el reloj del AudioContext (inmune a throttling JS)
+  useEffect(() => {
+    if (!running || !audioRef.current || isEmom || isTabata || isCountUp || blockDuration === 0) return
+    const ctx = audioRef.current
+    scheduledNodes.current = scheduleBlockBeeps(ctx, blockDuration, -elapsed)
+    return () => { cancelScheduledBeeps(scheduledNodes.current, ctx); scheduledNodes.current = [] }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, blockIdx])
 
   useEffect(() => {
     if (!running) return
@@ -117,22 +123,6 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
     if (remaining <= 3 && remaining > 0) beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0)
   }, [elapsed, running, isCountUp, blockDuration])
 
-  // Avisos bloques simples countdown — rango para sobrevivir throttling JS
-  useEffect(() => {
-    if (!running || !audioRef.current || isEmom || isTabata || isCountUp) return
-    // 3-2-1: prioridad máxima, siempre antes del aviso de 10s
-    if (remaining <= 3 && remaining > 0) { beep(audioRef.current, remaining === 1 ? 1100 : 880, 1.0); return }
-    // Aviso 10s: usa ref para no disparar dos veces si remaining salta de 11 a 9
-    if (remaining <= 10 && remaining > 3 && beepedW10.current !== blockIdx) {
-      beepWarning(audioRef.current)
-      beepedW10.current = blockIdx
-      return
-    }
-    if (remaining === 30 && blockDuration > 30) {
-      beep(audioRef.current, 660, 0.15, 1.0)
-      setTimeout(() => beep(audioRef.current!, 660, 0.15, 1.0), 250)
-    }
-  }, [remaining, running, blockDuration, isEmom, isTabata, isCountUp, blockIdx])
 
   const isLandscape = useIsLandscape()
 
