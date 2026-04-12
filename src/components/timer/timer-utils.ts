@@ -37,15 +37,12 @@ export function scheduleBlockBeeps(ctx: AudioContext, blockDuration: number, off
     schedOsc(1100, 0.3, base + blockDuration - 1)
   }
 
-  // Beep de cambio al final del bloque
-  schedOsc(880,  0.5, base + blockDuration)
-  schedOsc(1100, 0.5, base + blockDuration + 0.2)
-
   return nodes
 }
 
-export function cancelScheduledBeeps(nodes: OscillatorNode[]) {
-  nodes.forEach(osc => { try { osc.stop(0) } catch {} })
+export function cancelScheduledBeeps(nodes: OscillatorNode[], ctx?: AudioContext) {
+  const stopAt = ctx ? ctx.currentTime : 0
+  nodes.forEach(osc => { try { osc.stop(stopAt) } catch {} })
 }
 
 export function beepWarning(ctx: AudioContext) {

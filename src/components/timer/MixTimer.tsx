@@ -55,12 +55,13 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   // Pre-programa beeps con el reloj del AudioContext cuando arranca/reanuda un bloque simple
   useEffect(() => {
     if (!running || !audioRef.current || isEmom || isTabata || isCountUp || blockDuration === 0) return
-    cancelScheduledBeeps(scheduledBeepsRef.current)
+    const ctx = audioRef.current
+    cancelScheduledBeeps(scheduledBeepsRef.current, ctx)
     const remaining = blockDuration - elapsed
     if (remaining > 1) {
-      scheduledBeepsRef.current = scheduleBlockBeeps(audioRef.current, remaining, 0)
+      scheduledBeepsRef.current = scheduleBlockBeeps(ctx, remaining, 0)
     }
-    return () => { cancelScheduledBeeps(scheduledBeepsRef.current) }
+    return () => { cancelScheduledBeeps(scheduledBeepsRef.current, ctx) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, blockIdx])
 
@@ -157,7 +158,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
           {running ? (
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
           ) : elapsed > 0 ? (
-            <button onClick={() => { cancelScheduledBeeps(scheduledBeepsRef.current); handleStart() }} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
+            <button onClick={() => { cancelScheduledBeeps(scheduledBeepsRef.current, audioRef.current ?? undefined); handleStart() }} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
           ) : (
             <button onClick={handleStart} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Iniciar</button>
           )}
@@ -213,7 +214,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
                   </button>
                 )}
                 {running && (
-                  <button onClick={() => { cancelScheduledBeeps(scheduledBeepsRef.current); setRunning(false) }} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
+                  <button onClick={() => { cancelScheduledBeeps(scheduledBeepsRef.current, audioRef.current ?? undefined); setRunning(false) }} className="mt-1 border border-neutral-700 text-white font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs">
                     Pausar
                   </button>
                 )}
