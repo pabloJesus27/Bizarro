@@ -43,7 +43,7 @@ function DashboardContent() {
   const [isCoach,         setIsCoach]         = useState(false)
   const [program,         setProgram]         = useState<Program>('bizarro')
   const [generatingTimer, setGeneratingTimer] = useState(false)
-  const [activeTab,       setActiveTab]       = useState<'wod' | 'ranking' | 'pesos'>('wod')
+  const [activeTab,       setActiveTab]       = useState<'wod' | 'ranking' | 'notas' | 'pesos'>('wod')
   const [timerError,      setTimerError]      = useState(false)
   const [wodError,        setWodError]        = useState<string | null>(null)
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)

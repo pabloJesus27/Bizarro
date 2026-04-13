@@ -46,7 +46,7 @@ function ComunidadContent() {
   const [modalWod,      setModalWod]      = useState<Wod | null>(null)
   const [rankingKey,    setRankingKey]    = useState(0)
   const [loadWeekOpen,  setLoadWeekOpen]  = useState(false)
-  const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking' | 'pesos'>('wod')
+  const [activeTab,     setActiveTab]     = useState<'wod' | 'ranking' | 'notas' | 'pesos'>('wod')
   const [wodError,      setWodError]      = useState<string | null>(null)
   const [prs,              setPrs]              = useState<PersonalRecord[]>([])
   const [editingWod,       setEditingWod]       = useState<Wod | null>(null)
