@@ -14,6 +14,7 @@ interface ParsedWod {
   title: string
   type: WodType
   description: string
+  notes?: string
 }
 
 interface Props {

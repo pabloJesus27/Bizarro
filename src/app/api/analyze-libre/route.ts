@@ -7,8 +7,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const VALID_TYPES = new Set(['For Time','AMRAP','EMOM','Strength','Gymnastics','Core','Mobility','Warmup','For Max','Other'])
 
-interface RawWod { date: string; block: number; description: string }
-interface FullWod { date: string; block: number; title: string; type: string; description: string }
+interface RawWod { date: string; block: number; description: string; notes?: string }
+interface FullWod { date: string; block: number; title: string; type: string; description: string; notes?: string }
 
 async function enrichWods(raws: RawWod[]): Promise<FullWod[]> {
   const list = raws.map((w, i) =>
@@ -111,7 +111,13 @@ ESTRUCTURA DE LA TABLA:
 - Hay un separador "DESCANSO / HIDRATACION" a mitad de la tabla — no es un bloque, ignóralo, pero las filas que vienen después de él SÍ son bloques reales.
 
 REGLA CRÍTICA — una celda = un bloque:
-El texto dentro de una celda puede tener múltiples líneas, párrafos o notas del coach. TODO ese texto forma la description de ese único bloque. NUNCA dividas el contenido de una sola celda en bloques distintos.
+El texto dentro de una celda puede tener múltiples líneas, párrafos o notas del coach. NUNCA dividas el contenido de una sola celda en bloques distintos.
+
+REGLA — separa descripción de notas:
+Cada celda puede tener dos partes:
+- description: las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias). Solo lo que el atleta necesita para ejecutar el WOD.
+- notes: texto explicativo del coach (contexto, por qué, consejos técnicos, indicaciones de intensidad). Se identifica por: separadores (---), sección "*Notas:" o "Nota:", párrafos largos explicativos con frases como "El objetivo de...", "El esquema es...", "La velocidad de...", "Las primeras series...".
+Si no hay notas, omite el campo notes.
 
 REGLA CRÍTICA — captura la primera línea de cada celda:
 Muchas celdas empiezan con "N sets", "N rondas", "N rounds" o similar en la primera línea. Esa primera línea es parte de la description y DEBE incluirse. No la omitas aunque sea breve.
@@ -129,7 +135,8 @@ PROCESO (columna por columna):
 Para cada bloque devuelve SOLO:
 - date: fecha YYYY-MM-DD del día
 - block: número de bloque (1, 2, 3… por día)
-- description: texto completo y literal de la celda, incluyendo cualquier prefijo como "N sets", "N rondas", "N rounds" que aparezca al inicio
+- description: solo las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE), incluyendo cualquier prefijo como "N sets", "N rondas", "N rounds"
+- notes: (opcional) texto explicativo del coach. Omite si no hay notas.
 
 Antes del JSON escribe una línea por día con el conteo:
 LUNES: N bloques
@@ -138,7 +145,7 @@ MARTES: N bloques
 
 Luego escribe exactamente: ===JSON===
 Y el array JSON sin markdown:
-[{"date":"...","block":1,"description":"..."}]`
+[{"date":"...","block":1,"description":"...","notes":"..."}]`
 
     } else if (mode === 'day') {
       visionPrompt = `Analiza esta imagen con el entrenamiento del día y extrae todos los bloques de ejercicio.

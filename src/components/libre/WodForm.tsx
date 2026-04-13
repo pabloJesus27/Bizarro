@@ -17,6 +17,7 @@ export default function WodForm({ date, block, wod, onSaved, onCancel }: {
   const [title,       setTitle]       = useState(wod?.title       ?? '')
   const [type,        setType]        = useState<WodType>(wod?.type ?? 'For Time')
   const [description, setDescription] = useState(wod?.description ?? '')
+  const [notes,       setNotes]       = useState(wod?.notes       ?? '')
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState('')
 
@@ -34,8 +35,8 @@ export default function WodForm({ date, block, wod, onSaved, onCancel }: {
     setLoading(true)
     try {
       const saved = isEdit
-        ? await updateWod(wod.id, { title, type, description })
-        : await createLibreWod({ date, block, title, type, description } as Omit<NewWod, 'program'>, user.id)
+        ? await updateWod(wod.id, { title, type, description, notes: notes || null })
+        : await createLibreWod({ date, block, title, type, description, notes: notes || null } as Omit<NewWod, 'program'>, user.id)
       onSaved(saved)
     } catch (err: unknown) {
       setError('No se pudo guardar el WOD. Inténtalo de nuevo.')
@@ -93,6 +94,17 @@ export default function WodForm({ date, block, wod, onSaved, onCancel }: {
           <textarea
             placeholder={`Ej:\n21-15-9\nThrusters (42.5 kg)\nPull-ups`} value={description}
             onChange={e => setDescription(e.target.value)} rows={6}
+            className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition resize-none font-mono text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-neutral-500 text-xs uppercase tracking-widest mb-1 font-mono">
+            Notas <span className="text-neutral-700 normal-case tracking-normal">(opcional)</span>
+          </label>
+          <textarea
+            placeholder="Indicaciones técnicas, contexto del bloque..."
+            value={notes} onChange={e => setNotes(e.target.value)} rows={3}
             className="w-full bg-neutral-900 text-white placeholder-neutral-600 border border-neutral-700 rounded-lg px-4 py-3 focus:outline-none focus:border-white transition resize-none font-mono text-sm"
           />
         </div>

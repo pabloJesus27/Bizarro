@@ -593,11 +593,19 @@ function LibreContent() {
                   <div className="flex flex-col gap-6">
                     {/* Descripción + PRCalculator 60/40 */}
                     <div className="flex gap-4 items-start">
-                      <div className="w-[60%] min-w-0">
+                      <div className="w-[60%] min-w-0 flex flex-col gap-4">
                         {activeWod.description && (
                           <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
                             {activeWod.description}
                           </pre>
+                        )}
+                        {activeWod.notes && (
+                          <div>
+                            <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-2">Notas</p>
+                            <pre className="text-neutral-400 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-700 pl-5">
+                              {activeWod.notes}
+                            </pre>
+                          </div>
                         )}
                       </div>
                       <div className="w-[40%]">

@@ -70,7 +70,7 @@ export async function reorderBlocks(updates: { id: string; block: number }[]): P
   ))
 }
 
-export async function updateWod(id: string, updates: Pick<NewWod, 'title' | 'description' | 'type'>): Promise<Wod> {
+export async function updateWod(id: string, updates: Pick<NewWod, 'title' | 'description' | 'type' | 'notes'>): Promise<Wod> {
   const { data, error } = await supabase
     .from('wods')
     .update(updates)

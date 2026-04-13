@@ -113,13 +113,13 @@ function AdminContent() {
     setDeletingWeek(false)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; notes?: string }[]) {
     if (parsed.length > 0) {
       const dates = parsed.map(w => w.date).sort()
       await deleteWodsForWeek(dates[0], dates[dates.length - 1], programSlug as import('@/lib/types').Program)
     }
-    for (const { date, block, title, type, description } of parsed) {
-      await createWod({ date, block, title, type, description, program: programSlug as import('@/lib/types').Program })
+    for (const { date, block, title, type, description, notes } of parsed) {
+      await createWod({ date, block, title, type, description, notes, program: programSlug as import('@/lib/types').Program })
     }
     const updated = await getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
     setWods(updated)
@@ -449,6 +449,16 @@ function AdminContent() {
                     <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
                       {activeWod.description}
                     </pre>
+
+                    {/* Notas del coach */}
+                    {activeWod.notes && (
+                      <div>
+                        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-2">Notas</p>
+                        <pre className="text-neutral-400 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-700 pl-5">
+                          {activeWod.notes}
+                        </pre>
+                      </div>
+                    )}
 
                     {/* Acciones */}
                     <div className="flex gap-3">

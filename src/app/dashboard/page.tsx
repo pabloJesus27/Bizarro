@@ -335,6 +335,16 @@ function DashboardContent() {
                       Ranking
                     </button>
                   )}
+                  {activeWod.notes && (
+                    <button
+                      onClick={() => setActiveTab('notas')}
+                      className={`py-3 mr-6 text-xs font-mono uppercase tracking-widest border-b-2 transition ${
+                        activeTab === 'notas' ? 'border-white text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                      }`}
+                    >
+                      Notas
+                    </button>
+                  )}
                   {activeWod.type === 'Strength' && /\d+\s*%/.test(activeWod.description ?? '') && (
                     <button
                       onClick={() => setActiveTab('pesos')}
@@ -350,6 +360,12 @@ function DashboardContent() {
                 {activeTab === 'ranking' ? (
                   <div className="flex-1 p-6">
                     <RankingSection wod={activeWod} refreshKey={rankingKey} />
+                  </div>
+                ) : activeTab === 'notas' ? (
+                  <div className="flex-1 p-6">
+                    <pre className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-800 pl-5">
+                      {activeWod.notes}
+                    </pre>
                   </div>
                 ) : activeTab === 'pesos' ? (
                   <PesosTab

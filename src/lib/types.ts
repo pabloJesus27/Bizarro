@@ -33,6 +33,7 @@ export interface Wod {
   owner_id: string | null
   created_at: string
   timer_config?: TimerConfig | null
+  notes?: string | null
 }
 
 export interface Result {

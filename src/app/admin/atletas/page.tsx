@@ -396,6 +396,15 @@ function AthleteWeekView({ athlete, onBack, programSlug, programId, onAthleteRem
                   </pre>
                 )}
 
+                {activeWod.notes && (
+                  <div>
+                    <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-2">Notas</p>
+                    <pre className="text-neutral-400 text-sm leading-relaxed whitespace-pre-wrap font-mono border-l-2 border-neutral-700 pl-5">
+                      {activeWod.notes}
+                    </pre>
+                  </div>
+                )}
+
                 {activeWod.type !== 'Warmup' && (
                   activeResult ? (
                     <div className="border border-neutral-800 rounded-xl p-5">
