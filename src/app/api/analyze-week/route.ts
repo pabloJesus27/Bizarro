@@ -31,7 +31,7 @@ Reglas de tipo (aplica en orden estricto, la primera que encaje gana — para en
 4. Contiene formato "X'' on X'' off" o "X'' work X'' rest" → For Max
 5. "ventanas de X min" con trabajo fijo por ventana → For Max
 6. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
-6b. Secciones A/B/C o A+B+C con descansos entre ellas (ej: "2' rest", "rest 2 min", "-2' rest y comenzamos B-") → For Time (aunque sea halterofilia o fuerza — hay registro de tiempo por sección)
+6b. Secciones ETIQUETADAS A/B/C (ej: "A:", "B:", "C:", "A+B+C") con ejercicios distintos y descansos entre ellas (ej: "-2' rest y comenzamos B-") → For Time. OJO: series del mismo ejercicio con descanso (ej: "Snatch 5x60% 4x65% rest 2min") NO cuenta — eso es Strength normal
 7. "for time" explícito, time cap → For Time
 8. Carrera de distancia fija única sin sets ni rondas → For Time
 9. N sets de ejercicios variados sin formato de tiempo (aunque incluya ring row, hollow rocks, v-ups, push ups, pull ups u otros movimientos de gymnastics) → Warmup
