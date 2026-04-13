@@ -60,6 +60,7 @@ Ejemplos de WODs complejos → mix:
 - "30'' on 30'' off: ejercicio A / ejercicio B / ejercicio C" SIN sets especificados → asumir 1 ronda → N*2 bloques alternando trabajo(30s) y descanso(30s) por ejercicio
 - "10 sets: 7 TTB + 7 burpees, rest 1 min" (sin tiempo de trabajo definido) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. NO crear 20 bloques sets+descanso.
 - "4 x 2.2.2.2, 15'' rest entre series, 3' rest entre bloques" (trabajo = reps, sin tiempo fijo de trabajo) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. Los descansos con tiempo NO convierten el WOD en mix si el trabajo no tiene duración fija.
+- "3 sets: 20 wall ball + 10 chest to bar / rest 3 min / 2 sets: 30 wall ball + 20 pull up / rest 3 min / 1 set: max wall ball + max chest to bar" (múltiples grupos con distintos sets/reps y descansos entre grupos, trabajo = reps sin duración fija) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. Aunque los grupos sean distintos y haya descansos, si TODO el trabajo son reps sin tiempo fijo → 1 solo bloque For Time.
 
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
