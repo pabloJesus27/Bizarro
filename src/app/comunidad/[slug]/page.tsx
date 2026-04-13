@@ -206,23 +206,23 @@ function ComunidadContent() {
     setDeletingWeek(false)
   }
 
-  async function handleLoadSingleWod(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
+  async function handleLoadSingleWod(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; notes?: string }[]) {
     const item = parsed[0]
     if (!item || pendingBlock === null) return
-    const saved = await createWod({ date: selectedDate, block: pendingBlock, title: item.title, type: item.type, description: item.description, program: slug })
+    const saved = await createWod({ date: selectedDate, block: pendingBlock, title: item.title, type: item.type, description: item.description, notes: item.notes, program: slug })
     setWods(prev => [...prev, saved])
     setSelectedBlock(pendingBlock)
     setPendingBlock(null)
     setPendingMode(null)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; notes?: string }[]) {
     if (parsed.length > 0) {
       const dates = parsed.map(w => w.date).sort()
       await deleteWodsForWeek(dates[0], dates[dates.length - 1], slug)
     }
-    for (const { date, block, title, type, description } of parsed) {
-      await createWod({ date, block, title, type, description, program: slug })
+    for (const { date, block, title, type, description, notes } of parsed) {
+      await createWod({ date, block, title, type, description, notes, program: slug })
     }
     const joinedAt = isOwner ? undefined : membership?.joined_at
     const updated = await getWodsForCommunity(slug, weekDates[0], weekDates[6], joinedAt)
@@ -796,7 +796,7 @@ function ComunidadContent() {
             const newWods: import('@/lib/types').Wod[] = []
             for (let i = 0; i < sorted.length; i++) {
               const item = sorted[i]
-              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: slug })
+              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, notes: item.notes, program: slug })
               newWods.push(saved)
             }
             setWods(prev => [...prev, ...newWods])

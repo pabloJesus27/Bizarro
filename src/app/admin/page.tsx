@@ -556,7 +556,7 @@ function AdminContent() {
             const firstBlock = pendingBlock
             for (let i = 0; i < sorted.length; i++) {
               const item = sorted[i]
-              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, program: programSlug })
+              const saved = await createWod({ date: selectedDate, block: firstBlock + i, title: item.title, type: item.type, description: item.description, notes: item.notes, program: programSlug })
               handleSaved(saved)
             }
             setLoadWodOpen(false)

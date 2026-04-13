@@ -196,11 +196,11 @@ function LibreContent() {
     setDeletingWeek(false)
   }
 
-  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string }[]) {
+  async function handleLoadWeek(parsed: { date: string; block: number; title: string; type: import('@/lib/types').WodType; description: string; notes?: string }[]) {
     if (!user) return
-    for (const { date, block, title, type, description } of parsed) {
+    for (const { date, block, title, type, description, notes } of parsed) {
       try {
-        await createLibreWod({ date, block, title, type, description }, user.id)
+        await createLibreWod({ date, block, title, type, description, notes }, user.id)
       } catch (err: unknown) {
         if ((err as { code?: string })?.code === '23505') continue
         throw err
