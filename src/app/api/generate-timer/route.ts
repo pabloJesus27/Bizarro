@@ -46,7 +46,7 @@ Reglas:
 - WOD COMPLEJO con fases que SÍ tienen duración fija en segundos (AMRAP N min + descanso + AMRAP N min, X'' on X'' off, EMOM dentro de un mix, etc.) → mix: bloques separados con label descriptivo
 - "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
 - "X sets" CON descanso explícito Y CON tiempo de trabajo definido por set → mix con bloques alternos trabajo+descanso expandidos
-- "X sets" CON descanso explícito PERO SIN tiempo de trabajo definido (el atleta va a su ritmo, no hay cap) → For Time simple (1 solo bloque countUp:true, seconds:0). El atleta ve el crono corriendo y gestiona el descanso mentalmente. NO crear bloques individuales por set ni bloques de descanso.
+- "X sets" CON descanso explícito PERO SIN tiempo de trabajo definido (el atleta va a su ritmo, no hay cap) → For Time simple (1 solo bloque countUp:true, seconds:0). El atleta ve el crono corriendo y gestiona el descanso mentalmente. NO crear bloques individuales por set ni bloques de descanso. IMPORTANTE: que el DESCANSO tenga duración en segundos (ej: "rest 15''", "rest 3'") NO significa que el trabajo tenga duración fija. Si el trabajo son solo reps (ej: "2 deadlifts", "5 pull ups"), es For Time simple.
 
 Ejemplos de WODs complejos → mix:
 - "AMRAP 5 min, descanso 3 min, AMRAP 5 min" → blocks: [AMRAP 1(300s), Descanso(180s), AMRAP 2(300s)]
@@ -59,6 +59,7 @@ Ejemplos de WODs complejos → mix:
 - "3 sets 30'' on 30'' off: handstand / pull over / hollow rocks / double unders" → cada ejercicio ocupa su propio bloque de 30s trabajo + 30s descanso, rotando en orden, repetido 3 veces → 24 bloques: [Handstand(30s),Off(30s),Pull Over(30s),Off(30s),Hollow Rocks(30s),Off(30s),Double Unders(30s),Off(30s)] × 3
 - "30'' on 30'' off: ejercicio A / ejercicio B / ejercicio C" SIN sets especificados → asumir 1 ronda → N*2 bloques alternando trabajo(30s) y descanso(30s) por ejercicio
 - "10 sets: 7 TTB + 7 burpees, rest 1 min" (sin tiempo de trabajo definido) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. NO crear 20 bloques sets+descanso.
+- "4 x 2.2.2.2, 15'' rest entre series, 3' rest entre bloques" (trabajo = reps, sin tiempo fijo de trabajo) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. Los descansos con tiempo NO convierten el WOD en mix si el trabajo no tiene duración fija.
 
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
