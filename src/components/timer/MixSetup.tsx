@@ -38,10 +38,12 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       block = { id: ++idCounter.current, label: 'EMOM', seconds: emomTotal, intervalSeconds: intSecs }
     } else if (newLabel === 'Tabata') {
       block = { id: ++idCounter.current, label: 'Tabata', seconds: tabTotal, tabataWork: tabWork, tabataRest: tabRest }
+    } else if (newLabel === 'For Time') {
+      const seconds = forTimeCap ? newMinutes * 60 + newSecs : 0
+      block = { id: ++idCounter.current, label: 'For Time', seconds, countUp: true }
     } else {
       const seconds = newMinutes * 60 + newSecs
-      const countUp = newLabel === 'For Time' ? true : undefined
-      block = { id: ++idCounter.current, label: newLabel.trim(), seconds, ...(countUp ? { countUp } : {}) }
+      block = { id: ++idCounter.current, label: newLabel.trim(), seconds }
     }
     setBlocks(prev => {
       if (prev.length === 0) setCardOpen(false)
@@ -110,7 +112,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
                   {['AMRAP', 'For Time', 'EMOM', 'Tabata'].map(sub => (
                     <button
                       key={sub}
-                      onClick={() => { setNewLabel(sub); setNewMinutes(sub === 'AMRAP' ? 20 : 5) }}
+                      onClick={() => { setNewLabel(sub); setNewMinutes(sub === 'AMRAP' ? 20 : sub === 'For Time' ? 0 : 5); setForTimeCap(false) }}
                       className={`px-1 py-2 rounded-lg text-[10px] font-mono text-center uppercase tracking-wide transition border ${newLabel === sub ? 'border-white text-white' : 'border-neutral-700 text-neutral-500 hover:text-white hover:border-neutral-500'}`}
                     >
                       {sub}
