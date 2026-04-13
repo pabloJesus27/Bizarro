@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bizarro</string>
+    <string name="title_activity_main">Bizarro</string>
+    <string name="package_name">com.bizarro.app</string>
+    <string name="custom_url_scheme">com.bizarro.app</string>
+</resources>

@@ -66,7 +66,20 @@
       "mcp__plugin_engram_engram__mem_session_start",
       "Read(//Users/pjesussuarez/**)",
       "Read(//Users/pjesussuarez/.config/**)",
-      "Read(//Users/pjesussuarez/Library/**)"
+      "Read(//Users/pjesussuarez/Library/**)",
+      "Bash(git diff:*)",
+      "Bash(sed -n '140,155p' /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/lib/db.ts)",
+      "Bash(sed -n '278,290p' /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/lib/db.ts)",
+      "Bash(sed -n '537,547p' /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/lib/db.ts)",
+      "Bash(sed -n '604,615p' /Users/pjesussuarez/Documents/MisProyectos/Bizarro/src/lib/db.ts)",
+      "Bash(gh run:*)",
+      "WebFetch(domain:www.roguefitness.com)",
+      "WebSearch",
+      "WebFetch(domain:www.amazon.es)",
+      "Bash(npm list:*)",
+      "Bash(npx next:*)",
+      "Bash(npx cap:*)",
+      "Bash(npx:*)"
     ]
   }
 }

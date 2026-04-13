@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { APP_VERSION } from '@/lib/version'
 
 function parseVersion(v: string): number[] {
   return v.split('.').map(Number)
@@ -23,24 +22,39 @@ export default function AppUpdateModal() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    let isNative = false
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { Capacitor } = require('@capacitor/core')
-      isNative = Capacitor.isNativePlatform()
-    } catch {
-      return
-    }
-    if (!isNative) return
+    async function check() {
+      let isNative = false
+      let nativeVersion = '0.0.0'
 
-    fetch('/api/app-version')
-      .then(r => r.json())
-      .then(({ minVersion, downloadUrl }) => {
-        if (isOutdated(APP_VERSION, minVersion)) {
+      try {
+        const { Capacitor } = await import('@capacitor/core')
+        isNative = Capacitor.isNativePlatform()
+      } catch {
+        return
+      }
+
+      if (!isNative) return
+
+      try {
+        const { App } = await import('@capacitor/app')
+        const info = await App.getInfo()
+        nativeVersion = info.version
+      } catch {
+        return
+      }
+
+      try {
+        const res = await fetch('/api/app-version')
+        const { minVersion, downloadUrl } = await res.json()
+        if (isOutdated(nativeVersion, minVersion)) {
           setDownloadUrl(downloadUrl)
         }
-      })
-      .catch(() => {})
+      } catch {
+        // silencioso — no bloquear la app si falla la red
+      }
+    }
+
+    check()
   }, [])
 
   if (!downloadUrl) return null
