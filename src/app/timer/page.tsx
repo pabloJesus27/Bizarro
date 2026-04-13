@@ -15,6 +15,8 @@ import EMOMSetup from '@/components/timer/EMOMSetup'
 import ForTimeSetup from '@/components/timer/ForTimeSetup'
 import TabataSetup from '@/components/timer/TabataSetup'
 import MixSetup from '@/components/timer/MixSetup'
+import HelpModal, { HelpButton } from '@/components/HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Page ─────────────────────────────────────────────────
 
@@ -35,6 +37,7 @@ function TimerContent() {
   const manualType = searchParams.get('type')
 
   const [config, setConfig] = useState<TimerConfig | null>(null)
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit('timer-manual')
   const [pendingConfig, setPendingConfig] = useState<TimerConfig | null>(null)
   const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
   const loadedRef = useRef(false)
@@ -108,18 +111,16 @@ function TimerContent() {
 
   return (
     <main className="min-h-screen bg-black flex flex-col p-8">
-      <button
-        onClick={() => {
-          if (config) {
-            setConfig(null)
-          } else {
-            router.back()
-          }
-        }}
-        className="text-neutral-600 hover:text-white text-sm font-mono mb-12 transition self-start"
-      >
-        ← Volver
-      </button>
+      <div className="flex items-center justify-between mb-12">
+        <button
+          onClick={() => { if (config) { setConfig(null) } else { router.back() } }}
+          className="text-neutral-600 hover:text-white text-sm font-mono transition"
+        >
+          ← Volver
+        </button>
+        {!config && <HelpButton onClick={openHelp} />}
+      </div>
+      {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
       <div className="flex-1 flex items-start justify-center">
         {config ? (
           <div className="w-full">

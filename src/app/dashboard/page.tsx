@@ -17,7 +17,8 @@ import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import PesosTab from '@/components/comunidad/PesosTab'
-import WelcomeModal from '@/components/WelcomeModal'
+import HelpModal, { HelpButton } from '@/components/HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Dashboard Page ─────────────────────────────────────
 
@@ -47,7 +48,11 @@ function DashboardContent() {
   const [wodError,        setWodError]        = useState<string | null>(null)
   const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
   const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
-  const [showWelcome,     setShowWelcome]     = useState(false)
+
+  const helpKey = user && program
+    ? (program === 'libre' ? `dashboard-libre-${user.id}` : `dashboard-atleta-${user.id}`)
+    : ''
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit(helpKey)
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const initPosRef = useRef<{ date: string; block: number } | null>(
@@ -78,10 +83,6 @@ function DashboardContent() {
 
       setProgram(resolvedProgram as Program)
       setLoading(false)
-      if (profile?.role !== 'coach') {
-        const key = `bizarro_welcome_program_${user.id}`
-        if (!localStorage.getItem(key)) setShowWelcome(true)
-      }
     })
   }, [authLoading, user, router])
 
@@ -222,9 +223,12 @@ function DashboardContent() {
           >
             ← anterior
           </button>
-          <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
-            {formatWeekRange(weekDates)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
+              {formatWeekRange(weekDates)}
+            </span>
+            <HelpButton onClick={openHelp} />
+          </div>
           <button
             onClick={() => setWeekOffset(o => Math.min(0, o + 1))}
             disabled={weekOffset === 0}
@@ -451,14 +455,8 @@ function DashboardContent() {
         />
       )}
 
-      {showWelcome && (
-        <WelcomeModal
-          mode="program"
-          onClose={() => {
-            localStorage.setItem(`bizarro_welcome_program_${user!.id}`, '1')
-            setShowWelcome(false)
-          }}
-        />
+      {showHelp && helpKey && (
+        <HelpModal helpKey={program === 'libre' ? 'dashboard-libre' : 'dashboard-atleta'} onClose={dismissHelp} />
       )}
     </>
   )

@@ -4,6 +4,8 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AppHeader from '@/components/AppHeader'
+import HelpModal, { HelpButton } from '@/components/HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
 import RankingSection from '@/components/RankingSection'
@@ -29,6 +31,7 @@ function ComunidadContent() {
   const params = useParams()
   const slug = params.slug as string
   const searchParams = useSearchParams()
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit(user ? `comunidad-${user.id}` : '')
 
   const today = useMemo(() => getTodayStr(), [])
 
@@ -298,6 +301,8 @@ function ComunidadContent() {
 
         <AppHeader homeRoute={`/comunidad/${slug}`} communitySlug={slug} leftTitle={community?.name} />
 
+        {showHelp && user && <HelpModal helpKey="comunidad" onClose={dismissHelp} />}
+
         {/* Navegación de semana */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-900">
           <button
@@ -308,9 +313,12 @@ function ComunidadContent() {
             ← anterior
           </button>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
-              {formatWeekRange(weekDates)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
+                {formatWeekRange(weekDates)}
+              </span>
+              <HelpButton onClick={openHelp} />
+            </div>
             {isOwner && (wods.length > 0 ? (deletingWeek ? (
               <div className="flex gap-2">
                 <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>

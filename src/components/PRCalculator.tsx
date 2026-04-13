@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import type { PersonalRecord } from '@/lib/db'
+import HelpModal, { HelpButton } from './HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // All detectable exercise names
 const DETECTABLE = [
@@ -167,6 +169,7 @@ export default function PRCalculator({ prs, wodText, onClose }: Props) {
   const percentages = extractPercentages(wodText)
 
   const [selected, setSelected] = useState<DetectedEntry | null>(entries[0] ?? null)
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit('pr-calculator')
 
   useEffect(() => {
     const e = extractEntries(wodText)
@@ -183,7 +186,11 @@ export default function PRCalculator({ prs, wodText, onClose }: Props) {
 
   return (
     <div className="border border-neutral-800 rounded-xl p-4 w-full bg-black">
-      <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-3">% PR</p>
+      {showHelp && <HelpModal helpKey="pr-calculator" onClose={dismissHelp} />}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">% PR</p>
+        <HelpButton onClick={openHelp} />
+      </div>
 
       <div className="flex flex-col gap-0.5 mb-3">
         {entries.map(entry => (

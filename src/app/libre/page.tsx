@@ -19,7 +19,8 @@ import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from 
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import WodForm from '@/components/libre/WodForm'
 import PRCalculator from '@/components/PRCalculator'
-import WelcomeModal from '@/components/WelcomeModal'
+import HelpModal, { HelpButton } from '@/components/HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Libre Page ───────────────────────────────────────────
 
@@ -54,7 +55,7 @@ function LibreContent() {
   const [communitySlug,      setCommunitySlug]      = useState<string | undefined>(undefined)
   const [generatingTimers,   setGeneratingTimers]   = useState(false)
   const [timerGenProgress,   setTimerGenProgress]   = useState<{ current: number; total: number } | null>(null)
-  const [showWelcome,        setShowWelcome]        = useState(false)
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit(user ? `dashboard-libre-${user.id}` : '')
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
   const resultHandledRef = useRef(false)
@@ -78,8 +79,6 @@ function LibreContent() {
       setPrs(userPRs)
       if (community) setCommunitySlug(community.slug)
       setLoading(false)
-      const key = `bizarro_welcome_libre_${user.id}`
-      if (!localStorage.getItem(key)) setShowWelcome(true)
     })
   }, [authLoading, user, router])
 
@@ -323,9 +322,12 @@ function LibreContent() {
             ← anterior
           </button>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
-              {formatWeekRange(weekDates)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
+                {formatWeekRange(weekDates)}
+              </span>
+              <HelpButton onClick={openHelp} />
+            </div>
             {wods.length > 0 ? (deletingWeek ? (
               <div className="flex gap-2">
                 <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
@@ -737,15 +739,7 @@ function LibreContent() {
         />
       )}
 
-      {showWelcome && (
-        <WelcomeModal
-          mode="libre"
-          onClose={() => {
-            localStorage.setItem(`bizarro_welcome_libre_${user!.id}`, '1')
-            setShowWelcome(false)
-          }}
-        />
-      )}
+      {showHelp && user && <HelpModal helpKey="dashboard-libre" onClose={dismissHelp} />}
     </>
   )
 }

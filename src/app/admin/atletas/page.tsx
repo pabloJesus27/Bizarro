@@ -10,6 +10,8 @@ import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from 
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import CoachHeader from '@/components/CoachHeader'
 import { CoachPageLoading } from '@/components/PageLoading'
+import HelpModal, { HelpButton } from '@/components/HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 function getInitials(name: string | null): string {
   if (!name) return '?'
@@ -18,12 +20,13 @@ function getInitials(name: string | null): string {
 
 // ── Athlete List ───────────────────────────────────────
 
-function AthleteList({ athletes, onSelect, programId, programSlug, onAthleteAdded }: {
+function AthleteList({ athletes, onSelect, programId, programSlug, onAthleteAdded, onOpenHelp }: {
   athletes: Profile[]
   onSelect: (athlete: Profile) => void
   programId: string
   programSlug: string
   onAthleteAdded: (athlete: Profile) => void
+  onOpenHelp?: () => void
 }) {
   const [showModal, setShowModal] = useState(false)
   const [email,     setEmail]     = useState('')
@@ -49,9 +52,12 @@ function AthleteList({ athletes, onSelect, programId, programSlug, onAthleteAdde
   return (
     <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between mb-6">
-        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">
-          {athletes.length === 0 ? 'Sin atletas' : `${athletes.length} ${athletes.length === 1 ? 'atleta' : 'atletas'}`}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">
+            {athletes.length === 0 ? 'Sin atletas' : `${athletes.length} ${athletes.length === 1 ? 'atleta' : 'atletas'}`}
+          </p>
+          {onOpenHelp && <HelpButton onClick={onOpenHelp} />}
+        </div>
         <button
           onClick={() => { setShowModal(true); setError(null); setEmail('') }}
           className="text-xs uppercase tracking-widest font-mono text-neutral-500 hover:text-white border border-neutral-800 hover:border-neutral-600 rounded-full px-4 py-1.5 transition"
@@ -440,6 +446,7 @@ function AtletasContent() {
   const [programName,      setProgramName]      = useState('')
   const [profileName,      setProfileName]      = useState('')
   const [avatarUrl,        setAvatarUrl]        = useState<string | null>(null)
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit(user ? `mis-atletas-${user.id}` : '')
 
   useEffect(() => {
     if (authLoading) return
@@ -487,6 +494,8 @@ function AtletasContent() {
         avatarUrl={avatarUrl}
       />
 
+      {showHelp && user && <HelpModal helpKey="mis-atletas" onClose={dismissHelp} />}
+
       {selectedAthlete ? (
         <AthleteWeekView
           athlete={selectedAthlete}
@@ -512,6 +521,7 @@ function AtletasContent() {
           programId={programId}
           programSlug={programSlug}
           onAthleteAdded={athlete => setAthletes(prev => [...prev, athlete].sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '')))}
+          onOpenHelp={openHelp}
         />
       )}
     </main>

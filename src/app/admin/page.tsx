@@ -12,7 +12,8 @@ import WodModal from '@/components/admin/WodModal'
 import type { Wod } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
-import WelcomeModal from '@/components/WelcomeModal'
+import HelpModal, { HelpButton } from '@/components/HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Admin Page ─────────────────────────────────────────
 
@@ -44,7 +45,7 @@ function AdminContent() {
   const [avatarUrl,     setAvatarUrl]     = useState<string | null>(null)
   const [programName,   setProgramName]   = useState('')
   const [pendingCount,  setPendingCount]  = useState(0)
-  const [showWelcome,   setShowWelcome]   = useState(false)
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit(user ? `admin-${user.id}` : '')
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
 
@@ -57,8 +58,6 @@ function AdminContent() {
       if (profile?.role !== 'coach') router.push('/dashboard')
       setProfileName(profile?.full_name ?? '')
       setAvatarUrl(profile?.avatar_url ?? null)
-      const key = `bizarro_welcome_coach_${user.id}`
-      if (!localStorage.getItem(key)) setShowWelcome(true)
     })
 
     getMyPrograms(user.id).then(async programs => {
@@ -204,9 +203,12 @@ function AdminContent() {
             ← anterior
           </button>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
-              {formatWeekRange(weekDates)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
+                {formatWeekRange(weekDates)}
+              </span>
+              <HelpButton onClick={openHelp} />
+            </div>
             {wods.length > 0 ? (deletingWeek ? (
               <div className="flex gap-2">
                 <button onClick={handleDeleteWeek} className="text-red-400 text-xs font-mono">Confirmar</button>
@@ -556,14 +558,8 @@ function AdminContent() {
         />
       )}
 
-      {showWelcome && (
-        <WelcomeModal
-          mode="coach"
-          onClose={() => {
-            localStorage.setItem(`bizarro_welcome_coach_${user!.id}`, '1')
-            setShowWelcome(false)
-          }}
-        />
+      {showHelp && user && (
+        <HelpModal helpKey="admin" onClose={dismissHelp} />
       )}
     </>
   )

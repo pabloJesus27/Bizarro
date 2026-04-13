@@ -5,6 +5,8 @@ import { upsertResult, maybeUpdatePR } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
 import { WOD_TYPE_LABEL, detectPRExercise } from '@/lib/wod-utils'
 import { getTodayStr } from '@/lib/week-utils'
+import HelpModal, { HelpButton } from './HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 export default function ResultModal({ wod, existing, onClose, onSaved }: {
   wod:       Wod
@@ -28,6 +30,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
   const [error,        setError]        = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
   const [isDirty,      setIsDirty]      = useState(false)
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit('resultado-prs')
 
   function markDirty() { if (!isDirty) setIsDirty(true) }
 
@@ -108,6 +111,7 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
       <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-md p-6">
 
+        {showHelp && <HelpModal helpKey="resultado-prs" onClose={dismissHelp} />}
         <div className="flex items-start justify-between mb-6">
           <div>
             <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
@@ -115,9 +119,12 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
             </p>
             <h2 className="text-white font-black text-xl tracking-tight uppercase">{wod.title}</h2>
           </div>
-          <button onClick={handleClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
-            &times;
-          </button>
+          <div className="flex items-center gap-2 ml-4">
+            <HelpButton onClick={openHelp} />
+            <button onClick={handleClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition">
+              &times;
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

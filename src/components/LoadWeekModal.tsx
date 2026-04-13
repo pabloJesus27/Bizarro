@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import HelpModal, { HelpButton } from './HelpModal'
+import { useFirstVisit } from '@/hooks/useFirstVisit'
 import type { WodType } from '@/lib/types'
 import { DAY_SHORT } from '@/lib/week-utils'
 import { supabase } from '@/lib/supabase'
@@ -37,6 +39,7 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
   const [wods,         setWods]         = useState<ParsedWod[]>([])
   const [error,        setError]        = useState('')
   const [message,      setMessage]      = useState('')
+  const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit('cargar-imagen')
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -131,6 +134,7 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
       <div className="bg-neutral-950 border border-neutral-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
 
         {/* Header */}
+        {showHelp && <HelpModal helpKey="cargar-imagen" onClose={dismissHelp} />}
         <div className="flex items-start justify-between p-6 border-b border-neutral-900">
           <div>
             <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mb-1">
@@ -140,9 +144,12 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
               {step === 'message' ? 'Indicaciones de la semana' : 'Cargar entrenamiento'}
             </h2>
           </div>
-          <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition ml-4">
-            &times;
-          </button>
+          <div className="flex items-center gap-2 ml-4">
+            {step === 'upload' && <HelpButton onClick={openHelp} />}
+            <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition">
+              &times;
+            </button>
+          </div>
         </div>
 
         {/* Content */}
