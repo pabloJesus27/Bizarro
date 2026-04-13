@@ -42,8 +42,8 @@ Reglas:
 - AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
-- For Time SIN tiempo de trabajo definido (el atleta va a su ritmo, con o sin descansos entre bloques) → For Time simple (1 solo bloque countUp:true, seconds:0). El atleta corre el cronómetro y gestiona los descansos mirando el reloj. NO crear bloques individuales ni bloques de descanso.
-- WOD COMPLEJO con fases distintas y descanso explícito entre ellas (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
+- For Time cuyos bloques NO tienen duración fija en segundos (solo reps, RPE, peso o distancia) → For Time simple SIEMPRE, aunque haya secciones A/B/C o descansos entre ellas. 1 solo bloque countUp:true, seconds:0. NUNCA crear bloques por sección ni bloques de descanso.
+- WOD COMPLEJO con fases que SÍ tienen duración fija en segundos (AMRAP N min + descanso + AMRAP N min, X'' on X'' off, EMOM dentro de un mix, etc.) → mix: bloques separados con label descriptivo
 - "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
 - "X sets" CON descanso explícito Y CON tiempo de trabajo definido por set → mix con bloques alternos trabajo+descanso expandidos
 - "X sets" CON descanso explícito PERO SIN tiempo de trabajo definido (el atleta va a su ritmo, no hay cap) → For Time simple (1 solo bloque countUp:true, seconds:0). El atleta ve el crono corriendo y gestiona el descanso mentalmente. NO crear bloques individuales por set ni bloques de descanso.
