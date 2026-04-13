@@ -155,16 +155,21 @@ La fecha es: ${date}
 REGLA CRÍTICA — copia literal, nunca inventes:
 La description debe ser una transcripción exacta del texto visible. NUNCA añadas datos que no estén escritos en la imagen.
 
+REGLA — separa descripción de notas:
+- description: solo las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias).
+- notes: (opcional) texto explicativo del coach. Se identifica por: separadores (---), "*Notas:", párrafos largos como "El objetivo de...", "El esquema es...". Omite si no hay notas.
+
 Para cada bloque devuelve SOLO:
 - date: "${date}"
 - block: número de bloque (1, 2, 3…)
-- description: texto completo y literal del bloque
+- description: solo las instrucciones de ejecución
+- notes: (opcional) texto explicativo del coach
 
 Ignora notas de hidratación, nutrición o recordatorios que no sean ejercicio.
 
 Luego escribe exactamente: ===JSON===
 Y el array JSON sin markdown:
-[{"date":"${date}","block":1,"description":"..."}]`
+[{"date":"${date}","block":1,"description":"...","notes":"..."}]`
 
     } else {
       visionPrompt = `Analiza esta imagen con un WOD de CrossFit.
@@ -174,11 +179,15 @@ La fecha es: ${date}
 REGLA CRÍTICA — todo es UN solo WOD:
 Aunque la imagen contenga secciones A, B, C, D, múltiples partes o bloques diferenciados, TODA la imagen forma un único WOD. Devuelve exactamente 1 elemento en el array con TODO el texto concatenado como description.
 
+REGLA — separa descripción de notas:
+- description: solo las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias).
+- notes: (opcional) texto explicativo del coach (contexto, consejos técnicos, por qué). Se identifica por: separadores (---), "*Notas:", párrafos largos explicativos como "El objetivo de...", "El esquema es...", "La velocidad de...". Omite si no hay notas.
+
 REGLA CRÍTICA — copia literal, nunca inventes:
-La description debe ser una transcripción exacta y completa de todo el texto visible. NUNCA añadas datos que no estén escritos en la imagen. NUNCA omitas partes.
+La description debe ser una transcripción exacta del texto de ejecución visible. NUNCA añadas datos que no estén escritos en la imagen. NUNCA omitas instrucciones de ejecución.
 
 Devuelve SOLO un array JSON con un único elemento, sin markdown:
-[{"date":"${date}","block":1,"description":"..."}]`
+[{"date":"${date}","block":1,"description":"...","notes":"..."}]`
     }
 
     let msg
