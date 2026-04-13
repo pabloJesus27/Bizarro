@@ -42,6 +42,7 @@ Reglas:
 - AMRAP N min → mix: [{"label":"AMRAP","seconds":N*60}]
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
+- For Time con secciones A/B/C (o A+B+C) SIN tiempo de trabajo definido por sección → For Time simple (1 solo bloque countUp:true, seconds:0). El atleta corre el cronómetro y gestiona los descansos mirando el reloj. NO crear bloques por sección ni bloques de descanso.
 - WOD COMPLEJO con fases distintas y descanso explícito entre ellas (AMRAP+descanso+AMRAP, X on X off, etc.) → mix: bloques separados con label descriptivo
 - "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
 - "X sets" CON descanso explícito Y CON tiempo de trabajo definido por set → mix con bloques alternos trabajo+descanso expandidos
