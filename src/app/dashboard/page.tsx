@@ -186,6 +186,7 @@ function DashboardContent() {
       })
       const cfg = await res.json()
       if (cfg.error) { setTimerError(true); return }
+      if (cfg.type === 'none') return
       sessionStorage.setItem('generated_timer_config', JSON.stringify(cfg))
       router.push('/timer')
     } catch { setTimerError(true) } finally {

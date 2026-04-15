@@ -145,7 +145,7 @@ function AdminContent() {
           body: JSON.stringify({ title: wod.title, description: wod.description, type: wod.type }),
         })
         const cfg = await res.json()
-        if (!cfg.error) {
+        if (!cfg.error && cfg.type !== 'none') {
           await updateWodTimerConfig(wod.id, cfg)
           setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
         }

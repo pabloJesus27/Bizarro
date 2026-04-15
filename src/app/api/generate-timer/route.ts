@@ -43,6 +43,8 @@ Reglas:
 - EMOM N min → mix: [{"label":"EMOM","seconds":N*60,"intervalSeconds":60}] (E2MOM → intervalSeconds:120, etc.)
 - For Max ventanas de X min durante Y min → mix: (Y/X) bloques de X*60s con label descriptivo
 - WOD de solo carrera (run, row, carrera, metros, km, distancia) sin otros ejercicios → For Time simple SIEMPRE: 1 solo bloque countUp:true, seconds:0. Aunque haya series, descansos o distancias variables.
+- WOD de tipo Core con TODOS los ejercicios por tiempo (ej: "30'' plank / 20'' hollow hold / 30'' dead bug") → mix con bloques alternos de trabajo y descanso según los tiempos indicados.
+- WOD de tipo Core con ejercicios a reps (ej: "20 hollow rocks, 15 v-ups") O mixto (algunos por tiempo, otros por reps) → devuelve exactamente: {"type":"none"}
 - For Time cuyos bloques NO tienen duración fija en segundos (solo reps, RPE, peso o distancia) → For Time simple SIEMPRE, aunque haya secciones A/B/C o descansos entre ellas. 1 solo bloque countUp:true, seconds:0. NUNCA crear bloques por sección ni bloques de descanso.
 - WOD COMPLEJO con fases que SÍ tienen duración fija en segundos (AMRAP N min + descanso + AMRAP N min, X'' on X'' off, EMOM dentro de un mix, etc.) → mix: bloques separados con label descriptivo
 - "X sets / X rondas / X rounds" SIN descanso explícito entre sets → For Time simple (1 solo bloque), NO crear un bloque por set
@@ -82,6 +84,10 @@ Solo JSON, sin explicación ni markdown.`,
   try {
     const clean = text.replace(/```json\n?|\n?```/g, '').trim()
     const cfg = JSON.parse(clean)
+
+    if (cfg?.type === 'none') {
+      return NextResponse.json({ type: 'none' })
+    }
 
     if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number; countUp?: boolean }) => !b.label || (!(b.seconds > 0) && !b.countUp))) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })

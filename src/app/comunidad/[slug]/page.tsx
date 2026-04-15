@@ -176,6 +176,7 @@ function ComunidadContent() {
       })
       const cfg = await res.json()
       if (cfg.error) { setTimerError(true); return }
+      if (cfg.type === 'none') return
       if (wod.id) {
         updateWodTimerConfig(wod.id, cfg).then(() =>
           setWods(prev => prev.map(w => w.id === wod.id ? { ...w, timer_config: cfg } : w))
