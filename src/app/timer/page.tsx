@@ -17,6 +17,7 @@ import TabataSetup from '@/components/timer/TabataSetup'
 import MixSetup from '@/components/timer/MixSetup'
 import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
+import { useIsLandscape } from '@/components/timer/LandscapeDisplay'
 
 // ── Page ─────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ function TimerContent() {
 
   const [config, setConfig] = useState<TimerConfig | null>(null)
   const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit('timer-manual')
+  const isLandscape = useIsLandscape()
   const [pendingConfig, setPendingConfig] = useState<TimerConfig | null>(null)
   const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
   const loadedRef = useRef(false)
@@ -110,8 +112,8 @@ function TimerContent() {
   )
 
   return (
-    <main className="min-h-screen bg-black flex flex-col p-8">
-      <div className="flex items-center justify-between mb-12">
+    <main className={`min-h-screen bg-black flex flex-col ${isLandscape ? 'p-4' : 'p-8'}`}>
+      <div className={`flex items-center justify-between ${isLandscape ? 'mb-3' : 'mb-12'}`}>
         <button
           onClick={() => { if (config) { setConfig(null) } else { router.back() } }}
           className="text-neutral-600 hover:text-white text-sm font-mono transition"
@@ -127,7 +129,7 @@ function TimerContent() {
             {renderTimer(config, handleFinish)}
           </div>
         ) : (
-          <div className="w-full max-w-md">
+          <div className={`w-full ${isLandscape ? '' : 'max-w-md'}`}>
             {generatedMixBlocks && (
               <MixSetup onStart={handleStart} initialBlocks={generatedMixBlocks} />
             )}
