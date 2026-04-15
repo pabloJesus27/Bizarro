@@ -3,12 +3,10 @@
 import { useState } from 'react'
 import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
-import { useIsLandscape } from './LandscapeDisplay'
 import type { TimerConfig } from '@/lib/types'
 
 export default function AMRAPSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { totalSeconds: number } }) {
   const [minutes, setMinutes] = useState(initialConfig ? Math.round(initialConfig.totalSeconds / 60) : 20)
-  const isLandscape = useIsLandscape()
 
   const card = (
     <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
@@ -28,25 +26,15 @@ export default function AMRAPSetup({ onStart, initialConfig }: { onStart: (c: Ti
     </div>
   )
 
-  const clock = <ClockFace compact={isLandscape} display={fmt(minutes * 60)} label="Duración" disabled={minutes === 0} onStart={() => onStart({ type: 'amrap', totalSeconds: minutes * 60 })} />
-
-  if (isLandscape) {
-    return (
-      <div className="flex flex-row items-center justify-center gap-8 w-full">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-white font-black text-5xl uppercase tracking-tighter">AMRAP</p>
-          {card}
-        </div>
-        {clock}
-      </div>
-    )
-  }
+  const clock = <ClockFace display={fmt(minutes * 60)} label="Duración" disabled={minutes === 0} onStart={() => onStart({ type: 'amrap', totalSeconds: minutes * 60 })} />
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-white font-black text-5xl uppercase tracking-tighter">AMRAP</p>
-      {card}
-      <Connector />
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-8 w-full">
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">AMRAP</p>
+        {card}
+      </div>
+      <div className="sm:hidden"><Connector /></div>
       {clock}
     </div>
   )

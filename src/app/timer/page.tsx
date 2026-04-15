@@ -17,7 +17,6 @@ import TabataSetup from '@/components/timer/TabataSetup'
 import MixSetup from '@/components/timer/MixSetup'
 import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
-import { useIsLandscape } from '@/components/timer/LandscapeDisplay'
 
 // ── Page ─────────────────────────────────────────────────
 
@@ -39,7 +38,6 @@ function TimerContent() {
 
   const [config, setConfig] = useState<TimerConfig | null>(null)
   const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit('timer-manual')
-  const isLandscape = useIsLandscape()
   const [pendingConfig, setPendingConfig] = useState<TimerConfig | null>(null)
   const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
   const loadedRef = useRef(false)
@@ -112,8 +110,8 @@ function TimerContent() {
   )
 
   return (
-    <main className={`bg-black flex flex-col ${isLandscape ? 'h-dvh overflow-hidden p-4' : 'min-h-screen p-8'}`}>
-      <div className={`flex items-center justify-between ${isLandscape ? 'mb-2' : 'mb-12'}`}>
+    <main className="bg-black flex flex-col min-h-screen p-8 sm:h-dvh sm:overflow-hidden sm:p-4">
+      <div className="flex items-center justify-between mb-12 sm:mb-2">
         <button
           onClick={() => { if (config) { setConfig(null) } else { router.back() } }}
           className="text-neutral-600 hover:text-white text-sm font-mono transition"
@@ -123,13 +121,13 @@ function TimerContent() {
 
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
-      <div className={`flex-1 flex justify-center ${isLandscape ? 'items-center overflow-y-auto' : 'items-start'}`}>
+      <div className="flex-1 flex justify-center items-start sm:items-center sm:overflow-y-auto">
         {config ? (
           <div className="w-full">
             {renderTimer(config, handleFinish)}
           </div>
         ) : (
-          <div className={`w-full ${isLandscape ? '' : 'max-w-md'}`}>
+          <div className="w-full max-w-md sm:max-w-none">
             {generatedMixBlocks && (
               <MixSetup onStart={handleStart} initialBlocks={generatedMixBlocks} />
             )}

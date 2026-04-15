@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
-import { useIsLandscape } from './LandscapeDisplay'
 import type { TimerConfig } from '@/lib/types'
 
 export default function TabataSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { workSeconds: number; restSeconds: number; rounds: number } }) {
@@ -11,7 +10,6 @@ export default function TabataSetup({ onStart, initialConfig }: { onStart: (c: T
   const [rest, setRest] = useState(initialConfig ? initialConfig.restSeconds : 10)
   const [rounds, setRounds] = useState(initialConfig ? initialConfig.rounds : 8)
   const isDisabled = work === 0 || rounds === 0
-  const isLandscape = useIsLandscape()
 
   const card = (
     <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-80">
@@ -65,25 +63,15 @@ export default function TabataSetup({ onStart, initialConfig }: { onStart: (c: T
     </div>
   )
 
-  const clock = <ClockFace compact={isLandscape} display={fmt((work + rest) * rounds)} label="Total" disabled={isDisabled} onStart={() => onStart({ type: 'tabata', workSeconds: work, restSeconds: rest, rounds })} />
-
-  if (isLandscape) {
-    return (
-      <div className="flex flex-row items-center justify-center gap-8 w-full">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
-          {card}
-        </div>
-        {clock}
-      </div>
-    )
-  }
+  const clock = <ClockFace display={fmt((work + rest) * rounds)} label="Total" disabled={isDisabled} onStart={() => onStart({ type: 'tabata', workSeconds: work, restSeconds: rest, rounds })} />
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
-      {card}
-      <Connector />
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-8 w-full">
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
+        {card}
+      </div>
+      <div className="sm:hidden"><Connector /></div>
       {clock}
     </div>
   )

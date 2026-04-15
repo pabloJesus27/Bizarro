@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react'
 import { fmt } from './timer-utils'
-import { useIsLandscape } from './LandscapeDisplay'
 import type { TimerConfig, MixBlock } from '@/lib/types'
 
 type MixBlockWithId = MixBlock & { id: number }
@@ -62,8 +61,6 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
 
   const total = blocks.reduce((acc, b) => acc + b.seconds, 0)
 
-  const isLandscape = useIsLandscape()
-
   const isAddDisabled = showSubTypes
     ? (newLabel === 'AMRAP' && newMinutes === 0) ||
       (newLabel === 'For Time' && forTimeCap && newMinutes === 0) ||
@@ -74,12 +71,12 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
   const isIOS = /iPad|iPhone|iPod/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
 
   return (
-    <div className={isLandscape ? 'flex flex-row gap-6 w-full h-full' : 'flex flex-col items-center gap-4'}>
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 sm:w-full sm:h-full">
 
       {/* Columna izquierda en landscape / contenido normal en portrait */}
-      <div className={isLandscape ? 'flex flex-col gap-4 flex-1 overflow-y-auto min-h-0 pb-2' : 'contents'}>
+      <div className="contents sm:flex sm:flex-col sm:gap-4 sm:flex-1 sm:overflow-y-auto sm:min-h-0 sm:pb-2">
 
-      <p className={`text-white font-black uppercase tracking-tighter ${isLandscape ? 'text-4xl' : 'text-5xl'}`}>Mix</p>
+      <p className="text-white font-black uppercase tracking-tighter text-5xl sm:text-4xl">Mix</p>
 
       {/* Tarjeta de configuración */}
       <div className="border border-neutral-700 rounded-2xl px-6 py-5 flex flex-col gap-5 w-80">
@@ -363,16 +360,16 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       </div>{/* fin columna izquierda */}
 
       {/* Columna derecha en landscape / contenido normal en portrait */}
-      <div className={isLandscape ? 'flex flex-col items-center justify-center gap-4 shrink-0' : 'contents'}>
+      <div className="contents sm:flex sm:flex-col sm:items-center sm:justify-center sm:gap-4 sm:shrink-0">
         <button
           onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks: blocks.map(({ id: _, ...b }) => b) })}
           disabled={blocks.length === 0}
-          className={`bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30 ${isLandscape ? 'w-32' : 'w-80'}`}
+          className="bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30 w-80 sm:w-32"
         >
           Listo
         </button>
         {isIOS && (
-          <p className={`text-neutral-600 text-xs font-mono text-center ${isLandscape ? 'max-w-[120px]' : ''}`}>⚠️ Desactiva el modo silencio para escuchar los beeps</p>
+          <p className="text-neutral-600 text-xs font-mono text-center sm:max-w-[120px]">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
         )}
       </div>
 

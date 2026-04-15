@@ -2,10 +2,10 @@
 
 const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
 
-export function ClockFace({ display, label, onStart, disabled, compact }: { display: string; label: string; onStart: () => void; disabled?: boolean; compact?: boolean }) {
+export function ClockFace({ display, label, onStart, disabled }: { display: string; label: string; onStart: () => void; disabled?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
-    <div className={`relative ${compact ? 'w-48 h-48' : 'w-72 h-72'}`}>
+    <div className="relative w-72 h-72 sm:w-48 sm:h-48">
       <svg viewBox="0 0 200 200" className="w-full h-full">
         <circle cx="100" cy="100" r="95" fill="none" stroke="#262626" strokeWidth="1.5" />
         {Array.from({ length: 60 }).map((_, i) => {
@@ -31,9 +31,9 @@ export function ClockFace({ display, label, onStart, disabled, compact }: { disp
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-        <p className={`text-neutral-400 uppercase tracking-widest font-mono ${compact ? 'text-[10px]' : 'text-sm'}`}>{label}</p>
-        <p className={`text-white font-black tabular-nums tracking-tighter leading-none ${compact ? 'text-3xl' : 'text-5xl'}`}>{display}</p>
-        <button onClick={onStart} disabled={disabled} className={`mt-1 bg-white text-black font-black uppercase tracking-widest rounded-xl disabled:opacity-30 disabled:cursor-not-allowed ${compact ? 'px-4 py-1.5 text-[10px]' : 'px-6 py-2 text-xs'}`}>
+        <p className="text-neutral-400 uppercase tracking-widest font-mono text-sm sm:text-[10px]">{label}</p>
+        <p className="text-white font-black tabular-nums tracking-tighter leading-none text-5xl sm:text-3xl">{display}</p>
+        <button onClick={onStart} disabled={disabled} className="mt-1 bg-white text-black font-black uppercase tracking-widest rounded-xl disabled:opacity-30 disabled:cursor-not-allowed px-6 py-2 text-xs sm:px-4 sm:py-1.5 sm:text-[10px]">
           Listo
         </button>
       </div>

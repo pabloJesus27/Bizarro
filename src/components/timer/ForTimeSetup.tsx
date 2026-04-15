@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
-import { useIsLandscape } from './LandscapeDisplay'
 import type { TimerConfig } from '@/lib/types'
 
 export default function ForTimeSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { capSeconds: number } }) {
   const [hasCap, setHasCap] = useState(initialConfig ? initialConfig.capSeconds > 0 : false)
   const [capMinutes, setCapMinutes] = useState(initialConfig && initialConfig.capSeconds > 0 ? Math.round(initialConfig.capSeconds / 60) : 20)
-  const isLandscape = useIsLandscape()
 
   const card = (
     <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
@@ -38,7 +36,6 @@ export default function ForTimeSetup({ onStart, initialConfig }: { onStart: (c: 
 
   const clock = (
     <ClockFace
-      compact={isLandscape}
       display={hasCap ? fmt(capMinutes * 60) : '00:00'}
       label={hasCap ? 'Time cap' : 'Sin límite'}
       disabled={hasCap && capMinutes === 0}
@@ -46,23 +43,13 @@ export default function ForTimeSetup({ onStart, initialConfig }: { onStart: (c: 
     />
   )
 
-  if (isLandscape) {
-    return (
-      <div className="flex flex-row items-center justify-center gap-8 w-full">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
-          {card}
-        </div>
-        {clock}
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
-      {card}
-      <Connector />
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-8 w-full">
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">For Time</p>
+        {card}
+      </div>
+      <div className="sm:hidden"><Connector /></div>
       {clock}
     </div>
   )

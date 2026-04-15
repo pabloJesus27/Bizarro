@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { fmt } from './timer-utils'
 import { ClockFace, Connector } from './ClockFace'
-import { useIsLandscape } from './LandscapeDisplay'
 import type { TimerConfig } from '@/lib/types'
 
 export default function EMOMSetup({ onStart, initialConfig }: { onStart: (c: TimerConfig) => void; initialConfig?: { totalSeconds: number; intervalSeconds: number } }) {
@@ -12,7 +11,6 @@ export default function EMOMSetup({ onStart, initialConfig }: { onStart: (c: Tim
   const [rounds, setRounds] = useState(initialConfig ? Math.round(initialConfig.totalSeconds / initialConfig.intervalSeconds) : 10)
   const intervalSeconds = intMin * 60 + intSec
   const totalSeconds = intervalSeconds * rounds
-  const isLandscape = useIsLandscape()
 
   const card = (
     <div className="border border-neutral-700 rounded-2xl px-6 py-7 flex flex-col gap-5 w-72">
@@ -64,25 +62,15 @@ export default function EMOMSetup({ onStart, initialConfig }: { onStart: (c: Tim
     </div>
   )
 
-  const clock = <ClockFace compact={isLandscape} display={fmt(totalSeconds)} label="Duración" disabled={totalSeconds === 0} onStart={() => onStart({ type: 'emom', totalSeconds, intervalSeconds })} />
-
-  if (isLandscape) {
-    return (
-      <div className="flex flex-row items-center justify-center gap-8 w-full">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-white font-black text-5xl uppercase tracking-tighter">EMOM</p>
-          {card}
-        </div>
-        {clock}
-      </div>
-    )
-  }
+  const clock = <ClockFace display={fmt(totalSeconds)} label="Duración" disabled={totalSeconds === 0} onStart={() => onStart({ type: 'emom', totalSeconds, intervalSeconds })} />
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-white font-black text-5xl uppercase tracking-tighter">EMOM</p>
-      {card}
-      <Connector />
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-8 w-full">
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-white font-black text-5xl uppercase tracking-tighter">EMOM</p>
+        {card}
+      </div>
+      <div className="sm:hidden"><Connector /></div>
       {clock}
     </div>
   )
