@@ -116,7 +116,7 @@ El texto dentro de una celda puede tener múltiples líneas, párrafos o notas d
 REGLA — separa descripción de notas:
 Cada celda puede tener dos partes:
 - description: las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias). Solo lo que el atleta necesita para ejecutar el WOD.
-- notes: texto explicativo del coach (contexto, por qué, consejos técnicos, indicaciones de intensidad). Se identifica por: separadores (---), sección "*Notas:" o "Nota:", párrafos largos explicativos con frases como "El objetivo de...", "El esquema es...", "La velocidad de...", "Las primeras series...".
+- notes: texto explicativo del coach (contexto, por qué, consejos técnicos, indicaciones de intensidad, recomendaciones de calentamiento, instrucciones de descanso como "toma el tiempo que necesites", avisos generales como "calienta adecuadamente"). Se identifica por: separadores (---), sección "*Notas:" o "Nota:", párrafos largos explicativos con frases como "El objetivo de...", "El esquema es...", "La velocidad de...", "Las primeras series...", o cualquier frase que sea un consejo/recomendación del coach y NO sea una instrucción de ejecución directa (sets, reps, peso, tiempo).
 Si no hay notas, omite el campo notes.
 
 REGLA CRÍTICA — captura la primera línea de cada celda:
@@ -157,7 +157,7 @@ La description debe ser una transcripción exacta del texto visible. NUNCA añad
 
 REGLA — separa descripción de notas:
 - description: solo las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias).
-- notes: (opcional) texto explicativo del coach. Se identifica por: separadores (---), "*Notas:", párrafos largos como "El objetivo de...", "El esquema es...". Omite si no hay notas.
+- notes: (opcional) texto del coach que NO es instrucción de ejecución directa: consejos, recomendaciones de calentamiento, instrucciones de descanso como "toma el tiempo que necesites", avisos generales. Se identifica por separadores (---), "*Notas:", párrafos explicativos, o cualquier frase que sea consejo/recomendación y no sets/reps/peso/tiempo. Omite si no hay notas.
 
 Para cada bloque devuelve SOLO:
 - date: "${date}"
@@ -181,7 +181,7 @@ Aunque la imagen contenga secciones A, B, C, D, múltiples partes o bloques dife
 
 REGLA — separa descripción de notas:
 - description: solo las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias).
-- notes: (opcional) texto explicativo del coach (contexto, consejos técnicos, por qué). Se identifica por: separadores (---), "*Notas:", párrafos largos explicativos como "El objetivo de...", "El esquema es...", "La velocidad de...". Omite si no hay notas.
+- notes: (opcional) texto del coach que NO es instrucción de ejecución directa: consejos, recomendaciones de calentamiento, instrucciones de descanso como "toma el tiempo que necesites", avisos generales. Se identifica por separadores (---), "*Notas:", párrafos explicativos, o cualquier frase que sea consejo/recomendación y no sets/reps/peso/tiempo. Omite si no hay notas.
 
 REGLA CRÍTICA — copia literal, nunca inventes:
 La description debe ser una transcripción exacta del texto de ejecución visible. NUNCA añadas datos que no estén escritos en la imagen. NUNCA omitas instrucciones de ejecución.

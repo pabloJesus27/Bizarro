@@ -126,7 +126,7 @@ El texto dentro de una celda puede tener múltiples líneas, párrafos o notas d
 REGLA — separa descripción de notas:
 Cada celda puede tener dos partes:
 - description: las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE, distancias). Solo lo que el atleta necesita para ejecutar el WOD.
-- notes: texto explicativo del coach (contexto, por qué, consejos técnicos, indicaciones de intensidad). Se identifica por: separadores (---), sección "*Notas:" o "Nota:", párrafos largos explicativos con frases como "El objetivo de...", "El esquema es...", "La velocidad de...", "Las primeras series...".
+- notes: texto del coach que NO es instrucción de ejecución directa: consejos, recomendaciones de calentamiento, instrucciones de descanso como "toma el tiempo que necesites", avisos generales. Se identifica por separadores (---), "*Notas:" o "Nota:", párrafos explicativos como "El objetivo de...", "El esquema es...", o cualquier frase que sea consejo/recomendación y no sets/reps/peso/tiempo/porcentaje.
 Si no hay notas, omite el campo notes.
 
 REGLA CRÍTICA — captura la primera línea de cada celda:
