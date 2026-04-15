@@ -187,7 +187,7 @@ export default function AppHeader({ homeRoute, showChangeProgram = true, communi
             onClick={() => setDrawerOpen(false)}
           />
           {/* Panel */}
-          <div className="fixed left-0 top-0 h-full w-64 bg-neutral-950 border-r border-neutral-800 z-50 flex flex-col lg:hidden">
+          <div className="fixed left-0 top-0 h-full w-64 bg-neutral-950 border-r border-neutral-800 z-50 flex flex-col lg:hidden" style={{ paddingLeft: 'env(safe-area-inset-left)', paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-900">
               <span className="text-white font-black text-lg tracking-tight uppercase">Menú</span>
               <button
