@@ -32,6 +32,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   scrollbar-width: none;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 body::-webkit-scrollbar {
