@@ -86,7 +86,7 @@ export default function SimpleTimer({ label, totalSeconds, intervalSeconds, onFi
           <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
-      <div className={`flex flex-col items-center min-h-[calc(100vh-160px)] ${isLandscape ? 'pointer-events-none' : ''}`}>
+      <div className={`flex flex-col items-center min-h-[calc(100vh-160px)] ${isLandscape ? 'hidden' : ''}`}>
         <p className="text-white font-black text-5xl uppercase tracking-tighter">{label}</p>
         <div className="flex-1 flex items-center justify-center">
         <div className="relative w-[min(28rem,85vw)] h-[min(28rem,85vw)]">
