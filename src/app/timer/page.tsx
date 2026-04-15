@@ -112,8 +112,8 @@ function TimerContent() {
   )
 
   return (
-    <main className={`min-h-screen bg-black flex flex-col ${isLandscape ? 'p-4' : 'p-8'}`}>
-      <div className={`flex items-center justify-between ${isLandscape ? 'mb-3' : 'mb-12'}`}>
+    <main className={`bg-black flex flex-col ${isLandscape ? 'h-dvh overflow-hidden p-4' : 'min-h-screen p-8'}`}>
+      <div className={`flex items-center justify-between ${isLandscape ? 'mb-2' : 'mb-12'}`}>
         <button
           onClick={() => { if (config) { setConfig(null) } else { router.back() } }}
           className="text-neutral-600 hover:text-white text-sm font-mono transition"
@@ -123,7 +123,7 @@ function TimerContent() {
 
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
-      <div className="flex-1 flex items-start justify-center">
+      <div className={`flex-1 flex justify-center ${isLandscape ? 'items-center overflow-y-auto' : 'items-start'}`}>
         {config ? (
           <div className="w-full">
             {renderTimer(config, handleFinish)}
