@@ -95,7 +95,7 @@ function RegisterContent() {
 
   if (success) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-black px-4">
+      <main className="min-h-dvh flex items-center justify-center bg-black px-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Revisa tu email</h2>
           <p className="text-neutral-400">
@@ -113,7 +113,7 @@ function RegisterContent() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-black px-4">
+    <main className="min-h-dvh flex items-center justify-center bg-black px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-3xl font-bold text-white mb-8 text-center tracking-tight">
           Bizarro

@@ -135,7 +135,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex flex-col">
+    <main className="min-h-dvh bg-black flex flex-col">
 
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 border-b border-neutral-900">

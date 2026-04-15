@@ -4,7 +4,7 @@ import AppQR from '@/components/AppQR'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
+    <main className="min-h-dvh bg-black flex flex-col items-center justify-center px-6">
       <div className="flex flex-col items-center gap-10 text-center">
         <Image
           src="/logoBizarro.png"

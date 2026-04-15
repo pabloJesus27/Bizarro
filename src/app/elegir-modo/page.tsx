@@ -49,7 +49,7 @@ export default function ElegirModoPage() {
 
   if (!ready) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
+      <main className="min-h-dvh bg-black flex items-center justify-center">
         {error ? (
           <div className="text-center flex flex-col gap-4">
             <p className="text-red-400 text-xs font-mono">{error}</p>
@@ -68,7 +68,7 @@ export default function ElegirModoPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex flex-col items-center justify-center px-6 gap-12">
+    <main className="min-h-dvh bg-black flex flex-col items-center justify-center px-6 gap-12">
       <div className="text-center">
         <p className="text-neutral-600 text-xs uppercase tracking-widest font-mono mb-3">¿Cómo quieres entrenar hoy?</p>
         <h1 className="text-white font-black text-3xl uppercase tracking-tighter">Elige tu modo</h1>

@@ -45,7 +45,7 @@ function UnirseContent() {
   }, [authLoading, user, session, token, router])
 
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center px-6">
+    <main className="min-h-dvh bg-black flex items-center justify-center px-6">
       <div className="text-center flex flex-col gap-4">
         {(status === 'loading' || status === 'joining') && (
           <div className="flex gap-1.5 justify-center">

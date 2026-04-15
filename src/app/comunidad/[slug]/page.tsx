@@ -298,7 +298,7 @@ function ComunidadContent() {
 
   return (
     <>
-      <main className="min-h-screen bg-black flex flex-col">
+      <main className="min-h-dvh bg-black flex flex-col">
 
         <AppHeader homeRoute={`/comunidad/${slug}`} communitySlug={slug} leftTitle={community?.name} />
 

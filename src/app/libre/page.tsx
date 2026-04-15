@@ -301,7 +301,7 @@ function LibreContent() {
 
   return (
     <>
-      <main className="min-h-screen bg-black flex flex-col">
+      <main className="min-h-dvh bg-black flex flex-col">
 
         <AppHeader homeRoute="/libre" communitySlug={communitySlug} showCommunityTab={true} />
 

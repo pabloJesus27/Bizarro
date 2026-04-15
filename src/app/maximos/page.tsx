@@ -140,7 +140,7 @@ export default function MaximosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex flex-col">
+    <main className="min-h-dvh bg-black flex flex-col">
 
       <AppHeader />
 

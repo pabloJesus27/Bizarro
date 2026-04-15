@@ -107,14 +107,14 @@ export default function SelectProgramPage() {
 
   if (loading || loadingData) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
+      <main className="min-h-dvh bg-black flex items-center justify-center">
         <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-black flex flex-col items-center justify-center px-6 gap-12">
+    <main className="min-h-dvh bg-black flex flex-col items-center justify-center px-6 gap-12">
       <div className="text-center">
         <p className="text-neutral-600 text-xs uppercase tracking-widest font-mono mb-3">Coach</p>
         <h1 className="text-white font-black text-3xl uppercase tracking-tighter">Mis programas</h1>

@@ -142,7 +142,7 @@ export default function ProgramacionesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black flex flex-col">
+    <main className="min-h-dvh bg-black flex flex-col">
       <AppHeader />
 
       <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full">

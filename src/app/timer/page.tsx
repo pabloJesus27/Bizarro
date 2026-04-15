@@ -104,7 +104,7 @@ function TimerContent() {
   }, [router, manualType])
 
   if (!manualType && !config && !pendingConfig && !generatedMixBlocks) return (
-    <main className="min-h-screen bg-black flex items-center justify-center">
+    <main className="min-h-dvh bg-black flex items-center justify-center">
       <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
     </main>
   )
@@ -158,7 +158,7 @@ function TimerContent() {
 export default function TimerPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen bg-black flex items-center justify-center">
+      <main className="min-h-dvh bg-black flex items-center justify-center">
         <div className="flex gap-1.5"><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:150ms]" /><div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse [animation-delay:300ms]" /></div>
       </main>
     }>
