@@ -31,7 +31,7 @@ export function ClockFace({ display, label, onStart, disabled }: { display: stri
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-        <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">{label}</p>
+        <p className="text-neutral-400 text-sm uppercase tracking-widest font-mono">{label}</p>
         <p className="text-white font-black text-5xl tabular-nums tracking-tighter leading-none">{display}</p>
         <button onClick={onStart} disabled={disabled} className="mt-1 bg-white text-black font-black uppercase tracking-widest px-6 py-2 rounded-xl text-xs disabled:opacity-30 disabled:cursor-not-allowed">
           Listo
