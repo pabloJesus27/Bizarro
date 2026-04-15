@@ -400,7 +400,7 @@ function DashboardContent() {
                         </div>
 
                         {/* Generar timer */}
-                        {!['Warmup', 'Strength', 'Gymnastics'].includes(activeWod.type) && (
+                        {!['Warmup', 'Strength', 'Gymnastics', 'Core'].includes(activeWod.type) && (
                           <div>
                             <button
                               onClick={() => handleGenerateTimer(activeWod)}
