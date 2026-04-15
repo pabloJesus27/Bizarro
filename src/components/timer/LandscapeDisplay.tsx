@@ -6,9 +6,14 @@ export function useIsLandscape(): boolean {
   const [isLandscape, setIsLandscape] = useState(false)
   useEffect(() => {
     const check = () => setIsLandscape(window.innerWidth > window.innerHeight)
+    const onOrientationChange = () => setTimeout(check, 150)
     check()
     window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
+    window.addEventListener('orientationchange', onOrientationChange)
+    return () => {
+      window.removeEventListener('resize', check)
+      window.removeEventListener('orientationchange', onOrientationChange)
+    }
   }, [])
   return isLandscape
 }
