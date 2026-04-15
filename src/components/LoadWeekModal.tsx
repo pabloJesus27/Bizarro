@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import HelpModal, { HelpButton } from './HelpModal'
+import HelpModal from './HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 import type { WodType } from '@/lib/types'
 import { DAY_SHORT } from '@/lib/week-utils'
@@ -146,7 +146,6 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
             </h2>
           </div>
           <div className="flex items-center gap-2 ml-4">
-            {step === 'upload' && <HelpButton onClick={openHelp} />}
             <button onClick={onClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition">
               &times;
             </button>

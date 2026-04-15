@@ -12,7 +12,7 @@ import WodModal from '@/components/admin/WodModal'
 import type { Wod } from '@/lib/types'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
-import HelpModal, { HelpButton } from '@/components/HelpModal'
+import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Admin Page ─────────────────────────────────────────
@@ -207,7 +207,6 @@ function AdminContent() {
               <span className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
                 {formatWeekRange(weekDates)}
               </span>
-              <HelpButton onClick={openHelp} />
             </div>
             {wods.length > 0 ? (deletingWeek ? (
               <div className="flex gap-2">

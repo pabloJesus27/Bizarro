@@ -5,7 +5,7 @@ import { upsertResult, maybeUpdatePR } from '@/lib/db'
 import type { Wod, Result } from '@/lib/types'
 import { WOD_TYPE_LABEL, detectPRExercise } from '@/lib/wod-utils'
 import { getTodayStr } from '@/lib/week-utils'
-import HelpModal, { HelpButton } from './HelpModal'
+import HelpModal from './HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 export default function ResultModal({ wod, existing, onClose, onSaved }: {
@@ -120,7 +120,6 @@ export default function ResultModal({ wod, existing, onClose, onSaved }: {
             <h2 className="text-white font-black text-xl tracking-tight uppercase">{wod.title}</h2>
           </div>
           <div className="flex items-center gap-2 ml-4">
-            <HelpButton onClick={openHelp} />
             <button onClick={handleClose} className="text-neutral-500 hover:text-white text-2xl leading-none transition">
               &times;
             </button>

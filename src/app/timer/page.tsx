@@ -15,7 +15,7 @@ import EMOMSetup from '@/components/timer/EMOMSetup'
 import ForTimeSetup from '@/components/timer/ForTimeSetup'
 import TabataSetup from '@/components/timer/TabataSetup'
 import MixSetup from '@/components/timer/MixSetup'
-import HelpModal, { HelpButton } from '@/components/HelpModal'
+import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Page ─────────────────────────────────────────────────
@@ -118,7 +118,7 @@ function TimerContent() {
         >
           ← Volver
         </button>
-        {!config && <HelpButton onClick={openHelp} />}
+
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
       <div className="flex-1 flex items-start justify-center">

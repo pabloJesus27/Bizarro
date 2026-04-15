@@ -10,7 +10,7 @@ import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from 
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import CoachHeader from '@/components/CoachHeader'
 import { CoachPageLoading } from '@/components/PageLoading'
-import HelpModal, { HelpButton } from '@/components/HelpModal'
+import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 function getInitials(name: string | null): string {
@@ -56,7 +56,6 @@ function AthleteList({ athletes, onSelect, programId, programSlug, onAthleteAdde
           <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">
             {athletes.length === 0 ? 'Sin atletas' : `${athletes.length} ${athletes.length === 1 ? 'atleta' : 'atletas'}`}
           </p>
-          {onOpenHelp && <HelpButton onClick={onOpenHelp} />}
         </div>
         <button
           onClick={() => { setShowModal(true); setError(null); setEmail('') }}

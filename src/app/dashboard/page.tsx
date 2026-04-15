@@ -17,7 +17,7 @@ import CoachMessageBubble from '@/components/CoachMessageBubble'
 import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from '@/lib/week-utils'
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import PesosTab from '@/components/comunidad/PesosTab'
-import HelpModal, { HelpButton } from '@/components/HelpModal'
+import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Dashboard Page ─────────────────────────────────────
@@ -227,7 +227,6 @@ function DashboardContent() {
             <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
               {formatWeekRange(weekDates)}
             </span>
-            <HelpButton onClick={openHelp} />
           </div>
           <button
             onClick={() => setWeekOffset(o => Math.min(0, o + 1))}

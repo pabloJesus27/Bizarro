@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AppHeader from '@/components/AppHeader'
-import HelpModal, { HelpButton } from '@/components/HelpModal'
+import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 import { AthletePageLoading } from '@/components/PageLoading'
 import ResultModal from '@/components/ResultModal'
@@ -317,7 +317,6 @@ function ComunidadContent() {
               <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
                 {formatWeekRange(weekDates)}
               </span>
-              <HelpButton onClick={openHelp} />
             </div>
             {isOwner && (wods.length > 0 ? (deletingWeek ? (
               <div className="flex gap-2">

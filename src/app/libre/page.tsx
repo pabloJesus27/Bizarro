@@ -19,7 +19,7 @@ import { DAY_SHORT, isSunday, getWeekDates, formatWeekRange, getTodayStr } from 
 import { WOD_TYPE_LABEL, getScoreDisplay } from '@/lib/wod-utils'
 import WodForm from '@/components/libre/WodForm'
 import PRCalculator from '@/components/PRCalculator'
-import HelpModal, { HelpButton } from '@/components/HelpModal'
+import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
 // ── Libre Page ───────────────────────────────────────────
@@ -326,7 +326,6 @@ function LibreContent() {
               <span className="text-neutral-400 text-xs font-mono uppercase tracking-widest">
                 {formatWeekRange(weekDates)}
               </span>
-              <HelpButton onClick={openHelp} />
             </div>
             {wods.length > 0 ? (deletingWeek ? (
               <div className="flex gap-2">
