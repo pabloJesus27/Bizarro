@@ -33,9 +33,9 @@ Reglas de tipo (aplica en orden estricto, la primera que encaje gana — para en
 6. N sets de reps fijas con descanso (ej: "10 sets 7 toes to bar 7 burpee rest 1 min") → For Time
 7. "for time" explícito, time cap → For Time
 8. Carrera de distancia fija única sin sets ni rondas → For Time
-9. N sets de ejercicios variados sin formato de tiempo (aunque incluya ring row, hollow rocks, v-ups, push ups, pull ups u otros movimientos de gymnastics, distancias cortas como 40m, ejercicios tipo jumping jacks, mountain climbers, paso del camarero, bear crawl, inchworm) → Warmup. IMPORTANTE: si hay varios ejercicios distintos en el mismo set sin descanso explícito → Warmup, no For Time.
+9. N sets con 2 o más ejercicios distintos mezclados sin formato de tiempo → Warmup SIEMPRE, aunque alguno sea de gymnastics (dominadas, hollow rocks, pull ups, ring row…) o lleve distancias cortas (40m). Ejemplos: "3 sets: 10 dominadas escápula + 10 buenos días + 10 hollow rocks", "3 sets: 40m paso del camarero + 30 jumping jacks + 20 mountain climbers" → Warmup.
 10. Calentamiento, activación, warm up → Warmup
-11. Trabajo de gymnastics a calidad sin tiempo (muscle up, handstand walk, double unders técnico) con sets pero sin métrica de tiempo → Gymnastics
+11. Trabajo de gymnastics a calidad sin tiempo, con 1 solo tipo de movimiento de habilidad (muscle up, handstand walk, double unders técnico) en sets → Gymnastics. SOLO si el bloque se centra en UN único ejercicio de gymnastics de habilidad.
 12. Sets/reps con barra, halterofilia, pesas, o musculación (lateral raises, curl, triceps, extensiones, femoral, abducciones) → Strength
 13. Core, abdominales, plancha, GHD, hollow body → Core
 14. Movilidad, estiramientos, foam roller → Mobility
