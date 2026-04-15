@@ -25,7 +25,7 @@ export default function LandscapeDisplay({
   onBack?: () => void
 }) {
   return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-40 gap-2">
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-40 gap-2" style={{ transform: 'translateZ(0)' }}>
       {onBack && (
         <button onClick={onBack} className="absolute top-6 left-6 text-neutral-600 hover:text-white text-sm font-mono transition">
           ← Volver
