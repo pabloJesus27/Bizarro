@@ -110,7 +110,7 @@ function TimerContent() {
   )
 
   return (
-    <main className="bg-black flex flex-col min-h-screen p-8 sm:h-dvh sm:overflow-hidden sm:p-4">
+    <main className="bg-black flex flex-col h-dvh overflow-hidden p-8 sm:p-4">
       <div className="flex items-center justify-between mb-12 sm:mb-2">
         <button
           onClick={() => { if (config) { setConfig(null) } else { router.back() } }}
@@ -121,7 +121,7 @@ function TimerContent() {
 
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
-      <div className="flex-1 flex justify-center items-start sm:items-center sm:overflow-y-auto">
+      <div className="flex-1 flex justify-center items-center overflow-y-auto">
         {config ? (
           <div className="w-full">
             {renderTimer(config, handleFinish)}
