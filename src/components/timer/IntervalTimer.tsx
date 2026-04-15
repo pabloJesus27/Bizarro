@@ -88,17 +88,17 @@ export default function IntervalTimer({ config, onFinish }: { config: Extract<Ti
   return (
     <>
       {isLandscape && running && !inPreCountdown && !finished && (
-        <LandscapeDisplay time={fmt(intervalRemaining)} label={isWarning ? '30 seg' : workLabel}>
+        <LandscapeDisplay time={fmt(intervalRemaining)} label={isWarning ? '30 seg' : workLabel} onBack={() => router.back()}>
           <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
         </LandscapeDisplay>
       )}
       {isLandscape && !running && elapsed > 0 && !inPreCountdown && !finished && (
-        <LandscapeDisplay time={fmt(intervalRemaining)} label={workLabel}>
+        <LandscapeDisplay time={fmt(intervalRemaining)} label={workLabel} onBack={() => router.back()}>
           <button onClick={() => setRunning(true)} className="bg-white text-black font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Reanudar</button>
         </LandscapeDisplay>
       )}
       {inPreCountdown && audioRef.current && (
-        <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
+        <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} onCancel={() => setInPreCountdown(false)} />
       )}
       {finished && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
@@ -106,7 +106,7 @@ export default function IntervalTimer({ config, onFinish }: { config: Extract<Ti
           <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
-      <div className="flex flex-col items-center gap-6 text-center">
+      <div className={`flex flex-col items-center gap-6 text-center ${isLandscape ? 'pointer-events-none' : ''}`}>
         <p className={`text-xs uppercase tracking-widest font-mono transition-colors ${isWarning ? 'text-white' : 'text-neutral-600'}`}>
           {isWarning ? '30 segundos' : 'Próxima parada'}
         </p>

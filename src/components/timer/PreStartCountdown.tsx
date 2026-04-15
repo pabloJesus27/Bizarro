@@ -3,9 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { beep, beepGo } from './timer-utils'
 
-export default function PreStartCountdown({ audioCtx, onDone }: { audioCtx: AudioContext; onDone: () => void }) {
+export default function PreStartCountdown({ audioCtx, onDone, onCancel }: { audioCtx: AudioContext; onDone: () => void; onCancel?: () => void }) {
   const [count, setCount] = useState(10)
   const doneRef = useRef(false)
+  const cancelledRef = useRef(false)
+
+  function handleCancel() {
+    cancelledRef.current = true
+    onCancel?.()
+  }
 
   useEffect(() => {
     if (doneRef.current) return
@@ -16,13 +22,18 @@ export default function PreStartCountdown({ audioCtx, onDone }: { audioCtx: Audi
     } else {
       beepGo(audioCtx)
       doneRef.current = true
-      const id = setTimeout(onDone, 700)
+      const id = setTimeout(() => { if (!cancelledRef.current) onDone() }, 700)
       return () => clearTimeout(id)
     }
   }, [count, audioCtx, onDone])
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+      {onCancel && (
+        <button onClick={handleCancel} className="absolute top-6 left-6 text-neutral-600 hover:text-white text-sm font-mono transition">
+          ← Volver
+        </button>
+      )}
       {count === 0 ? (
         <p className="text-white font-black text-9xl uppercase tracking-tighter">GO!</p>
       ) : (

@@ -17,13 +17,20 @@ export default function LandscapeDisplay({
   time,
   label,
   children,
+  onBack,
 }: {
   time: string
   label: string
   children?: React.ReactNode
+  onBack?: () => void
 }) {
   return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-40 gap-2">
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-40 gap-2 overflow-hidden touch-none">
+      {onBack && (
+        <button onClick={onBack} className="absolute top-6 left-6 text-neutral-600 hover:text-white text-sm font-mono transition">
+          ← Volver
+        </button>
+      )}
       <p className="text-neutral-600 text-xs uppercase tracking-widest font-mono">{label}</p>
       <p
         className="text-white font-black tabular-nums tracking-tighter leading-none"

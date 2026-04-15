@@ -155,7 +155,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   return (
     <>
       {isLandscape && !inPreCountdown && !finished && (
-        <LandscapeDisplay time={clockTime} label={`${current?.label ?? ''} · ${clockLabel}`}>
+        <LandscapeDisplay time={clockTime} label={`${current?.label ?? ''} · ${clockLabel}`} onBack={() => router.back()}>
           {running ? (
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
           ) : elapsed > 0 ? (
@@ -166,7 +166,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
         </LandscapeDisplay>
       )}
       {inPreCountdown && audioRef.current && (
-        <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
+        <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} onCancel={() => setInPreCountdown(false)} />
       )}
       {finished && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
@@ -174,7 +174,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
           <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
-      <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
+      <div className={`flex flex-col items-center min-h-[calc(100vh-160px)] ${isLandscape ? 'pointer-events-none' : ''}`}>
         <p className="text-white font-black text-5xl uppercase tracking-tighter">{current?.label}</p>
         <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mt-1">
           Bloque {blockIdx + 1} / {blocks.length}

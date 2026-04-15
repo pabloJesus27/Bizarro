@@ -75,6 +75,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds, onFinish
         <LandscapeDisplay
           time={fmt(phaseRemaining)}
           label={`${phase === 'work' ? 'Trabajo' : 'Descanso'} · Ronda ${currentRound}/${rounds}`}
+          onBack={() => router.back()}
         >
           {running ? (
             <button onClick={() => setRunning(false)} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-xs">Pausar</button>
@@ -86,7 +87,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds, onFinish
         </LandscapeDisplay>
       )}
       {inPreCountdown && audioRef.current && (
-        <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} />
+        <PreStartCountdown audioCtx={audioRef.current} onDone={() => { setInPreCountdown(false); setRunning(true) }} onCancel={() => setInPreCountdown(false)} />
       )}
       {finished && (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 gap-8">
@@ -94,7 +95,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds, onFinish
           <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
-      <div className="flex flex-col items-center min-h-[calc(100vh-160px)]">
+      <div className={`flex flex-col items-center min-h-[calc(100vh-160px)] ${isLandscape ? 'pointer-events-none' : ''}`}>
         <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
         <div className="flex-1 flex items-center justify-center">
         <div className="relative w-[min(28rem,85vw)] h-[min(28rem,85vw)]">
