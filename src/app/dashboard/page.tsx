@@ -20,6 +20,35 @@ import PesosTab from '@/components/comunidad/PesosTab'
 import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
+// ── Cache helpers ──────────────────────────────────────
+
+const DASH_CACHE_KEY = 'biz_dash_cache_v1'
+
+type DashCache = {
+  program: string
+  weekStart: string
+  wods: Wod[]
+  results: Result[]
+  prs: PersonalRecord[]
+  coachMessage: CoachMessage | null
+  communitySlug?: string
+}
+
+function getDashCache(): DashCache | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(DASH_CACHE_KEY)
+    if (!raw) return null
+    const c = JSON.parse(raw) as DashCache
+    if (c.weekStart !== getWeekDates(0)[0]) return null
+    return c
+  } catch { return null }
+}
+
+function saveDashCache(data: DashCache) {
+  try { sessionStorage.setItem(DASH_CACHE_KEY, JSON.stringify(data)) } catch {}
+}
+
 // ── Dashboard Page ─────────────────────────────────────
 
 function DashboardContent() {
@@ -27,27 +56,28 @@ function DashboardContent() {
   const router = useRouter()
 
   const today = useMemo(() => getTodayStr(), [])
+  const [cache] = useState<DashCache | null>(getDashCache)
 
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)
   const [selectedBlock, setSelectedBlock] = useState(1)
-  const [wods,          setWods]          = useState<Wod[]>([])
-  const [results,       setResults]       = useState<Result[]>([])
-  const [loading,       setLoading]       = useState(true)
+  const [wods,          setWods]          = useState<Wod[]>(cache?.wods ?? [])
+  const [results,       setResults]       = useState<Result[]>(cache?.results ?? [])
+  const [loading,       setLoading]       = useState(!cache)
   const [wodLoading,    setWodLoading]    = useState(false)
   const [newPR,         setNewPR]         = useState<string | null>(null)
   const [rankingKey,    setRankingKey]    = useState(0)
   const [modalWod,      setModalWod]      = useState<Wod | null>(null)
   const searchParams = useSearchParams()
-  const [prs,             setPrs]             = useState<PersonalRecord[]>([])
+  const [prs,             setPrs]             = useState<PersonalRecord[]>(cache?.prs ?? [])
   const [isCoach,         setIsCoach]         = useState(false)
-  const [program,         setProgram]         = useState<Program>('bizarro')
+  const [program,         setProgram]         = useState<Program>((cache?.program as Program) ?? 'bizarro')
   const [generatingTimer, setGeneratingTimer] = useState(false)
   const [activeTab,       setActiveTab]       = useState<'wod' | 'ranking' | 'notas' | 'pesos'>('wod')
   const [timerError,      setTimerError]      = useState(false)
   const [wodError,        setWodError]        = useState<string | null>(null)
-  const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(null)
-  const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(undefined)
+  const [coachMessage,    setCoachMessage]    = useState<CoachMessage | null>(cache?.coachMessage ?? null)
+  const [communitySlug,   setCommunitySlug]   = useState<string | undefined>(cache?.communitySlug)
 
   const helpKey = user && program
     ? (program === 'libre' ? `dashboard-libre-${user.id}` : `dashboard-atleta-${user.id}`)
@@ -139,6 +169,12 @@ function DashboardContent() {
     sessionStorage.setItem('biz_dash_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
 
+  // Escribe caché cuando los datos de la semana actual están listos (refresca en cada visita)
+  useEffect(() => {
+    if (loading || wodLoading || wods.length === 0 || weekOffset !== 0) return
+    saveDashCache({ program, weekStart: weekDates[0], wods, results, prs, coachMessage, communitySlug })
+  }, [wods, results, prs, coachMessage, communitySlug, program, weekDates, loading, wodLoading, weekOffset])
+
 
   useEffect(() => {
     if (resultHandledRef.current) return
@@ -199,7 +235,7 @@ function DashboardContent() {
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
   const prCalcWodText = activeWod ? `${activeWod.title} ${activeWod.description ?? ''}` : ''
 
-  if (authLoading || loading) return <AthletePageLoading />
+  if (loading) return <AthletePageLoading />
 
   return (
     <>
@@ -269,7 +305,7 @@ function DashboardContent() {
 
         {wodError && <div className="px-6 py-4 text-red-400 text-xs font-mono">{wodError}</div>}
 
-        {wodLoading ? (
+        {wodLoading && wods.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex gap-1.5">
               <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-pulse" />
