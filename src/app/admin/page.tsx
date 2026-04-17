@@ -15,6 +15,23 @@ import { WOD_TYPE_LABEL } from '@/lib/wod-utils'
 import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
+// ── Cache helpers ───────────────────────────────────────
+
+function getAdminCache(programSlug: string): Wod[] | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(`biz_admin_cache_v1_${programSlug}`)
+    if (!raw) return null
+    const c = JSON.parse(raw) as { weekStart: string; wods: Wod[] }
+    if (c.weekStart !== getWeekDates(0)[0]) return null
+    return c.wods
+  } catch { return null }
+}
+
+function saveAdminCache(programSlug: string, weekStart: string, wods: Wod[]) {
+  try { sessionStorage.setItem(`biz_admin_cache_v1_${programSlug}`, JSON.stringify({ weekStart, wods })) } catch {}
+}
+
 // ── Admin Page ─────────────────────────────────────────
 
 function AdminContent() {
@@ -28,8 +45,9 @@ function AdminContent() {
   const [weekOffset,    setWeekOffset]    = useState(0)
   const [selectedDate,  setSelectedDate]  = useState(today)
   const [selectedBlock, setSelectedBlock] = useState(1)
-  const [wods,          setWods]          = useState<Wod[]>([])
-  const [loading,       setLoading]       = useState(true)
+  const [cachedWods] = useState<Wod[] | null>(() => getAdminCache(programSlug))
+  const [wods,          setWods]          = useState<Wod[]>(cachedWods ?? [])
+  const [loading,       setLoading]       = useState(!cachedWods)
   const [modalOpen,     setModalOpen]     = useState(false)
   const [editingWod,    setEditingWod]    = useState<Wod | undefined>()
   const [deletingId,    setDeletingId]    = useState<string | null>(null)
@@ -68,13 +86,19 @@ function AdminContent() {
     })
   }, [authLoading, user, router])
 
-  // Load week WODs
+  // Load week WODs (setLoading(true) solo si no hay caché para esta semana)
   useEffect(() => {
-    setLoading(true)
+    if (!cachedWods || weekOffset !== 0) setLoading(true)
     getWodsForWeek(weekDates[0], weekDates[6], programSlug as import('@/lib/types').Program)
       .then(setWods)
       .finally(() => setLoading(false))
   }, [weekDates])
+
+  // Actualiza caché cuando cambian los WODs (tras crear/editar/borrar)
+  useEffect(() => {
+    if (loading || weekOffset !== 0) return
+    saveAdminCache(programSlug, weekDates[0], wods)
+  }, [wods, programSlug, weekDates, loading, weekOffset])
 
   // Reset to first day when week changes
   useEffect(() => {
@@ -178,7 +202,7 @@ function AdminContent() {
   const dayWods   = wods.filter(w => w.date === selectedDate).sort((a, b) => a.block - b.block)
   const activeWod = selectedBlock > 0 ? dayWods.find(w => w.block === selectedBlock) : undefined
 
-  if (authLoading || loading) return <CoachPageLoading />
+  if (loading) return <CoachPageLoading />
 
   return (
     <>

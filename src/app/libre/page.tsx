@@ -22,6 +22,33 @@ import PRCalculator from '@/components/PRCalculator'
 import HelpModal from '@/components/HelpModal'
 import { useFirstVisit } from '@/hooks/useFirstVisit'
 
+// ── Cache helpers ────────────────────────────────────────
+
+const LIBRE_CACHE_KEY = 'biz_libre_cache_v1'
+
+type LibreCache = {
+  weekStart: string
+  wods: Wod[]
+  results: Result[]
+  prs: PersonalRecord[]
+  communitySlug?: string
+}
+
+function getLibreCache(): LibreCache | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(LIBRE_CACHE_KEY)
+    if (!raw) return null
+    const c = JSON.parse(raw) as LibreCache
+    if (c.weekStart !== getWeekDates(0)[0]) return null
+    return c
+  } catch { return null }
+}
+
+function saveLibreCache(data: LibreCache) {
+  try { sessionStorage.setItem(LIBRE_CACHE_KEY, JSON.stringify(data)) } catch {}
+}
+
 // ── Libre Page ───────────────────────────────────────────
 
 function LibreContent() {
@@ -30,14 +57,15 @@ function LibreContent() {
   const searchParams = useSearchParams()
 
   const today = useMemo(() => getTodayStr(), [])
+  const [cache] = useState<LibreCache | null>(getLibreCache)
 
   const [weekOffset,     setWeekOffset]     = useState(0)
   const [selectedDate,   setSelectedDate]   = useState(today)
   const [selectedBlock,  setSelectedBlock]  = useState(1)
   const [pendingBlock,   setPendingBlock]   = useState<number | null>(null)
-  const [wods,           setWods]           = useState<Wod[]>([])
-  const [results,        setResults]        = useState<Result[]>([])
-  const [loading,        setLoading]        = useState(true)
+  const [wods,           setWods]           = useState<Wod[]>(cache?.wods ?? [])
+  const [results,        setResults]        = useState<Result[]>(cache?.results ?? [])
+  const [loading,        setLoading]        = useState(!cache)
   const [editingWod,     setEditingWod]     = useState<Wod | undefined>()
   const [deletingId,     setDeletingId]     = useState<string | null>(null)
   const [deletingDay,    setDeletingDay]    = useState(false)
@@ -51,8 +79,8 @@ function LibreContent() {
   const [loadWodOpen,        setLoadWodOpen]        = useState(false)
   const [loadWodMode,        setLoadWodMode]        = useState<'day' | 'wod'>('day')
   const [pendingMode,        setPendingMode]        = useState<'select' | 'manual' | 'image-select' | null>(null)
-  const [prs,                setPrs]                = useState<PersonalRecord[]>([])
-  const [communitySlug,      setCommunitySlug]      = useState<string | undefined>(undefined)
+  const [prs,                setPrs]                = useState<PersonalRecord[]>(cache?.prs ?? [])
+  const [communitySlug,      setCommunitySlug]      = useState<string | undefined>(cache?.communitySlug)
   const [generatingTimers,   setGeneratingTimers]   = useState(false)
   const [timerGenProgress,   setTimerGenProgress]   = useState<{ current: number; total: number } | null>(null)
   const { show: showHelp, dismiss: dismissHelp, open: openHelp } = useFirstVisit(user ? `dashboard-libre-${user.id}` : '')
@@ -136,6 +164,12 @@ function LibreContent() {
   useEffect(() => {
     sessionStorage.setItem('biz_libre_pos', JSON.stringify({ date: selectedDate, block: selectedBlock }))
   }, [selectedDate, selectedBlock])
+
+  // Escribe caché cuando los datos de la semana actual están listos
+  useEffect(() => {
+    if (loading || wods.length === 0 || weekOffset !== 0) return
+    saveLibreCache({ weekStart: weekDates[0], wods, results, prs, communitySlug })
+  }, [wods, results, prs, communitySlug, weekDates, loading, weekOffset])
 
   useEffect(() => {
     if (resultHandledRef.current) return
@@ -297,7 +331,7 @@ function LibreContent() {
   const activeWod = selectedBlock > 0 ? (dayWods.find(w => w.block === selectedBlock) ?? null) : null
   const activeResult = activeWod ? results.find(r => r.wod_id === activeWod.id) : undefined
 
-  if (authLoading || loading) return <AthletePageLoading />
+  if (loading) return <AthletePageLoading />
 
   return (
     <>
