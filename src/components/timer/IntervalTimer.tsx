@@ -26,6 +26,12 @@ export default function IntervalTimer({ config, onFinish }: { config: Extract<Ti
   const isWarning = running && intervalRemaining <= 30 && intervalRemaining > 0
 
   useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') audioRef.current?.resume().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { document.removeEventListener('visibilitychange', onVisible); audioRef.current?.close().catch(() => {}) }
+  }, [])
+
+  useEffect(() => {
     if (running) startEpochRef.current = Date.now() - elapsed * 1000
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running])

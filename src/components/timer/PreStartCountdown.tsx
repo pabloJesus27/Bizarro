@@ -30,7 +30,11 @@ export default function PreStartCountdown({ audioCtx, onDone, onCancel }: { audi
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
       {onCancel && (
-        <button onClick={handleCancel} className="absolute top-6 left-6 text-neutral-600 hover:text-white text-sm font-mono transition">
+        <button
+          onClick={handleCancel}
+          className="absolute text-neutral-600 hover:text-white text-sm font-mono transition"
+          style={{ top: 'calc(1.5rem + env(safe-area-inset-top))', left: 'calc(1.5rem + env(safe-area-inset-left))' }}
+        >
           ← Volver
         </button>
       )}

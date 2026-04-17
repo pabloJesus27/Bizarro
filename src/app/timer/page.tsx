@@ -72,6 +72,32 @@ function TimerContent() {
     router.push('/dashboard')
   }
 
+  // iOS WakeLock alternative — silent looping video prevents screen sleep on Safari
+  useEffect(() => {
+    if (!timerActive) return
+    if ('wakeLock' in navigator) return // WakeLock API disponible, no hace falta
+    const video = document.createElement('video')
+    video.setAttribute('loop', '')
+    video.setAttribute('muted', '')
+    video.setAttribute('autoplay', '')
+    video.setAttribute('playsinline', '')
+    video.setAttribute('webkit-playsinline', '')
+    video.style.cssText = 'position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none'
+    // MP4 mínimo 1×1 silencioso (~100B)
+    video.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAPoAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAAwAAAAAAAAAAAAAAAQAAAAAAAAPoAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAcbWRoZAAAAAAAAAAAAAAAAAAAKAAAACgAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVhtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEYc3RibAAAALhzdHNkAAAAAAAAAAEAAACMYXZjMQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJhdmNDAQ0ACf/hABlZAA2s2UBUFehAAAADApAAAAMAi8YB4gAAAbNj6+PlAAAABGNvbHIBAAAABA8PD6AAAAASYXV0aAAAAAAAAAAAAAgAAAAAAAAAGHN0dHMAAAAAAAAAAQAAAAoAAAQAAAAAFHN0c3MAAAAAAAAAAQAAAAEAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAoAAAABAAAANHN0c3oAAAAAAAAAAAAAAAAAACsAAAAhAAAAIQAAACEAAAAhAAAAIQAAACEAAAAhAAAAIQAAACEAAAAUc3RjbwAAAAAAAAABAAAAMAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTguNDUuMTAw'
+    document.body.appendChild(video)
+    video.play().catch(() => {})
+    function onVisible() {
+      if (document.visibilityState === 'visible') video.play().catch(() => {})
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      video.pause()
+      document.body.removeChild(video)
+    }
+  }, [timerActive])
+
   useEffect(() => {
     if (!timerActive) return
     if (!('wakeLock' in navigator)) return
