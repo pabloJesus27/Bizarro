@@ -34,14 +34,6 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds, onFinish
   }, [running])
 
   useEffect(() => {
-    if (!running || !('wakeLock' in navigator)) return
-    let wl: { release: () => void } | null = null
-    ;(navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => void }> } })
-      .wakeLock.request('screen').then(w => { wl = w }).catch(() => {})
-    return () => { wl?.release() }
-  }, [running])
-
-  useEffect(() => {
     if (!running) return
     const tick = () => {
       const next = Math.min(totalDuration, Math.round((Date.now() - startEpochRef.current) / 1000))
@@ -95,7 +87,7 @@ export default function TabataTimer({ workSeconds, restSeconds, rounds, onFinish
           <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
-      <div className={`flex flex-col items-center min-h-[calc(100vh-160px)] ${isLandscape ? 'hidden' : ''}`}>
+      <div className={`flex flex-col items-center min-h-[calc(100dvh-160px)] ${isLandscape ? 'hidden' : ''}`}>
         <p className="text-white font-black text-5xl uppercase tracking-tighter">Tabata</p>
         <div className="flex-1 flex items-center justify-center">
         <div className="relative w-[min(28rem,85vw)] h-[min(28rem,85vw)]">

@@ -75,14 +75,6 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
   }, [running, blockIdx])
 
   useEffect(() => {
-    if (!running || !('wakeLock' in navigator)) return
-    let wl: { release: () => void } | null = null
-    ;(navigator as unknown as { wakeLock: { request: (t: string) => Promise<{ release: () => void }> } })
-      .wakeLock.request('screen').then(w => { wl = w }).catch(() => {})
-    return () => { wl?.release() }
-  }, [running])
-
-  useEffect(() => {
     if (!running || blockDuration === 0 || elapsed < blockDuration) return
     if (blockIdx + 1 >= blocks.length) {
       setRunning(false)
@@ -174,7 +166,7 @@ export default function MixTimer({ blocks, onFinish }: { blocks: MixBlock[]; onF
           <button onClick={() => onFinish ? onFinish() : router.push('/dashboard')} className="border border-neutral-700 text-white font-black uppercase tracking-widest px-8 py-3 rounded-xl text-sm hover:border-white active:scale-95 active:bg-neutral-900 transition">Terminar</button>
         </div>
       )}
-      <div className={`flex flex-col items-center min-h-[calc(100vh-160px)] ${isLandscape ? 'hidden' : ''}`}>
+      <div className={`flex flex-col items-center min-h-[calc(100dvh-160px)] ${isLandscape ? 'hidden' : ''}`}>
         <p className="text-white font-black text-5xl uppercase tracking-tighter">{current?.label}</p>
         <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono mt-1">
           Bloque {blockIdx + 1} / {blocks.length}
