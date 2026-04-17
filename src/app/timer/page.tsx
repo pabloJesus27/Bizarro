@@ -75,10 +75,18 @@ function TimerContent() {
   useEffect(() => {
     if (!timerActive) return
     if (!('wakeLock' in navigator)) return
-    navigator.wakeLock.request('screen').then(lock => {
-      wakeLockRef.current = lock
-    }).catch(() => {})
+    async function acquireWakeLock() {
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request('screen')
+      } catch {}
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') acquireWakeLock()
+    }
+    acquireWakeLock()
+    document.addEventListener('visibilitychange', onVisibilityChange)
     return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       wakeLockRef.current?.release().catch(() => {})
       wakeLockRef.current = null
     }
