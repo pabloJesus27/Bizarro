@@ -64,6 +64,7 @@ Ejemplos de WODs complejos → mix:
 - "10 sets: 7 TTB + 7 burpees, rest 1 min" (sin tiempo de trabajo definido) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. NO crear 20 bloques sets+descanso.
 - "4 x 2.2.2.2, 15'' rest entre series, 3' rest entre bloques" (trabajo = reps, sin tiempo fijo de trabajo) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. Los descansos con tiempo NO convierten el WOD en mix si el trabajo no tiene duración fija.
 - "3 sets: 20 wall ball + 10 chest to bar / rest 3 min / 2 sets: 30 wall ball + 20 pull up / rest 3 min / 1 set: max wall ball + max chest to bar" (múltiples grupos con distintos sets/reps y descansos entre grupos, trabajo = reps sin duración fija) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. Aunque los grupos sean distintos y haya descansos, si TODO el trabajo son reps sin tiempo fijo → 1 solo bloque For Time.
+- "100 toes to bar, cada parada 10 burpees" / "X reps de A, cada vez que paras Y reps de B" (penalty reps o paradas) → For Time simple: [{"label":"For Time","seconds":0,"countUp":true}]. Las paradas son gestión del atleta, no bloques con duración fija. NUNCA crear bloques por ejercicio.
 
 Reglas para mix:
 - El label de cada bloque debe ser corto y descriptivo de lo que ocurre en ese bloque
@@ -89,8 +90,18 @@ Solo JSON, sin explicación ni markdown.`,
       return NextResponse.json({ type: 'none' })
     }
 
-    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0 || cfg.blocks.some((b: { label: string; seconds: number; countUp?: boolean }) => !b.label || (!(b.seconds > 0) && !b.countUp))) {
+    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0) {
       return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+    }
+
+    // Si algún bloque tiene seconds:0 sin countUp, Claude generó bloques sin duración fija
+    // → colapsar todo en un For Time simple
+    const hasInvalidBlock = cfg.blocks.some(
+      (b: { label: string; seconds: number; countUp?: boolean }) =>
+        !b.label || (!(b.seconds > 0) && !b.countUp)
+    )
+    if (hasInvalidBlock) {
+      return NextResponse.json({ type: 'mix', blocks: [{ label: 'For Time', seconds: 0, countUp: true }] })
     }
 
     return NextResponse.json(cfg)
