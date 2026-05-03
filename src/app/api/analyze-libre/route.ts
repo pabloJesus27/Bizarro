@@ -83,13 +83,14 @@ export async function POST(req: NextRequest) {
     const user = await getAuthenticatedUser(req)
     if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-    const allowed = await checkAiRateLimit(user.id, 'analyze-libre', 5)
+    const { imageBase64, mediaType, mode, date, weekDates, variant } = await req.json()
+
+    const rateLimitKey = variant === 'coach' ? 'analyze-week' : 'analyze-libre'
+    const allowed = await checkAiRateLimit(user.id, rateLimitKey, 5)
     if (!allowed) return NextResponse.json(
       { error: 'Límite diario alcanzado. Inténtalo mañana.' },
       { status: 429 }
     )
-
-    const { imageBase64, mediaType, mode, date, weekDates } = await req.json()
 
     let visionPrompt: string
 

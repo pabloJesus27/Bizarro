@@ -62,20 +62,11 @@ export default function LoadWeekModal({ weekDates, selectedDate, programSlug, va
     setError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      let res: Response
-      if (variant === 'libre') {
-        res = await fetch('/api/analyze-libre', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ imageBase64, mediaType, mode: loadMode, date: selectedDate, weekDates }),
-        })
-      } else {
-        res = await fetch('/api/analyze-week', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ imageBase64, mediaType, weekDates }),
-        })
-      }
+      const res = await fetch('/api/analyze-libre', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ imageBase64, mediaType, mode: loadMode, date: selectedDate, weekDates, variant }),
+      })
       const { wods: parsed, error: apiError } = await res.json()
       if (apiError) { setError(apiError); return }
       setWods(parsed)
