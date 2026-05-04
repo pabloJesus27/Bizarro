@@ -71,12 +71,9 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
   const isIOS = /iPad|iPhone|iPod/.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')
 
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 sm:w-full sm:h-full">
+    <div className="flex flex-col items-center gap-4 w-full">
 
-      {/* Columna izquierda en landscape / contenido normal en portrait */}
-      <div className="contents sm:flex sm:flex-col sm:gap-4 sm:flex-1 sm:overflow-y-auto sm:min-h-0 sm:pb-2">
-
-      <p className="text-white font-black uppercase tracking-tighter text-5xl sm:text-4xl">Mix</p>
+      <p className="text-white font-black uppercase tracking-tighter text-5xl">Mix</p>
 
       {/* Tarjeta de configuración */}
       <div className="border border-neutral-700 rounded-2xl px-6 py-5 flex flex-col gap-5 w-80">
@@ -267,7 +264,7 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
       {blocks.length > 0 && (
         <div className="flex flex-col gap-2 w-80">
           <p className="text-neutral-500 text-xs uppercase tracking-widest font-mono">Resumen</p>
-          <div className={`flex flex-col gap-2 overflow-y-auto ${cardOpen ? 'max-h-40' : 'max-h-[calc(100dvh-26rem)]'}`}>
+          <div className={`flex flex-col gap-2 overflow-y-auto ${cardOpen ? 'max-h-40' : ''}`}>
             {blocks.map((b, i) => (
               <div
                 key={b.id}
@@ -357,21 +354,16 @@ export default function MixSetup({ onStart, initialBlocks }: { onStart: (c: Time
         </div>
       )}
 
-      </div>{/* fin columna izquierda */}
-
-      {/* Columna derecha en landscape / contenido normal en portrait */}
-      <div className="contents sm:flex sm:flex-col sm:items-center sm:justify-center sm:gap-4 sm:shrink-0">
-        <button
-          onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks: blocks.map(({ id: _, ...b }) => b) })}
-          disabled={blocks.length === 0}
-          className="bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30 w-80 sm:w-32"
-        >
-          Listo
-        </button>
-        {isIOS && (
-          <p className="text-neutral-600 text-xs font-mono text-center sm:max-w-[120px]">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
-        )}
-      </div>
+      <button
+        onClick={() => blocks.length > 0 && onStart({ type: 'mix', blocks: blocks.map(({ id: _, ...b }) => b) })}
+        disabled={blocks.length === 0}
+        className="bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl text-sm disabled:opacity-30 w-80"
+      >
+        Listo
+      </button>
+      {isIOS && (
+        <p className="text-neutral-600 text-xs font-mono text-center">⚠️ Desactiva el modo silencio para escuchar los beeps</p>
+      )}
 
     </div>
   )
