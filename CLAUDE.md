@@ -11,7 +11,8 @@ Aplicación web de gestión de entrenamientos CrossFit. Permite a coaches crear 
 - **Base de datos:** Supabase (PostgreSQL + Auth)
 - **Estilos:** Tailwind CSS v4
 - **Email:** Resend
-- **IA:** Anthropic SDK (Claude Haiku para generación de timers)
+- **IA:** Anthropic SDK (Claude Sonnet 4.6 para generación de timers y análisis de imágenes)
+- **App Android:** Capacitor
 - **Deploy:** Vercel
 
 ## Convenciones del proyecto
@@ -36,7 +37,10 @@ src/
 │   ├── reset-password/             # Reset contraseña
 │   ├── dashboard/                  # Panel atleta: WODs semana + resultados + ranking
 │   ├── elegir-modo/                # Selección: programa con coach o "por libre"
+│   ├── elegir-programa/            # Selección de programa para atletas
 │   ├── libre/                      # Panel atleta libre: sus propios WODs
+│   ├── comunidad/[slug]/           # Panel de comunidad entre atletas
+│   ├── unirse-comunidad/           # Unirse a una comunidad por invitación
 │   ├── maximos/                    # Personal records del atleta
 │   ├── programaciones/             # Gestión de programas: unirse, solicitar, dejar
 │   ├── profile/                    # Editar perfil
@@ -47,7 +51,16 @@ src/
 │   ├── select-program/             # Selección de programa activo (coaches multi-programa)
 │   └── api/
 │       ├── generate-timer/         # POST: IA genera config de timer desde WOD
-│       ├── analyze-week/           # POST: IA analiza imagen y carga WODs de la semana
+│       ├── analyze-libre/          # POST: IA analiza imagen y carga WODs (semana, día o WOD único)
+│       ├── coach-message/          # GET/POST: mensaje semanal del coach para su programa
+│       ├── create-community/       # POST: crea una comunidad nueva
+│       ├── delete-community/       # POST: elimina una comunidad
+│       ├── invite-community/       # POST: genera invitación a una comunidad
+│       ├── join-community/         # POST: atleta se une a una comunidad
+│       ├── community-members/      # GET: lista miembros de una comunidad
+│       ├── community-prs/          # GET: PRs de los miembros de una comunidad
+│       ├── remove-community-member/ # POST: expulsa miembro de una comunidad
+│       ├── program-prs/            # GET: PRs de los atletas de un programa
 │       ├── accept-join-request/    # POST: acepta solicitud + envía email bienvenida
 │       ├── create-join-request/    # POST: crea solicitud de unión
 │       ├── cancel-join-request/    # POST: cancela solicitud
@@ -55,11 +68,16 @@ src/
 │       ├── add-athlete/            # POST: agrega atleta por email directo
 │       ├── remove-athlete/         # POST: remueve atleta del programa
 │       ├── use-invite/             # POST: valida token de invitación coach
+│       ├── app-version/            # GET: versión mínima requerida de la APK Android
 │       └── auth/
 │           ├── login/              # POST: proxy server-side de login con rate limiting
 │           └── check-rate-limit/   # POST: verifica si IP está bloqueada (register/forgot)
+├── context/
+│   └── AuthContext.tsx             # Contexto global de autenticación (useAuth hook)
+├── hooks/
+│   └── useFirstVisit.ts            # Hook para onboarding contextual por feature/usuario
 ├── lib/
-│   ├── types.ts                    # Tipos: Wod, Result, Profile, Program, WodType, TimerConfig, MixBlock...
+│   ├── types.ts                    # Tipos: Wod, Result, Profile, Program, Community, WodType, TimerConfig, MixBlock...
 │   ├── db.ts                       # Todas las funciones de acceso a Supabase
 │   ├── auth.ts                     # signUp, signIn, signOut, resetPassword
 │   ├── supabase.ts                 # Cliente Supabase singleton
@@ -70,9 +88,13 @@ src/
 │   └── ai-rate-limit.ts            # Rate limiting para endpoints de IA (ai_usage en Supabase)
 └── components/
     ├── AppHeader.tsx               # Header atleta con nav, timer modal, perfil
+    ├── AppQR.tsx                   # QR de descarga de la app Android
+    ├── AppUpdateModal.tsx          # Modal de actualización forzada de la APK
     ├── CoachHeader.tsx             # Header coach con nav y selección de programa
     ├── CoachMessageCard.tsx        # Tarjeta mensaje del coach (desktop, sidebar)
     ├── CoachMessageBubble.tsx      # Burbuja mensaje del coach (móvil, flotante)
+    ├── HelpModal.tsx               # Modal de ayuda contextual (onboarding por feature)
+    ├── PageLoading.tsx             # Spinner/skeleton de carga de página
     ├── PRCalculator.tsx            # Calculadora de pesos basada en PRs del atleta
     ├── Timer.tsx                   # Modal timer simple
     ├── LoadWeekModal.tsx           # Modal carga WODs desde imagen (incluye mensaje del coach)
@@ -81,8 +103,10 @@ src/
     ├── timer/                      # Subcomponentes del timer
     │   ├── timer-utils.ts          # fmt(), beep()
     │   ├── ClockFace.tsx           # Cara del reloj (display)
+    │   ├── LandscapeDisplay.tsx    # Vista apaisada del timer
     │   ├── PreStartCountdown.tsx   # Cuenta regresiva antes de empezar
-    │   ├── SimpleTimer.tsx         # Timer AMRAP/EMOM
+    │   ├── SimpleTimer.tsx         # Timer AMRAP
+    │   ├── EMOMTimer.tsx           # Timer EMOM
     │   ├── IntervalTimer.tsx       # Timer de intervalos genérico
     │   ├── ForTimeTimer.tsx        # Timer For Time (cuenta arriba)
     │   ├── TabataTimer.tsx         # Timer Tabata
@@ -93,7 +117,10 @@ src/
     │   ├── TabataSetup.tsx         # Config Tabata
     │   └── MixSetup.tsx            # Config Mix
     ├── admin/
-    │   └── WodModal.tsx            # Modal crear/editar WOD (coach)
+    │   ├── WodModal.tsx            # Modal crear/editar WOD (coach)
+    │   └── CommunityPanel.tsx      # Panel de gestión de comunidad (coach)
+    ├── comunidad/
+    │   └── PesosTab.tsx            # Tab de pesos/PRs en el panel de comunidad
     └── libre/
         └── WodForm.tsx             # Formulario WOD modo libre
 ```
@@ -102,15 +129,18 @@ src/
 
 | Tabla | Campos clave |
 |---|---|
-| `profiles` | id, full_name, role (athlete\|coach), avatar_url, program (slug) |
-| `wods` | id, date, title, description, type, block (1-10), program (slug), owner_id |
+| `profiles` | id, full_name, role (athlete\|coach), avatar_url, program (slug), gender |
+| `wods` | id, date, title, description, type, block (1-10), program (slug), owner_id, notes |
 | `results` | id, wod_id, user_id, score_time, score_rounds, score_weight, score_notes, rx |
-| `programs` | id, name, slug, owner_id |
+| `programs` | id, name, slug, owner_id, type ('coach'\|'community') |
 | `athlete_programs` | id, athlete_id, program_id, joined_at |
 | `join_requests` | id, athlete_id, program_id, status (pending\|accepted\|rejected) |
 | `personal_records` | id, user_id, exercise, weight, achieved_at, wod_id |
 | `coach_invites` | token, created_by, used_at |
 | `coach_messages` | id, program_slug, week_start, content, created_by, created_at — UNIQUE(program_slug, week_start) |
+| `community_invites` | id, community_id, token, invited_email, used_by, created_at |
+
+> Las comunidades reutilizan la tabla `programs` con `type = 'community'` y `athlete_programs` para membresías.
 
 ## Roles de usuario
 
@@ -124,30 +154,35 @@ src/
 - `src/lib/wod-utils.ts` — `WOD_TYPES` (lista canónica), `WOD_TYPE_LABEL`, `detectPRExercise`, `parseTime`, `parseAmrap`, `parseNumber`, `sortRanking`, `getScoreDisplay`. Idem.
 - `src/lib/api-auth.ts` — `getAuthenticatedUser`, `isProgramOwner`. Helper de autorización para rutas API.
 - `src/lib/auth-rate-limit.ts` — `checkAuthRateLimit`, `recordAuthAttempt`. Usar en `/api/auth/login` y `/api/auth/check-rate-limit`.
-- `src/lib/ai-rate-limit.ts` — `checkAiRateLimit`, `recordAiUsage`. Usar en `/api/generate-timer` y `/api/analyze-week`.
+- `src/lib/ai-rate-limit.ts` — `checkAiRateLimit`, `recordAiUsage`. Usar en `/api/generate-timer` y `/api/analyze-libre`.
 - `src/components/timer/timer-utils.ts` — `fmt()` (formatea segundos), `beep()` (audio feedback). Usar desde cualquier componente de timer.
 
-## Estado del proyecto (actualizado 2026-03-26)
+## Estado del proyecto (actualizado 2026-05-04)
 
 - Autenticación completa (login, registro, recuperación, invitaciones)
 - Multi-programa funcional (coaches pueden gestionar varios programas)
 - Timer con IA (Claude Sonnet 4.6 interpreta el WOD y genera la config)
-- Carga de semana por imagen (reconocimiento con IA, incluye mensaje del coach)
+- Timer evita suspensión de pantalla: WakeLock API en Android, vídeo mudo en iOS/Safari
+- Carga de WODs por imagen: semana completa, día o WOD individual (`/api/analyze-libre`)
+- Comunidades: cualquier atleta puede crear una comunidad para compartir WODs con amigos; rankings y PRs propios; invitaciones por email
 - Sistema de solicitudes de unión con notificaciones por email (Resend)
 - Rankings por WOD con paginación; se refresca automáticamente al guardar resultado
 - Personal records con auto-actualización al guardar resultado de Strength
 - Calculadora de pesos por porcentaje de PR (`PRCalculator`) en el dashboard
 - Mensajes del coach por semana y programa (`coach_messages`), visibles en dashboard
 - Tipos de WOD: Warmup, Strength, Gymnastics, Core, Mobility, For Time, AMRAP, EMOM, For Max, Other
+- Caché sessionStorage (stale-while-revalidate) en dashboard, libre y admin — elimina delay al volver del timer
+- Onboarding contextual por feature con `HelpModal` + hook `useFirstVisit`
+- App Android (Capacitor): `app-version` controla versión mínima, `AppUpdateModal` fuerza actualización
 - Seguridad de rutas API: add-athlete, remove-athlete, accept-join-request, use-invite verifican sesión y ownership
 - use-invite: JWT obligatorio — no acepta userId del cliente; update atómico anti-race-condition
 - add-athlete: busca email en auth.users via admin API (profiles no tiene columna email)
 - accept-join-request usa RPC PostgreSQL (transacción atómica)
 - Manejo de errores revisado (sin console.log en producción, errores visibles al usuario)
 - Rate limiting en login (proxy server-side, 5/15min) y register/forgot-password (pre-check, 3/60min)
-- Refactor de componentes: subcomponentes extraídos a `src/components/timer/`, `src/components/admin/`, `src/components/libre/`
+- Refactor de componentes: subcomponentes extraídos a `src/components/timer/`, `src/components/admin/`, `src/components/libre/`, `src/components/comunidad/`
 - `WOD_TYPES` y `getTodayStr` centralizados — no redefinir en páginas
-- Tests unitarios con Vitest: 62 tests en `wod-utils.test.ts`, `week-utils.test.ts`, `timer-utils.test.ts`
+- Tests unitarios con Vitest: 62 tests en `src/lib/wod-utils.test.ts`, `week-utils.test.ts`, `timer-utils.test.ts`
 
 ## Comportamiento según tipo de tarea
 
@@ -299,7 +334,6 @@ Cuando lances un sub-agente, incluye en el prompt:
 
 ### Features no implementadas
 - Búsqueda de atletas por nombre en el panel de atletas
-- Ranking global de PRs entre atletas
 - Plantillas de WODs reutilizables
 
 ### UX
