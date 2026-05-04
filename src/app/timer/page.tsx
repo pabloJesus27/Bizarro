@@ -155,7 +155,8 @@ function TimerContent() {
 
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
-      <div className="flex-1 flex justify-center items-center overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col items-center pt-4 pb-8">
         {config ? (
           <div className="w-full">
             {renderTimer(config, handleFinish)}
@@ -184,6 +185,7 @@ function TimerContent() {
             )}
           </div>
         )}
+        </div>
       </div>
     </main>
   )
