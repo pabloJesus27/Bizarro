@@ -156,7 +156,7 @@ function TimerContent() {
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
       <div className="flex-1 overflow-y-auto">
-        <div className="min-h-full flex flex-col justify-center items-center py-8">
+        <div className="min-h-full flex flex-col items-center pt-4 pb-8 [@media(orientation:landscape)]:justify-center [@media(orientation:landscape)]:py-4">
         {config ? (
           <div className="w-full">
             {renderTimer(config, handleFinish)}
