@@ -42,13 +42,6 @@ function TimerContent() {
   const [generatedMixBlocks, setGeneratedMixBlocks] = useState<MixBlock[] | null>(null)
   const loadedRef = useRef(false)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function resetScroll() { scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' }) }
-    window.addEventListener('orientationchange', resetScroll)
-    return () => window.removeEventListener('orientationchange', resetScroll)
-  }, [])
 
   const timerActive = !!(config || generatedMixBlocks || pendingConfig || manualType)
 
@@ -162,7 +155,7 @@ function TimerContent() {
 
       </div>
       {showHelp && <HelpModal helpKey="timer-manual" onClose={dismissHelp} />}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <div className="min-h-full flex flex-col items-center pt-4 pb-8 [@media(orientation:landscape)]:justify-center [@media(orientation:landscape)]:py-4">
         {config ? (
           <div className="w-full">
