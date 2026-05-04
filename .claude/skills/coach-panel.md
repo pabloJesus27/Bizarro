@@ -136,12 +136,13 @@ await deleteWod(id)
 
 ---
 
-## Carga de semana por imagen
+## Carga de WODs por imagen
 
 ```typescript
-// POST /api/analyze-week
-// Recibe imagen (base64 o URL) con el planning semanal
+// POST /api/analyze-libre
+// Recibe imagen + variant ('coach' | 'atleta') + mode ('week' | 'day' | 'wod')
 // Usa IA para extraer WODs → devuelve array de WODs a crear
+// ⚠️ El endpoint analyze-week fue ELIMINADO (commit ca5df09) — todo pasa por analyze-libre
 
 // Componente: src/components/LoadWeekModal.tsx
 ```
@@ -166,7 +167,7 @@ ANTHROPIC_API_KEY=       # Análisis de imagen para cargar semana
 | `/api/remove-athlete` | Eliminar atleta | auth + isProgramOwner |
 | `/api/accept-join-request` | Aceptar solicitud + email | auth + isProgramOwner |
 | `/api/use-invite` | Validar token invitación coach | update atómico (sin auth) |
-| `/api/analyze-week` | Cargar semana por imagen | auth |
+| `/api/analyze-libre` | Cargar WODs por imagen (semana, día o WOD) | auth |
 
 ---
 
