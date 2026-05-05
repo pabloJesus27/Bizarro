@@ -24,14 +24,10 @@ export async function POST(req: NextRequest) {
   const msg = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: `Analiza este WOD de CrossFit y devuelve SOLO un objeto JSON (sin markdown) con la configuración del temporizador.
-
-WOD:
-Título: ${title}
-Tipo: ${type}
-Descripción: ${description}
+    system: [
+      {
+        type: 'text',
+        text: `Analiza WODs de CrossFit y devuelve SOLO un objeto JSON (sin markdown) con la configuración del temporizador.
 
 Tipos de timer disponibles:
 - mix: { "type": "mix", "blocks": [{ "label": "nombre del bloque", "seconds": N, "intervalSeconds"?: N, "countUp"?: true }, ...] }
@@ -77,6 +73,15 @@ Reglas para mix:
 - Si el WOD dice "rest Y" al final de cada set SIN tiempo de trabajo definido, NO crees bloques: usa For Time simple (countUp:true, seconds:0)
 
 Solo JSON, sin explicación ni markdown.`,
+        cache_control: { type: 'ephemeral' },
+      },
+    ] as Anthropic.TextBlockParam[],
+    messages: [{
+      role: 'user',
+      content: `WOD:
+Título: ${title}
+Tipo: ${type}
+Descripción: ${description}`,
     }],
   })
 

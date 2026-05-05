@@ -18,9 +18,36 @@ async function enrichWods(raws: RawWod[]): Promise<FullWod[]> {
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,
-    messages: [{
-      role: 'user',
-      content: `Para cada bloque de CrossFit genera un título corto y asigna el tipo correcto.
+    output_config: {
+      format: {
+        type: 'json_schema',
+        schema: {
+          type: 'object',
+          properties: {
+            blocks: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  i: { type: 'integer' },
+                  title: { type: 'string' },
+                  type: {
+                    type: 'string',
+                    enum: ['For Time', 'AMRAP', 'EMOM', 'Strength', 'Gymnastics', 'Core', 'Mobility', 'Warmup', 'For Max', 'Other'],
+                  },
+                },
+                required: ['i', 'title', 'type'],
+              },
+            },
+          },
+          required: ['blocks'],
+        },
+      },
+    },
+    system: [
+      {
+        type: 'text',
+        text: `Para cada bloque de CrossFit genera un título corto y asigna el tipo correcto.
 
 Tipos válidos: Warmup | Strength | Gymnastics | Core | Mobility | For Time | AMRAP | EMOM | For Max | Other
 
@@ -46,36 +73,27 @@ Reglas de título (máx 4 palabras):
 - WOD metabólico: ejercicios clave separados por + (ej: "Toes to Bar + Burpees")
 - Warmup/activación: los 2-3 ejercicios principales (ej: "Ring Row + V-ups")
 - Movilidad: el movimiento principal (ej: "Rotaciones Hombro", "90/90 Cadera")
-- El título debe derivarse ÚNICAMENTE del texto de la descripción del bloque
-
-Bloques:
-${list}
-
-Devuelve SOLO un array JSON con todos los bloques, sin markdown:
-[{"i":0,"title":"...","type":"..."},...]`,
+- El título debe derivarse ÚNICAMENTE del texto de la descripción del bloque`,
+        cache_control: { type: 'ephemeral' },
+      },
+    ] as Anthropic.TextBlockParam[],
+    messages: [{
+      role: 'user',
+      content: `Bloques:\n${list}\n\nDevuelve SOLO un array JSON con todos los bloques, sin markdown:\n[{"i":0,"title":"...","type":"..."},...]`,
     }],
   })
 
-  const raw = (msg.content[0] as { type: string; text: string }).text.trim()
-  const jsonStart = raw.indexOf('[')
-  const jsonEnd = raw.lastIndexOf(']')
-  if (jsonStart === -1 || jsonEnd === -1) {
-    return raws.map(w => ({ ...w, title: 'WOD', type: 'Other' }))
-  }
-
-  try {
-    const enriched: { i: number; title: string; type: string }[] = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
-    return raws.map((w, i) => {
-      const e = enriched.find(x => x.i === i)
-      return {
-        ...w,
-        title: e?.title ?? 'WOD',
-        type: e && VALID_TYPES.has(e.type) ? e.type : 'Other',
-      }
-    })
-  } catch {
-    return raws.map(w => ({ ...w, title: 'WOD', type: 'Other' }))
-  }
+  const { blocks: enriched }: { blocks: { i: number; title: string; type: string }[] } = JSON.parse(
+    (msg.content[0] as { type: string; text: string }).text
+  )
+  return raws.map((w, i) => {
+    const e = enriched.find(x => x.i === i)
+    return {
+      ...w,
+      title: e?.title ?? 'WOD',
+      type: e && VALID_TYPES.has(e.type) ? e.type : 'Other',
+    }
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -92,19 +110,12 @@ export async function POST(req: NextRequest) {
       { status: 429 }
     )
 
-    let visionPrompt: string
+    let visionSystemText: string
+    let visionUserText: string
 
     if (mode === 'week') {
       const [lunes, martes, miercoles, jueves, viernes, sabado] = weekDates
-      visionPrompt = `Analiza esta imagen con la programación semanal de CrossFit y extrae el texto de cada celda.
-
-Las fechas de esta semana son:
-- LUNES = ${lunes}
-- MARTES = ${martes}
-- MIÉRCOLES = ${miercoles}
-- JUEVES = ${jueves}
-- VIERNES = ${viernes}
-- SÁBADO = ${sabado}
+      visionSystemText = `Analiza imágenes con la programación semanal de CrossFit y extrae el texto de cada celda.
 
 ESTRUCTURA DE LA TABLA:
 - Cada COLUMNA es un día. Usa los encabezados (LUNES, MARTES…) para saber a qué día pertenece cada celda.
@@ -134,7 +145,7 @@ PROCESO (columna por columna):
 5. No mezcles contenido entre columnas. Cada celda pertenece solo a su columna.
 
 Para cada bloque devuelve SOLO:
-- date: fecha YYYY-MM-DD del día
+- date: fecha YYYY-MM-DD del día (usa las fechas proporcionadas por el usuario)
 - block: número de bloque (1, 2, 3… por día)
 - description: solo las instrucciones de ejecución (sets, reps, tiempos, porcentajes, RPE), incluyendo cualquier prefijo como "N sets", "N rondas", "N rounds"
 - notes: (opcional) texto explicativo del coach. Omite si no hay notas.
@@ -142,16 +153,26 @@ Para cada bloque devuelve SOLO:
 Antes del JSON escribe una línea por día con el conteo:
 LUNES: N bloques
 MARTES: N bloques
-...
+MIÉRCOLES: N bloques
+JUEVES: N bloques
+VIERNES: N bloques
+SÁBADO: N bloques
 
 Luego escribe exactamente: ===JSON===
 Y el array JSON sin markdown:
 [{"date":"...","block":1,"description":"...","notes":"..."}]`
+      visionUserText = `Analiza esta imagen con la programación semanal de CrossFit.
+
+Las fechas de esta semana son:
+- LUNES = ${lunes}
+- MARTES = ${martes}
+- MIÉRCOLES = ${miercoles}
+- JUEVES = ${jueves}
+- VIERNES = ${viernes}
+- SÁBADO = ${sabado}`
 
     } else if (mode === 'day') {
-      visionPrompt = `Analiza esta imagen con el entrenamiento del día y extrae todos los bloques de ejercicio.
-
-La fecha es: ${date}
+      visionSystemText = `Analiza imágenes con el entrenamiento del día y extrae todos los bloques de ejercicio.
 
 REGLA CRÍTICA — copia literal, nunca inventes:
 La description debe ser una transcripción exacta del texto visible. NUNCA añadas datos que no estén escritos en la imagen.
@@ -161,7 +182,7 @@ REGLA — separa descripción de notas:
 - notes: (opcional) texto del coach que NO es instrucción de ejecución directa: consejos, recomendaciones de calentamiento, instrucciones de descanso como "toma el tiempo que necesites", avisos generales. Se identifica por separadores (---), "*Notas:", párrafos explicativos, o cualquier frase que sea consejo/recomendación y no sets/reps/peso/tiempo. Omite si no hay notas.
 
 Para cada bloque devuelve SOLO:
-- date: "${date}"
+- date: fecha YYYY-MM-DD del día (usa la fecha proporcionada por el usuario)
 - block: número de bloque (1, 2, 3…)
 - description: solo las instrucciones de ejecución
 - notes: (opcional) texto explicativo del coach
@@ -170,12 +191,13 @@ Ignora notas de hidratación, nutrición o recordatorios que no sean ejercicio.
 
 Luego escribe exactamente: ===JSON===
 Y el array JSON sin markdown:
-[{"date":"${date}","block":1,"description":"...","notes":"..."}]`
+[{"date":"...","block":1,"description":"...","notes":"..."}]`
+      visionUserText = `Analiza esta imagen con el entrenamiento del día.
+
+La fecha es: ${date}`
 
     } else {
-      visionPrompt = `Analiza esta imagen con un WOD de CrossFit.
-
-La fecha es: ${date}
+      visionSystemText = `Analiza imágenes con WODs de CrossFit.
 
 REGLA CRÍTICA — todo es UN solo WOD:
 Aunque la imagen contenga secciones A, B, C, D, múltiples partes o bloques diferenciados, TODA la imagen forma un único WOD. Devuelve exactamente 1 elemento en el array con TODO el texto concatenado como description.
@@ -188,7 +210,8 @@ REGLA CRÍTICA — copia literal, nunca inventes:
 La description debe ser una transcripción exacta del texto de ejecución visible. NUNCA añadas datos que no estén escritos en la imagen. NUNCA omitas instrucciones de ejecución.
 
 Devuelve SOLO un array JSON con un único elemento, sin markdown:
-[{"date":"${date}","block":1,"description":"...","notes":"..."}]`
+[{"date":"...","block":1,"description":"...","notes":"..."}]`
+      visionUserText = `La fecha es: ${date}`
     }
 
     let msg
@@ -196,11 +219,18 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
       msg = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 8192,
+        system: [
+          {
+            type: 'text',
+            text: visionSystemText,
+            cache_control: { type: 'ephemeral' },
+          },
+        ] as Anthropic.TextBlockParam[],
         messages: [{
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-            { type: 'text', text: visionPrompt },
+            { type: 'text', text: visionUserText },
           ],
         }],
       })
@@ -223,12 +253,19 @@ Devuelve SOLO un array JSON con un único elemento, sin markdown:
     }
     const cleaned = extracted.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 
+    let raws: RawWod[]
     try {
-      const raws: RawWod[] = JSON.parse(cleaned)
-      const wods = await enrichWods(raws)
-      return NextResponse.json({ wods })
+      raws = JSON.parse(cleaned)
     } catch {
       return NextResponse.json({ error: 'Error al interpretar la imagen' }, { status: 500 })
+    }
+
+    try {
+      const wods = await enrichWods(raws)
+      return NextResponse.json({ wods })
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : 'Error desconocido'
+      return NextResponse.json({ error: `Error al clasificar los bloques: ${errMsg}` }, { status: 500 })
     }
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e)
