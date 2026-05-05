@@ -1,23 +1,17 @@
 export function keepAudioContextAlive(ctx: AudioContext) {
-  // Oscilador infrasónico — mantiene el AudioContext vivo en Android
+  // Auto-resume si Android suspende el contexto
+  ctx.onstatechange = () => {
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+  }
+  // Oscilador infrasónico (~0dB) que corre indefinidamente para que Android
+  // no duerma el AudioContext entre beeps largos (bloques de 2+ minutos)
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
-  gain.gain.value = 0.0001
-  osc.frequency.value = 1
+  gain.gain.value = 0.0001  // inaudible
+  osc.frequency.value = 1   // 1Hz, fuera del rango audible
   osc.connect(gain)
   gain.connect(ctx.destination)
   osc.start()
-
-  // iOS: HTMLAudioElement en loop a volumen inaudible para que el sistema
-  // considere la sesión de audio activa y permita continuar en background
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  const iosAudio = isIOS ? new Audio('/beep.wav') : null
-  if (iosAudio) { iosAudio.volume = 0.001; iosAudio.loop = true; iosAudio.play().catch(() => {}) }
-
-  ctx.onstatechange = () => {
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
-    if (ctx.state === 'closed' && iosAudio) iosAudio.pause()
-  }
 }
 
 // Pre-programa beeps para un bloque usando el reloj del AudioContext (inmune a throttling JS)
