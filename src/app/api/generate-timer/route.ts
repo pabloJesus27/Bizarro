@@ -24,6 +24,31 @@ export async function POST(req: NextRequest) {
   const msg = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
+    output_config: {
+      format: {
+        type: 'json_schema',
+        schema: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', enum: ['mix', 'none'] },
+            blocks: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  label: { type: 'string' },
+                  seconds: { type: 'number' },
+                  intervalSeconds: { type: 'number' },
+                  countUp: { type: 'boolean' },
+                },
+                required: ['label', 'seconds'],
+              },
+            },
+          },
+          required: ['type'],
+        },
+      },
+    },
     system: [
       {
         type: 'text',
@@ -85,32 +110,25 @@ Descripción: ${description}`,
     }],
   })
 
-  const text = (msg.content[0] as { type: 'text'; text: string }).text.trim()
+  const cfg = JSON.parse((msg.content[0] as { type: 'text'; text: string }).text)
 
-  try {
-    const clean = text.replace(/```json\n?|\n?```/g, '').trim()
-    const cfg = JSON.parse(clean)
-
-    if (cfg?.type === 'none') {
-      return NextResponse.json({ type: 'none' })
-    }
-
-    if (cfg?.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0) {
-      return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
-    }
-
-    // Si algún bloque tiene seconds:0 sin countUp, Claude generó bloques sin duración fija
-    // → colapsar todo en un For Time simple
-    const hasInvalidBlock = cfg.blocks.some(
-      (b: { label: string; seconds: number; countUp?: boolean }) =>
-        !b.label || (!(b.seconds > 0) && !b.countUp)
-    )
-    if (hasInvalidBlock) {
-      return NextResponse.json({ type: 'mix', blocks: [{ label: 'For Time', seconds: 0, countUp: true }] })
-    }
-
-    return NextResponse.json(cfg)
-  } catch {
-    return NextResponse.json({ error: 'parse_error' }, { status: 500 })
+  if (cfg.type === 'none') {
+    return NextResponse.json({ type: 'none' })
   }
+
+  if (cfg.type !== 'mix' || !Array.isArray(cfg.blocks) || cfg.blocks.length === 0) {
+    return NextResponse.json({ error: 'invalid_timer' }, { status: 500 })
+  }
+
+  // Si algún bloque tiene seconds:0 sin countUp, Claude generó bloques sin duración fija
+  // → colapsar todo en un For Time simple
+  const hasInvalidBlock = cfg.blocks.some(
+    (b: { label: string; seconds: number; countUp?: boolean }) =>
+      !b.label || (!(b.seconds > 0) && !b.countUp)
+  )
+  if (hasInvalidBlock) {
+    return NextResponse.json({ type: 'mix', blocks: [{ label: 'For Time', seconds: 0, countUp: true }] })
+  }
+
+  return NextResponse.json(cfg)
 }
