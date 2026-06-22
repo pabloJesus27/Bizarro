@@ -40,7 +40,7 @@ export default function LandscapeDisplay({
           ← Volver
         </button>
       )}
-      <p className="uppercase tracking-widest font-mono font-bold" style={{ fontSize: '3vh', color: '#FFD000' }}>{label}</p>
+      <p className="uppercase tracking-widest font-mono font-bold" style={{ fontSize: '7vh', color: '#FFD000' }}>{label}</p>
       <p
         className="font-black tabular-nums tracking-tighter leading-none"
         style={{ fontSize: '50vh', color: '#6BBF00', fontFamily: "'DSEG7Classic', monospace" }}
