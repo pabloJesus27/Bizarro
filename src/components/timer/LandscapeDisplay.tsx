@@ -42,8 +42,8 @@ export default function LandscapeDisplay({
       )}
       <p className="text-neutral-600 text-xs uppercase tracking-widest font-mono">{label}</p>
       <p
-        className="text-white font-black tabular-nums tracking-tighter leading-none"
-        style={{ fontSize: '32vh' }}
+        className="font-black tabular-nums tracking-tighter leading-none"
+        style={{ fontSize: '50vh', color: '#FF0000' }}
       >
         {time}
       </p>
