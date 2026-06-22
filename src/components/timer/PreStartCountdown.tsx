@@ -39,11 +39,11 @@ export default function PreStartCountdown({ audioCtx, onDone, onCancel }: { audi
         </button>
       )}
       {count === 0 ? (
-        <p className="text-white font-black text-9xl uppercase tracking-tighter">GO!</p>
+        <p className="font-black uppercase tracking-tighter" style={{ fontSize: '30vw', color: '#FF0000', fontFamily: "'DSEG7Classic', monospace" }}>GO!</p>
       ) : (
         <>
-          <p className="text-neutral-600 text-xs uppercase tracking-widest font-mono mb-6">Preparado...</p>
-          <p className="text-white font-black text-9xl tabular-nums leading-none">{count}</p>
+          <p className="text-neutral-500 uppercase tracking-widest font-mono mb-6" style={{ fontSize: '4vw' }}>Preparado...</p>
+          <p className="font-black tabular-nums leading-none" style={{ fontSize: '40vw', color: '#FF0000', fontFamily: "'DSEG7Classic', monospace" }}>{count}</p>
         </>
       )}
     </div>
